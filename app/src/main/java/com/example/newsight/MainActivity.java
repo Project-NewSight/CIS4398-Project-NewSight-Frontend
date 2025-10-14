@@ -1,10 +1,13 @@
 package com.example.newsight;
 
+import static android.content.ContentValues.TAG;
+
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -59,40 +62,47 @@ public class MainActivity extends AppCompatActivity {
                 isLoggedIn = true;
                 Toast.makeText(MainActivity.this, "Logged in as " + email, Toast.LENGTH_SHORT).show();
 
-                // Show camera button on successful login
+
                 btnLogin.setVisibility(View.GONE);
                 etEmail.setVisibility(View.GONE);
                 etPassword.setVisibility(View.GONE);
                 btnOpenCamera.setVisibility(View.VISIBLE);
 
-                // Optional: disable login to prevent multiple clicks
-                btnLogin.setEnabled(false);
-                etEmail.setEnabled(false);
-                etPassword.setEnabled(false);
             }
         });
 
         btnOpenCamera.setOnClickListener(v -> {
+            Log.d(TAG, "Camera button clicked!");
+
             if (!isLoggedIn) {
+                Log.d(TAG, "Not logged in");
                 Toast.makeText(MainActivity.this, "Please login first", Toast.LENGTH_SHORT).show();
                 return;
             }
 
+            Log.d(TAG, "Checking camera permission...");
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
                     != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Permission not granted, requesting...");
                 ActivityCompat.requestPermissions(MainActivity.this,
                         new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
             } else {
+                Log.d(TAG, "Permission already granted, opening camera...");
                 openCamera();
             }
         });
+
+        Log.d(TAG, "onCreate complete");
     }
 
     private void openCamera() {
+        Log.d(TAG, "openCamera() called");
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+        try {
+            Log.d(TAG, "Launching camera intent...");
             startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
-        } else {
+        } catch (Exception e) {
+            Log.e(TAG, "Error opening camera: " + e.getMessage());
             Toast.makeText(this, "Camera not available", Toast.LENGTH_SHORT).show();
         }
     }
