@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_CAMERA_PERMISSION = 100;
     private static final int REQUEST_IMAGE_CAPTURE = 101;
+    private VibrationMotor vibrationMotor;
 
     private boolean isLoggedIn = false;
 
@@ -127,29 +128,38 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void testVibration() {
+        Log.d(TAG, "=== Testing VibrationMotor Class ===");
+
         if (!HapticPermissionHelper.canVibrate(this)) {
             Toast.makeText(this, "Cannot vibrate - check permissions", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Simple test vibration (500ms)
-        android.os.Vibrator vibrator = (android.os.Vibrator)
-                getSystemService(VIBRATOR_SERVICE);
+        try {
+            // Initialize VibrationMotor
+            vibrationMotor = new VibrationMotor(this);
+            vibrationMotor.initialize();
 
-        if (vibrator != null) {
-            Log.d(TAG, "Triggering test vibration");
+            // Test 1: Simple vibration
+            Log.d(TAG, "Test 1: Simple 500ms vibration");
+            vibrationMotor.vibrateSimple(500, 70);
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                vibrator.vibrate(android.os.VibrationEffect.createOneShot(
-                        500, android.os.VibrationEffect.DEFAULT_AMPLITUDE));
-            } else {
-                vibrator.vibrate(500);
-            }
+            // Wait a bit before next test
+            new android.os.Handler().postDelayed(() -> {
+                // Test 2: Pattern vibration
+                Log.d(TAG, "Test 2: Pattern vibration");
+                long[] timings = {0, 200, 100, 200};
+                int[] intensities = {0, 150, 0, 150};
+                VibrationPattern pattern = new VibrationPattern(timings, intensities, -1);
 
-            Toast.makeText(this, "Vibration triggered!", Toast.LENGTH_SHORT).show();
-        } else {
-            Log.e(TAG, "Vibrator is null");
-            Toast.makeText(this, "Vibrator not available", Toast.LENGTH_SHORT).show();
+                vibrationMotor.triggerVibration(pattern, 500, 80);
+            }, 1000);
+
+            Toast.makeText(this, "Testing VibrationMotor - Check Logcat", Toast.LENGTH_LONG).show();
+
+        } catch (VibrationMotor.VibrationException e) {
+            Log.e(TAG, "VibrationMotor error: " + e.getMessage());
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -209,6 +219,14 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Camera permission denied");
                 Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (vibrationMotor != null) {
+            vibrationMotor.close();
         }
     }
 }
