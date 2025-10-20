@@ -108,8 +108,7 @@ public class MainActivity extends AppCompatActivity {
         // Test vibration button
         btnTestVibration.setOnClickListener(v -> {
             Log.d(TAG, "Test Vibration button clicked");
-            testVibrationPattern();
-            testVibration();
+            testPatternGenerator();
         });
 
         Log.d(TAG, "onCreate complete");
@@ -190,6 +189,83 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "Bad pattern valid: " + badPattern.validate()); // Should be false
 
         Toast.makeText(this, "Check Logcat for VibrationPattern tests", Toast.LENGTH_LONG).show();
+    }
+
+    private void testPatternGenerator() {
+        Log.d(TAG, "=== Testing PatternGenerator ===");
+
+        if (!HapticPermissionHelper.canVibrate(this)) {
+            Toast.makeText(this, "Cannot vibrate", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            vibrationMotor = new VibrationMotor(this);
+            vibrationMotor.initialize();
+            PatternGenerator generator = new PatternGenerator();
+
+            Log.d(TAG, "Pattern library has " + generator.getPatternCount() + " patterns");
+
+            testPatternSequence(generator, 0);
+
+            Toast.makeText(this, "Testing all patterns - feel the vibrations!",
+                    Toast.LENGTH_LONG).show();
+
+        } catch (VibrationMotor.VibrationException e) {
+            Log.e(TAG, "Error: " + e.getMessage());
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void testPatternSequence(PatternGenerator generator, int step) {
+        android.os.Handler handler = new android.os.Handler();
+
+        switch (step) {
+            case 0:
+                Log.d(TAG, "Testing: RIGHT turn");
+                VibrationPattern right = generator.generateDirectionalPattern(
+                        PatternGenerator.Direction.RIGHT, 80);
+                vibrationMotor.triggerVibration(right, 500, 80);
+                handler.postDelayed(() -> testPatternSequence(generator, 1), 1500);
+                break;
+
+            case 1:
+                Log.d(TAG, "Testing: LEFT turn");
+                VibrationPattern left = generator.generateDirectionalPattern(
+                        PatternGenerator.Direction.LEFT, 80);
+                vibrationMotor.triggerVibration(left, 500, 80);
+                handler.postDelayed(() -> testPatternSequence(generator, 2), 1500);
+                break;
+
+            case 2:
+                Log.d(TAG, "Testing: FORWARD");
+                VibrationPattern forward = generator.generateDirectionalPattern(
+                        PatternGenerator.Direction.FORWARD, 80);
+                vibrationMotor.triggerVibration(forward, 500, 80);
+                handler.postDelayed(() -> testPatternSequence(generator, 3), 1500);
+                break;
+
+            case 3:
+                Log.d(TAG, "Testing: OBSTACLE WARNING");
+                VibrationPattern warning = generator.generateObstacleWarningPattern();
+                vibrationMotor.triggerVibration(warning, 600, 100);
+                handler.postDelayed(() -> testPatternSequence(generator, 4), 2000);
+                break;
+
+            case 4:
+                Log.d(TAG, "Testing: CROSSWALK STOP");
+                VibrationPattern stop = generator.generateCrosswalkStopPattern();
+                vibrationMotor.triggerVibration(stop, 850, 80);
+                handler.postDelayed(() -> testPatternSequence(generator, 5), 2000);
+                break;
+
+            case 5:
+                Log.d(TAG, "Testing: ARRIVAL CELEBRATION");
+                VibrationPattern celebration = generator.generateArrivalCelebrationPattern();
+                vibrationMotor.triggerVibration(celebration, 1600, 70);
+                Log.d(TAG, "Pattern test sequence complete!");
+                break;
+        }
     }
 
     private void openCamera() {
