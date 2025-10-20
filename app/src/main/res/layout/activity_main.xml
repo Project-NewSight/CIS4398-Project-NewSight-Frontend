@@ -49,4 +49,13 @@
         android:textColor="#FFFFFF"
         android:visibility="gone" />
 
+    <Button
+        android:id="@+id/btnTestVibration"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Test Vibration"
+        android:backgroundTint="@android:color/holo_orange_light"
+        android:textColor="#FFFFFF"
+        android:visibility="gone" />
+
 </LinearLayout>
