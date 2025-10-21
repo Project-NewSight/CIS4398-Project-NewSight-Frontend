@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- <uses-permission android:name="android.permission.CAMERA" /> -->
 
     <application
         android:allowBackup="true"
@@ -29,7 +29,34 @@
         <activity
             android:name=".MainActivity"
             android:exported="true" />
-
+        <!-- HomeActivity -->
+        <activity
+            android:name=".HomeActivity"
+            android:exported="true" />
+        <!-- NavigateActivity Section  -->
+        <activity
+            android:name=".NavigateActivity"
+            android:exported="true" />
+        <!-- CommunicateActivity -->
+        <activity
+            android:name=".CommunicateActivity"
+            android:exported="true" />
+        <!-- ObserveActivity -->
+        <activity
+            android:name=".ObserveActivity"
+            android:exported="true" />
+        <!-- ColorCueActivity -->
+        <activity
+            android:name=".ColorCueActivity"
+            android:exported="true" />
+        <!-- EmergencyActivity -->
+        <activity
+            android:name=".EmergencyActivity"
+            android:exported="true" />
+        <!-- SettingsActivity -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="true" />
     </application>
 
 </manifest>
