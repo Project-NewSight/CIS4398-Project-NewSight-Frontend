@@ -69,6 +69,10 @@ public class MainActivity extends AppCompatActivity {
                 btnLogin.setEnabled(false);
                 etEmail.setEnabled(false);
                 etPassword.setEnabled(false);
+
+                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                startActivity(intent);
+                finish();
             }
         });
 

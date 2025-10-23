@@ -1,0 +1,109 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#000000">
+
+    <!-- 🔝 Top Navigation Bar -->
+    <LinearLayout
+        android:id="@+id/topNavBar"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="#222222">
+
+        <!-- 🟨 Home -->
+        <FrameLayout
+            android:id="@+id/btnHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_yellow"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Go to Home">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Home"
+                android:textColor="@color/black"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!-- 🎤 Mic -->
+        <FrameLayout
+            android:id="@+id/btnMic"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_grey"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Activate Voice Command">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_mic"
+                android:contentDescription="Microphone Icon" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- 🚨 Emergency Actions -->
+    <LinearLayout
+        android:id="@+id/emergencyActions"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:showDividers="middle">
+
+        <!-- 🟨 Ping Location -->
+        <FrameLayout
+            android:id="@+id/btnPingLocation"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_cyan"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Ping Current Location">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Ping Location"
+                android:textColor="@color/black"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!-- 🔴 Send Text Alert -->
+        <FrameLayout
+            android:id="@+id/btnSendAlert"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_red"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Send Emergency Text Alert">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Send Text Alert"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+    </LinearLayout>
+</LinearLayout>
