@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#000000">
+
+    <!-- Home Bar -->
+    <FrameLayout
+        android:id="@+id/btnHome"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Go to Home">
+
+        <TextView
+            style="@style/ShadowText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Home"
+            android:textColor="@color/white"
+            android:textSize="45sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <!-- Add/Edit Contact Form -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="40dp"
+        android:gravity="center_horizontal">
+
+        <!-- Name Input -->
+        <EditText
+            android:id="@+id/inputName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Contact Name"
+            android:textColor="@color/white"
+            android:textColorHint="#AAAAAA"
+            android:backgroundTint="@color/white"
+            android:textSize="22sp"
+            android:inputType="textPersonName"
+            android:padding="12dp"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Phone Input -->
+        <EditText
+            android:id="@+id/inputPhone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Phone Number"
+            android:textColor="@color/white"
+            android:textColorHint="#AAAAAA"
+            android:backgroundTint="@color/white"
+            android:textSize="22sp"
+            android:inputType="phone"
+            android:padding="12dp"
+            android:layout_marginBottom="40dp" />
+
+        <!-- Save Button -->
+        <FrameLayout
+            android:id="@+id/btnSaveContact"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:background="@drawable/rectangle_green"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Save Contact"
+                android:textColor="@color/white"
+                android:textSize="36sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- Mic Bar -->
+    <FrameLayout
+        android:id="@+id/btnMic"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Activate Voice Command">
+
+        <ImageView
+            style="@style/MicIconStyle"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_mic"
+            android:contentDescription="Microphone Icon" />
+    </FrameLayout>
+</LinearLayout>
