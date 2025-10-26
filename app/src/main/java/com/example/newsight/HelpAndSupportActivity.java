@@ -1,4 +1,28 @@
 package com.example.newsight;
 
-public class HelpAndSupportActivity {
+import android.os.Bundle;
+import android.widget.FrameLayout;
+import android.content.Intent;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class HelpAndSupportActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_help_and_support);
+
+        // Home
+        FrameLayout btnHome = findViewById(R.id.btnHome);
+        btnHome.setOnClickListener(v -> {
+            Intent intent = new Intent(this, HomeActivity.class);
+            startActivity(intent);
+        });
+
+        // Mic
+        FrameLayout btnMic = findViewById(R.id.btnMic);
+        btnMic.setOnClickListener(v -> {
+            Intent intent = new Intent(this, VoiceCommandActivity.class);
+            startActivity(intent);
+        });
+    }
 }

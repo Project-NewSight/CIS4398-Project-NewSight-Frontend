@@ -28,7 +28,7 @@ public class EmergencyActivity extends AppCompatActivity {
         // Ping Location
         FrameLayout btnPingLocation = findViewById(R.id.btnPingLocation);
         btnPingLocation.setOnClickListener(v -> {
-            Intent intent = new Intent(this, PingLocationActivity.class);
+            Intent intent = new Intent(this, FindLocationActivity.class);
             startActivity(intent);
         });
 

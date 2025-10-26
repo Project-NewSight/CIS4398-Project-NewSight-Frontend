@@ -5,11 +5,11 @@ import android.widget.FrameLayout;
 import android.content.Intent;
 import androidx.appcompat.app.AppCompatActivity;
 
-public class CommunicateActivity extends AppCompatActivity {
+public class GetDirectionsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_communicate);
+        setContentView(R.layout.activity_get_directions);
 
         FrameLayout btnHome = findViewById(R.id.btnHome);
         btnHome.setOnClickListener(v -> {
@@ -23,15 +23,21 @@ public class CommunicateActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        FrameLayout btnSpeakToText = findViewById(R.id.btnSpeakToText);
-        btnSpeakToText.setOnClickListener(v -> {
-            Intent intent = new Intent(this, SpeakToTextActivity.class);
+        FrameLayout btnSelectNavigation = findViewById(R.id.btnSelectNavigation);
+        btnSelectNavigation.setOnClickListener(v -> {
+            Intent intent = new Intent(this, SelectDestinationActivity.class);
             startActivity(intent);
         });
 
-        FrameLayout btnSignTranslation = findViewById(R.id.btnSignTranslation);
-        btnSignTranslation.setOnClickListener(v -> {
-            Intent intent = new Intent(this, SignTranslationActivity.class);
+        FrameLayout btnStartNavigation = findViewById(R.id.btnStartNavigation);
+        btnStartNavigation.setOnClickListener(v -> {
+            Intent intent = new Intent(this, StartNavigationActivity.class);
+            startActivity(intent);
+        });
+
+        FrameLayout btnStopNavigation = findViewById(R.id.btnStopNavigation);
+        btnStopNavigation.setOnClickListener(v -> {
+            Intent intent = new Intent(this, StopNavigationActivity.class);
             startActivity(intent);
         });
     }

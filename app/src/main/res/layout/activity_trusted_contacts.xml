@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:background="#000000">
 
-    <!-- Home Bar -->
+    <!-- 🟦 Home Bar -->
     <FrameLayout
         android:id="@+id/btnHome"
         android:layout_width="match_parent"
@@ -27,87 +27,106 @@
             android:textStyle="bold" />
     </FrameLayout>
 
-    <!-- Main Navigation Grid -->
-    <GridLayout
-        android:id="@+id/navGrid"
+    <!-- 🟩 Add / 🟧 Remove Contact Buttons -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:columnCount="2"
-        android:rowCount="2"
-        android:useDefaultMargins="false"
-        android:alignmentMode="alignBounds"
-        android:gravity="center">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2">
 
-        <!--  Find My Location  -->
         <FrameLayout
-            android:id="@+id/btnFindLocation"
+            android:id="@+id/btnAddContact"
             android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:background="@drawable/rectangle_light_blue"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Find My Location">
-
-            <TextView
-                style="@style/ShadowText"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="Find My Location"
-                android:textColor="@color/white"
-                android:textSize="45sp"
-                android:textStyle="bold" />
-        </FrameLayout>
-
-        <!-- 🟧 Obstacle Detection (Top Right) -->
-        <FrameLayout
-            android:id="@+id/btnObstacleDetection"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:background="@drawable/rectangle_orange"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Obstacle Detection">
-
-            <TextView
-                style="@style/ShadowText"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="Obstacle Detection"
-                android:textColor="@color/white"
-                android:textSize="45sp"
-                android:textStyle="bold" />
-        </FrameLayout>
-
-        <!-- Get Directions  -->
-        <FrameLayout
-            android:id="@+id/btnGetDirections"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_columnSpan="2"
-            android:layout_rowWeight="1"
+            android:layout_height="100dp"
+            android:layout_weight="1"
             android:background="@drawable/rectangle_green"
             android:clickable="true"
             android:focusable="true"
-            android:contentDescription="Get Directions">
+            android:contentDescription="Add Trusted Contact">
 
             <TextView
                 style="@style/ShadowText"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="Get Directions"
+                android:text="Add"
                 android:textColor="@color/white"
-                android:textSize="55sp"
+                android:textSize="40sp"
                 android:textStyle="bold" />
         </FrameLayout>
-    </GridLayout>
+
+        <FrameLayout
+            android:id="@+id/btnRemoveContact"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_orange"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Remove Trusted Contact">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Remove"
+                android:textColor="@color/white"
+                android:textSize="40sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- 📜 Scrollable Contacts List -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/contactListContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <!-- Example static contact rows -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/rectangle_light_blue">
+
+                <TextView
+                    style="@style/ShadowText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="Contact 1"
+                    android:textColor="@color/white"
+                    android:textSize="36sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/rectangle_pink">
+
+                <TextView
+                    style="@style/ShadowText"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="Contact 2"
+                    android:textColor="@color/white"
+                    android:textSize="36sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+        </LinearLayout>
+    </ScrollView>
 
     <!-- 🎤 Mic Bar -->
     <FrameLayout

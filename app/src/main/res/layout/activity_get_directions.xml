@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:background="#000000">
 
-    <!-- 🔵 Home Bar -->
+    <!-- Home Bar -->
     <FrameLayout
         android:id="@+id/btnHome"
         android:layout_width="match_parent"
@@ -27,26 +27,26 @@
             android:textStyle="bold" />
     </FrameLayout>
 
-    <!-- 🧱 Emergency Actions -->
+    <!-- 🗺️ Main Content Area -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
+        android:gravity="top"
         android:padding="0dp"
-        android:layout_margin="0dp"
-        android:gravity="top">
+        android:layout_margin="0dp">
 
-        <!-- 📡 Ping Location -->
+        <!-- Select Navigation -->
         <FrameLayout
-            android:id="@+id/btnPingLocation"
+            android:id="@+id/btnSelectNavigation"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:background="@drawable/rectangle_light_blue"
+            android:background="@drawable/rectangle_pink"
             android:clickable="true"
             android:focusable="true"
-            android:contentDescription="Ping Current Location"
+            android:contentDescription="Select Navigation"
             android:padding="0dp"
             android:layout_margin="0dp">
 
@@ -55,22 +55,46 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="Ping Location"
+                android:text="Select Navigation"
                 android:textColor="@color/white"
                 android:textSize="50sp"
                 android:textStyle="bold" />
         </FrameLayout>
 
-        <!-- 🟥 Send Text Alert -->
+        <!-- Start Navigation -->
         <FrameLayout
-            android:id="@+id/btnSendAlert"
+            android:id="@+id/btnStartNavigation"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_green"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Start Navigation"
+            android:padding="0dp"
+            android:layout_margin="0dp">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Start Navigation"
+                android:textColor="@color/white"
+                android:textSize="50sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!-- Stop Navigation -->
+        <FrameLayout
+            android:id="@+id/btnStopNavigation"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:background="@drawable/rectangle_red"
             android:clickable="true"
             android:focusable="true"
-            android:contentDescription="Send Emergency Text Alert"
+            android:contentDescription="Stop Navigation"
             android:padding="0dp"
             android:layout_margin="0dp">
 
@@ -79,14 +103,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="Send Text Alert"
+                android:text="Stop Navigation"
                 android:textColor="@color/white"
                 android:textSize="50sp"
                 android:textStyle="bold" />
         </FrameLayout>
     </LinearLayout>
 
-    <!-- 🎤 Mic Bar -->
+    <!-- Mic Bar -->
     <FrameLayout
         android:id="@+id/btnMic"
         android:layout_width="match_parent"

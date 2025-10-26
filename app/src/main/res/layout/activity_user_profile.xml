@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:background="#000000">
 
-    <!-- 🔵 Home Bar -->
+    <!-- 🟦 Home Bar -->
     <FrameLayout
         android:id="@+id/btnHome"
         android:layout_width="match_parent"
@@ -27,61 +27,103 @@
             android:textStyle="bold" />
     </FrameLayout>
 
-    <!-- 🧱 Emergency Actions -->
+    <!-- 🧩 Profile Information -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:padding="0dp"
-        android:layout_margin="0dp"
-        android:gravity="top">
+        android:gravity="center">
 
-        <!-- 📡 Ping Location -->
         <FrameLayout
-            android:id="@+id/btnPingLocation"
+            android:id="@+id/cardName"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:background="@drawable/rectangle_light_blue"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Ping Current Location"
-            android:padding="0dp"
-            android:layout_margin="0dp">
+            android:background="@drawable/rectangle_light_blue">
 
             <TextView
                 style="@style/ShadowText"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="Ping Location"
+                android:text="Name"
                 android:textColor="@color/white"
-                android:textSize="50sp"
+                android:textSize="45sp"
                 android:textStyle="bold" />
         </FrameLayout>
 
-        <!-- 🟥 Send Text Alert -->
         <FrameLayout
-            android:id="@+id/btnSendAlert"
+            android:id="@+id/cardEmail"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:background="@drawable/rectangle_red"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Send Emergency Text Alert"
-            android:padding="0dp"
-            android:layout_margin="0dp">
+            android:background="@drawable/rectangle_green">
 
             <TextView
                 style="@style/ShadowText"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="Send Text Alert"
+                android:text="Email"
                 android:textColor="@color/white"
-                android:textSize="50sp"
+                android:textSize="45sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/cardPreferredMode"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_orange">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Preferred Mode"
+                android:textColor="@color/white"
+                android:textSize="45sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/cardAccessibility"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_pink">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Accessibility"
+                android:textColor="@color/white"
+                android:textSize="45sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/btnEditProfile"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_yellow"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                style="@style/WhiteShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Edit Profile"
+                android:textColor="@color/black"
+                android:textSize="45sp"
                 android:textStyle="bold" />
         </FrameLayout>
     </LinearLayout>
@@ -94,9 +136,7 @@
         android:background="@drawable/rectangle_deep_blue"
         android:clickable="true"
         android:focusable="true"
-        android:contentDescription="Activate Voice Command"
-        android:padding="0dp"
-        android:layout_margin="0dp">
+        android:contentDescription="Activate Voice Command">
 
         <ImageView
             style="@style/MicIconStyle"

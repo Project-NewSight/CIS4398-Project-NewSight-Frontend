@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -5,173 +6,95 @@
     android:orientation="vertical"
     android:background="#000000">
 
-    <LinearLayout
-        android:id="@+id/topNavBar"
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:background="#222222">
-
-        <!-- 🟨 Home Button -->
-        <FrameLayout
-            android:id="@+id/btnHome"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@drawable/rectangle_yellow"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Go to Home">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="Home"
-                android:textColor="@color/black"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-        </FrameLayout>
-
-        <!-- 🎤 Mic Button -->
-        <FrameLayout
-            android:id="@+id/btnMic"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:background="@drawable/rectangle_grey"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Activate Voice Command">
-
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_mic"
-                android:contentDescription="Microphone Icon" />
-        </FrameLayout>
-    </LinearLayout>
-
-    <!-- 🟦 4-Button Observation Grid -->
-    <GridLayout
-        android:id="@+id/observeGrid"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:columnCount="2"
-        android:rowCount="2"
-        android:alignmentMode="alignBounds"
-        android:useDefaultMargins="false"
-        android:gravity="center">
-
-        <!-- 1️⃣ Read Text (Blue) -->
-        <FrameLayout
-            android:id="@+id/btnReadText"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:background="@drawable/rectangle_blue"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Read Text">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="Read Text"
-                android:textColor="@color/white"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-        </FrameLayout>
-
-        <!-- 2️⃣ Detect People (Purple) -->
-        <FrameLayout
-            android:id="@+id/btnDetectPeople"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:background="@drawable/rectangle_purple"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Detect People">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="Detect People"
-                android:textColor="@color/white"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-        </FrameLayout>
-
-        <!-- 3️⃣ Obstacle Scan (Red) -->
-        <FrameLayout
-            android:id="@+id/btnObstacleScan"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:background="@drawable/rectangle_red"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Obstacle Scan">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="Obstacle Scan"
-                android:textColor="@color/white"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-        </FrameLayout>
-
-        <!-- 4️⃣ Identify Object (Teal) -->
-        <FrameLayout
-            android:id="@+id/btnIdentifyObject"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_columnWeight="1"
-            android:layout_rowWeight="1"
-            android:background="@drawable/rectangle_teal"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Identify Object">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="Identify Object"
-                android:textColor="@color/white"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-        </FrameLayout>
-    </GridLayout>
-
-    <!-- 🟨 Bottom Bar: Start/Stop Observing -->
+    <!-- 🟨 Home Bar -->
     <FrameLayout
-        android:id="@+id/btnStartStopObserving"
+        android:id="@+id/btnHome"
         android:layout_width="match_parent"
         android:layout_height="90dp"
-        android:background="@drawable/rectangle_cyan"
+        android:background="@drawable/rectangle_deep_blue"
         android:clickable="true"
         android:focusable="true"
-        android:contentDescription="Start or Stop Observing">
+        android:contentDescription="Go to Home">
 
         <TextView
+            style="@style/ShadowText"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="Start / Stop Observing"
-            android:textColor="@color/black"
-            android:textSize="24sp"
+            android:text="Home"
+            android:textColor="@color/white"
+            android:textSize="45sp"
             android:textStyle="bold" />
+    </FrameLayout>
+
+    <!-- 🧱 Main Section (fills space, buttons stacked flush) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="top"
+        android:fitsSystemWindows="false">
+
+        <!-- Detection Button -->
+        <FrameLayout
+            android:id="@+id/btnDetection"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_green"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Detection Menu">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Detection"
+                android:textColor="@color/white"
+                android:textSize="60sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!-- Fashion Button -->
+        <FrameLayout
+            android:id="@+id/btnFashion"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_pink"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Fashion Menu">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Fashion"
+                android:textColor="@color/white"
+                android:textSize="60sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- 🎤 Bottom Mic Button -->
+    <FrameLayout
+        android:id="@+id/btnMic"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Activate Voice Command">
+
+        <ImageView
+            style="@style/MicIconStyle"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_mic"
+            android:contentDescription="Microphone Icon" />
     </FrameLayout>
 </LinearLayout>

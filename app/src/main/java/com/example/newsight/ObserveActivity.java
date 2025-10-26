@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.widget.FrameLayout;
 import android.content.Intent;
 import androidx.appcompat.app.AppCompatActivity;
+import com.example.newsight.R;
+
 
 public class ObserveActivity extends AppCompatActivity {
     @Override
@@ -11,52 +13,27 @@ public class ObserveActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_observe);
 
-        // 🔝 Home Button
         FrameLayout btnHome = findViewById(R.id.btnHome);
         btnHome.setOnClickListener(v -> {
             Intent intent = new Intent(this, HomeActivity.class);
             startActivity(intent);
         });
 
-        // 🎤 Mic Button
         FrameLayout btnMic = findViewById(R.id.btnMic);
         btnMic.setOnClickListener(v -> {
             Intent intent = new Intent(this, VoiceCommandActivity.class);
             startActivity(intent);
         });
 
-        // 🟦 Read Text
-        FrameLayout btnReadText = findViewById(R.id.btnReadText);
-        btnReadText.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ReadTextActivity.class);
+        FrameLayout btnDetection = findViewById(R.id.btnDetection);
+        btnDetection.setOnClickListener(v -> {
+            Intent intent = new Intent(this, DetectionActivity.class);
             startActivity(intent);
         });
 
-        // 🟣 Detect People
-        FrameLayout btnDetectPeople = findViewById(R.id.btnDetectPeople);
-        btnDetectPeople.setOnClickListener(v -> {
-            Intent intent = new Intent(this, DetectPeopleActivity.class);
-            startActivity(intent);
-        });
-
-        // 🔴 Obstacle Scan
-        FrameLayout btnObstacleScan = findViewById(R.id.btnObstacleScan);
-        btnObstacleScan.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ObstacleScanActivity.class);
-            startActivity(intent);
-        });
-
-        // 🟢 Identify Object
-        FrameLayout btnIdentifyObject = findViewById(R.id.btnIdentifyObject);
-        btnIdentifyObject.setOnClickListener(v -> {
-            Intent intent = new Intent(this, IdentifyObjectActivity.class);
-            startActivity(intent);
-        });
-
-        // 🟨 Start / Stop Observing
-        FrameLayout btnStartStopObserving = findViewById(R.id.btnStartStopObserving);
-        btnStartStopObserving.setOnClickListener(v -> {
-            Intent intent = new Intent(this, StartStopObservingActivity.class);
+        FrameLayout btnFashion = findViewById(R.id.btnFashion);
+        btnFashion.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ColorCueActivity.class);
             startActivity(intent);
         });
     }

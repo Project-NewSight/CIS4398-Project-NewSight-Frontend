@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:background="#000000">
 
-    <!-- 🔵 Home Bar -->
+    <!-- Home Bar -->
     <FrameLayout
         android:id="@+id/btnHome"
         android:layout_width="match_parent"
@@ -27,66 +27,104 @@
             android:textStyle="bold" />
     </FrameLayout>
 
-    <!-- 🧱 Emergency Actions -->
+    <!--  Emergency Setup Options -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:padding="0dp"
-        android:layout_margin="0dp"
-        android:gravity="top">
+        android:gravity="center">
 
-        <!-- 📡 Ping Location -->
+        <!-- Set Emergency Contacts -->
         <FrameLayout
-            android:id="@+id/btnPingLocation"
+            android:id="@+id/btnSetContacts"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_green"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Set Emergency Contacts">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Set Emergency Contacts"
+                android:textColor="@color/white"
+                android:textSize="45sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!-- Configure GPS Ping -->
+        <FrameLayout
+            android:id="@+id/btnConfigureGPS"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:background="@drawable/rectangle_light_blue"
             android:clickable="true"
             android:focusable="true"
-            android:contentDescription="Ping Current Location"
-            android:padding="0dp"
-            android:layout_margin="0dp">
+            android:contentDescription="Configure GPS Ping">
 
             <TextView
                 style="@style/ShadowText"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="Ping Location"
+                android:text="Configure GPS Ping"
                 android:textColor="@color/white"
-                android:textSize="50sp"
+                android:textSize="45sp"
                 android:textStyle="bold" />
         </FrameLayout>
 
-        <!-- 🟥 Send Text Alert -->
+        <!-- Test Alert -->
         <FrameLayout
-            android:id="@+id/btnSendAlert"
+            android:id="@+id/btnTestAlert"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_orange"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Test Emergency Alert">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Test Alert"
+                android:textColor="@color/white"
+                android:textSize="45sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!--  Full Emergency Simulation -->
+        <FrameLayout
+            android:id="@+id/btnFullTest"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:background="@drawable/rectangle_red"
             android:clickable="true"
             android:focusable="true"
-            android:contentDescription="Send Emergency Text Alert"
-            android:padding="0dp"
-            android:layout_margin="0dp">
+            android:contentDescription="Run Full Emergency Simulation">
 
             <TextView
                 style="@style/ShadowText"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="Send Text Alert"
+                android:text="Full Emergency Simulation"
                 android:textColor="@color/white"
-                android:textSize="50sp"
+                android:textSize="40sp"
                 android:textStyle="bold" />
         </FrameLayout>
     </LinearLayout>
 
-    <!-- 🎤 Mic Bar -->
+    <!--  Mic Bar -->
     <FrameLayout
         android:id="@+id/btnMic"
         android:layout_width="match_parent"
@@ -94,9 +132,7 @@
         android:background="@drawable/rectangle_deep_blue"
         android:clickable="true"
         android:focusable="true"
-        android:contentDescription="Activate Voice Command"
-        android:padding="0dp"
-        android:layout_margin="0dp">
+        android:contentDescription="Activate Voice Command">
 
         <ImageView
             style="@style/MicIconStyle"

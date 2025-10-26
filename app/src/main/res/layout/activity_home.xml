@@ -6,12 +6,33 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginTop="0dp">
+
+    <!-- Settings Button (moved to top, full width, slightly thinner) -->
+    <FrameLayout
+        android:id="@+id/btnSettings"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:background="@drawable/rectangle_grey"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Settings">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Settings"
+            android:textColor="@color/white"
+            android:textSize="45sp"
+            style="@style/ShadowText"/>
+    </FrameLayout>
+
     <!-- Navigate Button -->
     <FrameLayout
         android:id="@+id/btnNavigate"
         android:layout_width="700dp"
-        android:layout_height="120dp"
-        android:background="@drawable/rectangle_cyan"
+        android:layout_height="135dp"
+        android:background="@drawable/rectangle_light_blue"
         android:clickable="true"
         android:focusable="true"
         android:contentDescription="Navigate">
@@ -22,147 +43,85 @@
             android:gravity="center"
             android:text="Navigate"
             android:textColor="#FFFFFF"
-            android:textSize="35sp"
-            android:shadowColor="#000000"
-            android:shadowDx="10"
-            android:shadowDy="10"
-            android:shadowRadius="3"/>
+            android:textSize="55sp"
+            style="@style/ShadowText"/>
     </FrameLayout>
 
     <!-- Observe Button -->
     <FrameLayout
         android:id="@+id/btnObserve"
         android:layout_width="700dp"
-        android:layout_height="120dp"
-        android:background="@drawable/rectangle_yellow"
+        android:layout_height="135dp"
+        android:background="@drawable/rectangle_orange"
         android:clickable="true"
         android:focusable="true"
         android:contentDescription="Observe">
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:text="Observe"
             android:textColor="#FFFFFF"
-            android:textSize="35sp"
+            android:textSize="55sp"
             android:gravity="center"
-            android:shadowColor="#000000"
-            android:shadowDx="10"
-            android:shadowDy="10"
-            android:shadowRadius="3"/>
+            style="@style/ShadowText"/>
     </FrameLayout>
 
     <!-- Communicate Button -->
     <FrameLayout
         android:id="@+id/btnCommunicate"
         android:layout_width="700dp"
-        android:layout_height="120dp"
-        android:background="@drawable/rectangle_purple"
+        android:layout_height="135dp"
+        android:background="@drawable/rectangle_green"
         android:clickable="true"
         android:focusable="true"
         android:contentDescription="Communicate">
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:text="Communicate"
             android:textColor="#FFFFFF"
-            android:textSize="35sp"
+            android:textSize="55sp"
             android:gravity="center"
-            android:shadowColor="#000000"
-            android:shadowDx="10"
-            android:shadowDy="10"
-            android:shadowRadius="3"/>
-    </FrameLayout>
-
-    <!-- Color Cue Button -->
-    <FrameLayout
-        android:id="@+id/btnColorCue"
-        android:layout_width="700dp"
-        android:layout_height="120dp"
-        android:background="@drawable/rectangle_teal"
-        android:clickable="true"
-        android:focusable="true"
-        android:contentDescription="Color Cue">
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="Color Cue"
-            android:textColor="#FFFFFF"
-            android:textSize="35sp"
-            android:gravity="center"
-            android:shadowColor="#000000"
-            android:shadowDx="10"
-            android:shadowDy="10"
-            android:shadowRadius="3"/>
+            style="@style/ShadowText"/>
     </FrameLayout>
 
     <!-- Emergency Button -->
     <FrameLayout
         android:id="@+id/btnEmergency"
         android:layout_width="700dp"
-        android:layout_height="120dp"
+        android:layout_height="135dp"
         android:background="@drawable/rectangle_red"
         android:clickable="true"
         android:focusable="true"
         android:contentDescription="Emergency">
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:text="Emergency"
             android:textColor="#FFFFFF"
-            android:textSize="35sp"
+            android:textSize="55sp"
             android:gravity="center"
-            android:shadowColor="#000000"
-            android:shadowDx="10"
-            android:shadowDy="10"
-            android:shadowRadius="3"/>
+            style="@style/ShadowText"/>
     </FrameLayout>
 
-    <!-- Bottom Row -->
-    <LinearLayout
-        android:orientation="horizontal"
+    <!-- Mic Button (bottom, full width) -->
+    <FrameLayout
+        android:id="@+id/btnMic"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center">
-        <!-- Settings Button -->
-        <FrameLayout
-            android:id="@+id/btnSettings"
-            android:layout_width="215dp"
-            android:layout_height="120dp"
-            android:background="@drawable/rectangle_grey"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Settings">
+        android:layout_height="100dp"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Mic">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="133dp"
-                android:gravity="center"
-                android:text="Settings"
-                android:textColor="@color/white"
-                android:textSize="30sp"
-                android:shadowColor="#000000"
-                android:shadowDx="10"
-                android:shadowDy="10"
-                android:shadowRadius="3"
-                />
-        </FrameLayout>
+        <ImageView
+            style="@style/MicIconStyle"
+            android:layout_gravity="center"
+            android:contentDescription="Microphone Icon"
+            android:src="@drawable/ic_mic" />
+    </FrameLayout>
 
-        <!-- Read and Ask Button -->
-        <FrameLayout
-            android:id="@+id/btnMic"
-            android:layout_width="215dp"
-            android:layout_height="120dp"
-            android:background="@drawable/rectangle_blue"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="mic">
-
-            <ImageView
-                android:layout_width="70dp"
-                android:layout_height="70dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_mic"
-                android:contentDescription="Microphone Icon" />
-        </FrameLayout>
-    </LinearLayout>
 </LinearLayout>

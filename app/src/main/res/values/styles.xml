@@ -1,6 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Square Buttons -->
     <style name="SquareButtonShape">
         <item name="cornerSize">0dp</item>
     </style>
+    <!-- Shadow Text -->
+    <style name="ShadowText">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">35sp</item>
+        <item name="android:shadowColor">#000000</item>
+        <item name="android:shadowDx">10</item>
+        <item name="android:shadowDy">10</item>
+        <item name="android:shadowRadius">8</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="WhiteShadowText">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">35sp</item>
+        <item name="android:shadowColor">#fffffb</item>
+        <item name="android:shadowDx">10</item>
+        <item name="android:shadowDy">10</item>
+        <item name="android:shadowRadius">8</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="MicIconStyle">
+        <item name="android:layout_width">80dp</item>
+        <item name="android:layout_height">80dp</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:contentDescription">Microphone Icon</item>
+        <item name="android:elevation">18dp</item>
+    </style>
+
 </resources>

@@ -32,13 +32,6 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Color Cue
-        FrameLayout btnColorCue = findViewById(R.id.btnColorCue);
-        btnColorCue.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, ColorCueActivity.class);
-            startActivity(intent);
-        });
-
         // Emergency
         FrameLayout btnEmergency = findViewById(R.id.btnEmergency);
         btnEmergency.setOnClickListener(v -> {
