@@ -2,14 +2,11 @@ package com.example.newsight;
 
 import android.os.Bundle;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.Set;
-import java.util.HashSet;
 
 
 public class AddContactActivity extends AppCompatActivity {
@@ -43,15 +40,32 @@ public class AddContactActivity extends AppCompatActivity {
                 return;
             }
 
-            SharedPreferences prefs = getSharedPreferences("TrustedContacts", MODE_PRIVATE);
-            Set<String> contacts = prefs.getStringSet("contacts", new HashSet<>());
-            contacts.add(name + ":" + phone);
-            prefs.edit().putStringSet("contacts", contacts).apply();
-
-            Toast.makeText(this, "Contact saved successfully!", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, TrustedContactsActivity.class));
-            finish();
+            int userId = 7;
+            ApiClient.INSTANCE.postContact(
+                    userId,
+                    name,
+                    phone,
+                    "Friend",
+                    "Unknown",
+                    new ApiCallback() {
+                        @Override
+                        public void onResult(boolean success, String msg) {
+                            runOnUiThread(() -> {
+                                if (success) {
+                                    Toast.makeText(AddContactActivity.this, "Contact added sucessfully", Toast.LENGTH_SHORT).show();
+                                    startActivity(new Intent(AddContactActivity.this, TrustedContactsActivity.class));
+                                    finish();
+                                } else {
+                                    Toast.makeText(AddContactActivity.this, "Error: " + msg, Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        }
+                    }
+            );
         });
-
     }
 }
+
+
+
+
