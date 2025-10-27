@@ -46,10 +46,6 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
         previewView = findViewById(R.id.previewView);
         cameraExecutor = Executors.newSingleThreadExecutor();
 
-        btnNavigation = findViewById(R.id.btnNavigation);
-        btnASL = findViewById(R.id.btnASL);
-        btnObjectDetection = findViewById(R.id.btnObjectDetection);
-        btnStopFeature = findViewById(R.id.btnStopFeature);
 
         btnNavigation.setOnClickListener(v -> setActiveFeature("navigation"));
         btnASL.setOnClickListener(v -> setActiveFeature("asl_detection"));

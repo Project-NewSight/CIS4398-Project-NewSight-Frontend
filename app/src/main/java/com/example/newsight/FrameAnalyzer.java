@@ -19,6 +19,8 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
     private static final String TAG = "FrameAnalyzer";
     private final WebSocketManager wsManager;
     private final FeatureProvider featureProvider;
+    private final ByteArrayOutputStream jpegStream = new ByteArrayOutputStream();
+    private byte[] nv21Buffer = null; // reuse buffer
     private long lastLogTime = 0;
 
     public interface FeatureProvider {
@@ -27,7 +29,7 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
     public FrameAnalyzer(WebSocketManager manager, FeatureProvider provider) {
         this.wsManager = manager;
-        this.featureProvider = provider;
+        this.featureProvider = () -> null;
     }
 
     @Override
@@ -40,13 +42,22 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
         }
 
         try {
-            byte[] nv21 = yuv420ToNv21(image);
-            YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, image.getWidth(),
-                    image.getHeight(), null);
+            int width = image.getWidth();
+            int height = image.getHeight();
 
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            yuvImage.compressToJpeg(new Rect(0, 0, yuvImage.getWidth(), yuvImage.getHeight()), 40, out);
-            byte[] jpegBytes = out.toByteArray();
+            // Reuse buffer
+            int requiredLength = width * height * 3 / 2; // NV21 size
+            if (nv21Buffer == null || nv21Buffer.length < requiredLength) {
+                nv21Buffer = new byte[requiredLength];
+            }
+
+            yuv420ToNv21(image, nv21Buffer);
+
+            jpegStream.reset(); // reuse ByteArrayOutputStream
+            YuvImage yuvImage = new YuvImage(nv21Buffer, ImageFormat.NV21, width, height, null);
+            yuvImage.compressToJpeg(new Rect(0, 0, width, height), 40, jpegStream);
+
+            byte[] jpegBytes = jpegStream.toByteArray();
 
             String activeFeature = featureProvider.getActiveFeature();
 
@@ -66,27 +77,23 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
         }
     }
 
-    private byte[] yuv420ToNv21(Image image) {
+    private void yuv420ToNv21(Image image, byte[] out) {
         Image.Plane[] planes = image.getPlanes();
-        int width = image.getWidth();
-        int height = image.getHeight();
-
-        int ySize = planes[0].getBuffer().remaining();
-        int uvSize = planes[1].getBuffer().remaining() + planes[2].getBuffer().remaining();
-        byte[] nv21 = new byte[ySize + uvSize];
-
-        planes[0].getBuffer().get(nv21, 0, ySize);
-
+        ByteBuffer yBuffer = planes[0].getBuffer();
         ByteBuffer uBuffer = planes[1].getBuffer();
         ByteBuffer vBuffer = planes[2].getBuffer();
-        int uvPos = ySize;
 
+        yBuffer.rewind();
         uBuffer.rewind();
         vBuffer.rewind();
+
+        int ySize = yBuffer.remaining();
+        yBuffer.get(out, 0, ySize);
+
+        int uvPos = ySize;
         while (vBuffer.hasRemaining() && uBuffer.hasRemaining()) {
-            nv21[uvPos++] = vBuffer.get();
-            nv21[uvPos++] = uBuffer.get();
+            out[uvPos++] = vBuffer.get();
+            out[uvPos++] = uBuffer.get();
         }
-        return nv21;
     }
 }

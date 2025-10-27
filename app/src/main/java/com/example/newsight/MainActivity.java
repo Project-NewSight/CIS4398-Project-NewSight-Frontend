@@ -41,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isLoggedIn = false;
 
+    private String currentFeature = "navigation"; // default feature
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -130,8 +132,8 @@ public class MainActivity extends AppCompatActivity {
                 ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build();
-
-                imageAnalysis.setAnalyzer(cameraExecutor, new FrameAnalyzer(wsManager));
+                FrameAnalyzer.FeatureProvider provider = () -> currentFeature;
+                imageAnalysis.setAnalyzer(cameraExecutor, new FrameAnalyzer(wsManager, provider));
 
                 cameraProvider.unbindAll();
                 cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
