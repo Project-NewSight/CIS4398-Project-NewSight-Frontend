@@ -119,7 +119,7 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     @Override
     public void onConnectionStatus(boolean isConnected) {
         runOnUiThread(() -> Toast.makeText(this,
-                isConnected ? "✅ Connected to backend" : "⚠️ Backend not available",
+                isConnected ? "Connected to backend" : "Backend not available",
                 Toast.LENGTH_SHORT).show());
     }
 

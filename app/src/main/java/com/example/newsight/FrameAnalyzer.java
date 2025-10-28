@@ -29,7 +29,7 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
     public FrameAnalyzer(WebSocketManager manager, FeatureProvider provider) {
         this.wsManager = manager;
-        this.featureProvider = () -> null;
+        this.featureProvider = provider;
     }
 
     @Override
