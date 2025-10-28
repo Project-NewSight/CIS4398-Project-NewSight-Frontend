@@ -40,7 +40,6 @@
         android:textColor="#FFFFFF"
         android:layout_marginBottom="16dp" />
 
-    <!-- Camera button initially hidden -->
     <Button
         android:id="@+id/btnOpenCamera"
         android:layout_width="match_parent"
@@ -48,6 +47,15 @@
         android:text="Open Camera"
         android:backgroundTint="@android:color/holo_green_light"
         android:textColor="#FFFFFF"
+        android:visibility="gone"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Camera container for PreviewView -->
+    <FrameLayout
+        android:id="@+id/cameraContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:visibility="gone" />
 
 </LinearLayout>
