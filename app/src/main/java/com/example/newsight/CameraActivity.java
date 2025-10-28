@@ -60,6 +60,12 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
         } else {
             initCameraAndBackend();
         }
+        // Check if an initial feature was passed
+        String featureFromIntent = getIntent().getStringExtra("feature");
+        if (featureFromIntent != null) {
+            setActiveFeature(featureFromIntent); // starts people detection automatically
+        }
+
     }
 
     private void setActiveFeature(String feature) {

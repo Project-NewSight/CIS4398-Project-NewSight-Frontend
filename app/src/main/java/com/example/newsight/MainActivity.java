@@ -1,6 +1,7 @@
 package com.example.newsight;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -9,6 +10,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
@@ -18,6 +20,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -25,76 +30,36 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-<<<<<<< HEAD
 public class MainActivity extends AppCompatActivity implements WebSocketManager.WsListener {
-=======
-public class MainActivity extends AppCompatActivity {
-    EditText etEmail, etPassword;
-    Button btnLogin;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_main);
-
-        // Debug log to confirm activity loaded
-        Toast.makeText(this, "MainActivity started", Toast.LENGTH_SHORT).show();
-
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
-        etEmail = findViewById(R.id.etEmail);
-        etPassword = findViewById(R.id.etPassword);
-        btnLogin = findViewById(R.id.btnLogin);
-
-        btnLogin.setOnClickListener(v -> {
-            String email = etEmail.getText().toString().trim();
-            String password = etPassword.getText().toString().trim();
-
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(MainActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(MainActivity.this, "Welcome " + email, Toast.LENGTH_SHORT).show();
-
-                // ✅ Go straight to the Home screen
-                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                startActivity(intent);
-                finish(); // close login so user can't go "back" to it
-            }
-        });
-    }
-}
-
->>>>>>> 62f7a9af77f6d25e1afecb90bb893859c319f272
-
     private static final int REQUEST_CAMERA_PERMISSION = 1001;
     private static final String TAG = "MainActivity";
-
-    private PreviewView previewView;
-    private ExecutorService cameraExecutor;
-    private WebSocketManager wsManager;
-
-/*
-    EditText etEmail, etPassword;
-    Button btnLogin, btnOpenCamera;
-
 
     private EditText etEmail, etPassword;
     private Button btnLogin, btnOpenCamera;
     private FrameLayout cameraContainer;
+    private PreviewView previewView;
+    private ExecutorService cameraExecutor;
+    private WebSocketManager wsManager;
 
     private boolean isLoggedIn = false;
     private String currentFeature = "navigation"; // default
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Toast.makeText(this, "MainActivity started", Toast.LENGTH_SHORT).show();
         super.onCreate(savedInstanceState);
+
+        // Edge to edge support
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+
+        Toast.makeText(this, "MainActivity started", Toast.LENGTH_SHORT).show();
+
+        // Insets padding
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
 
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
@@ -107,37 +72,30 @@ public class MainActivity extends AppCompatActivity {
 
         cameraExecutor = Executors.newSingleThreadExecutor();
 
-
         btnLogin.setOnClickListener(v -> handleLogin());
-<<<<<<< HEAD
-=======
-
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(MainActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
-            } else {
-                isLoggedIn = true;
-                Toast.makeText(MainActivity.this, "Logged in as " + email, Toast.LENGTH_SHORT).show();
-
-                // Show camera button on successful login
-                btnLogin.setVisibility(View.GONE);
-                etEmail.setVisibility(View.GONE);
-                etPassword.setVisibility(View.GONE);
-                btnOpenCamera.setVisibility(View.VISIBLE);
-
-                // Optional: disable login to prevent multiple clicks
-                btnLogin.setEnabled(false);
-                etEmail.setEnabled(false);
-                etPassword.setEnabled(false);
-
-                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
-
-
->>>>>>> 62f7a9af77f6d25e1afecb90bb893859c319f272
         btnOpenCamera.setOnClickListener(v -> checkCameraPermission());
+        if (getIntent().getBooleanExtra("open_camera", false)) {
+            // Assume user was already logged in if launched from Emergency
+            isLoggedIn = true;
+            etEmail.setVisibility(android.view.View.GONE);
+            etPassword.setVisibility(android.view.View.GONE);
+            btnLogin.setVisibility(android.view.View.GONE);
+            btnOpenCamera.setVisibility(android.view.View.VISIBLE);
+
+            checkCameraPermission();
+        }
+
+        if (getIntent().getBooleanExtra("detect_people", false)) {
+            // Assume user was already logged in if launched from detect people
+            isLoggedIn = true;
+            etEmail.setVisibility(android.view.View.GONE);
+            etPassword.setVisibility(android.view.View.GONE);
+            btnLogin.setVisibility(android.view.View.GONE);
+            btnOpenCamera.setVisibility(android.view.View.VISIBLE);
+
+            checkCameraPermission();
+        }
+
     }
 
     private void handleLogin() {
@@ -145,24 +103,27 @@ public class MainActivity extends AppCompatActivity {
         String password = etPassword.getText().toString().trim();
 
         if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Simulated login success
         isLoggedIn = true;
-        Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
-
-        // 🔌 Initialize WebSocketManager
-        String wsUrl = "wss://your-backend-url/ws"; // TODO: replace with your backend URL
-        wsManager = new WebSocketManager(wsUrl, this);
-        wsManager.connect();
+        Toast.makeText(this, "Logged in as " + email, Toast.LENGTH_SHORT).show();
 
         // Hide login UI
         etEmail.setVisibility(android.view.View.GONE);
         etPassword.setVisibility(android.view.View.GONE);
         btnLogin.setVisibility(android.view.View.GONE);
         btnOpenCamera.setVisibility(android.view.View.VISIBLE);
+
+        // Start HomeActivity immediately
+        Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+        startActivity(intent);
+
+        // Initialize WebSocket
+        String wsUrl = "wss://your-backend-url/ws"; // TODO: replace with actual URL
+        wsManager = new WebSocketManager(wsUrl, this);
+        wsManager.connect();
     }
 
     private void checkCameraPermission() {
@@ -212,8 +173,6 @@ public class MainActivity extends AppCompatActivity {
                         .build();
 
                 FrameAnalyzer.FeatureProvider provider = () -> currentFeature;
-
-                // ✅ Pass active WebSocketManager
                 imageAnalysis.setAnalyzer(cameraExecutor, new FrameAnalyzer(wsManager, provider));
 
                 cameraProvider.unbindAll();
@@ -246,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
         if (wsManager != null) wsManager.disconnect();
     }
 
-    // 🔹 WebSocketManager.WsListener implementation
+    // WebSocket callbacks
     @Override
     public void onResultsReceived(String results) {
         runOnUiThread(() -> {
@@ -264,4 +223,3 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 }
-*/

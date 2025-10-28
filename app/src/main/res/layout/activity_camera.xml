@@ -2,11 +2,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".CameraActivity">
+    android:layout_height="match_parent">
 
+    <!-- Camera preview -->
     <androidx.camera.view.PreviewView
         android:id="@+id/previewView"
         android:layout_width="0dp"
@@ -16,6 +15,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- AI connection status -->
     <TextView
         android:id="@+id/tv_ai_status"
         android:layout_width="wrap_content"
@@ -28,4 +28,43 @@
         app:layout_constraintStart_toStartOf="parent"
         android:layout_margin="16dp" />
 
+    <!-- Buttons for features -->
+    <LinearLayout
+        android:id="@+id/buttonContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="#80000000"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp">
+
+        <Button
+            android:id="@+id/btnNavigation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Navigation" />
+
+        <Button
+            android:id="@+id/btnASL"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ASL" />
+
+        <Button
+            android:id="@+id/btnObjectDetection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Object Detection" />
+
+        <Button
+            android:id="@+id/btnStopFeature"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Stop" />
+
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

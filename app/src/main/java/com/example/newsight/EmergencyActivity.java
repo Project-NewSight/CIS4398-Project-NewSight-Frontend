@@ -11,7 +11,7 @@ public class EmergencyActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emergency);
 
-        //  Home
+        //Home
         FrameLayout btnHome = findViewById(R.id.btnHome);
         btnHome.setOnClickListener(v -> {
             Intent intent = new Intent(this, HomeActivity.class);
@@ -36,6 +36,15 @@ public class EmergencyActivity extends AppCompatActivity {
         FrameLayout btnSendAlert = findViewById(R.id.btnSendAlert);
         btnSendAlert.setOnClickListener(v -> {
             Intent intent = new Intent(this, SendTextAlertActivity.class);
+            startActivity(intent);
+        });
+
+        // Open Camera (new)
+        FrameLayout btnOpenCamera = findViewById(R.id.btnOpenCamera);
+        btnOpenCamera.setOnClickListener(v -> {
+            // Launch MainActivity and open camera directly
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra("open_camera", true); // signal MainActivity to open camera immediately
             startActivity(intent);
         });
     }
