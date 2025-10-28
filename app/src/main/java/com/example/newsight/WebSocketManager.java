@@ -13,6 +13,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
+import okio.ByteString;
 
 public class WebSocketManager {
 
@@ -25,7 +26,7 @@ public class WebSocketManager {
     private final WsListener listener;
 
     private WebSocket webSocket;
-    private boolean connected = false;
+    private volatile boolean connected = false;
     private boolean tryingToReconnect = false;
 
     public interface WsListener {
@@ -38,6 +39,7 @@ public class WebSocketManager {
         this.listener = listener;
 
         this.client = new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
                 .readTimeout(0, TimeUnit.MILLISECONDS)
                 .retryOnConnectionFailure(true)
                 .build();
@@ -60,10 +62,13 @@ public class WebSocketManager {
 
     public void sendFrame(byte[] frameBytes, @NonNull String feature) {
         if (connected && webSocket != null) {
-            String message = "{\"feature\":\"" + feature + "\",\"frame\":\"" +
-                    android.util.Base64.encodeToString(frameBytes, android.util.Base64.NO_WRAP) + "\"}";
-            boolean sent = webSocket.send(message);
-            if (!sent) Log.w(TAG, "Failed to send frame.");
+            try {
+                boolean sent = webSocket.send(okio.ByteString.of(frameBytes));
+                if (!sent) Log.w(TAG, "Failed to send frame.");
+                else Log.d(TAG, "Sent binary frame (" + frameBytes.length + " bytes)");
+            } catch (Exception e) {
+                Log.e(TAG, "Error sending binary frame: " + e.getMessage(), e);
+            }
         } else {
             Log.d(TAG, "Skipping frame — not connected.");
         }
@@ -87,7 +92,7 @@ public class WebSocketManager {
         public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, Response response) {
             connected = false;
             if (listener != null) listener.onConnectionStatus(false);
-            Log.e(TAG, "WebSocket failed: " + t.getMessage());
+            Log.e(TAG, "WebSocket failed", t);
 
             if (ENABLE_RECONNECT && !tryingToReconnect) {
                 tryingToReconnect = true;

@@ -34,7 +34,7 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     private boolean backendEnabled = true;
     private String activeFeature = null;
 
-    private final String SERVER_WS_URL = "wss://your-backend-url";
+    private final String SERVER_WS_URL = "ws://10.0.2.2:8000/ws";
 
     private Button btnNavigation, btnASL, btnObjectDetection, btnStopFeature;
 
@@ -43,14 +43,14 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
+
+
         previewView = findViewById(R.id.previewView);
         cameraExecutor = Executors.newSingleThreadExecutor();
 
 
-        btnNavigation.setOnClickListener(v -> setActiveFeature("navigation"));
-        btnASL.setOnClickListener(v -> setActiveFeature("asl_detection"));
-        btnObjectDetection.setOnClickListener(v -> setActiveFeature("object_detection"));
-        btnStopFeature.setOnClickListener(v -> setActiveFeature(null));
+
+        setActiveFeature("familiar_face");
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -66,6 +66,7 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
         activeFeature = feature;
         String message = (feature != null) ? feature + " feature active" : "Feature streaming stopped";
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Active feature set to: " + activeFeature);
     }
 
     private void initCameraAndBackend() {
@@ -121,6 +122,7 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
         runOnUiThread(() -> Toast.makeText(this,
                 isConnected ? "✅ Connected to backend" : "⚠️ Backend not available",
                 Toast.LENGTH_SHORT).show());
+        Log.d(TAG, "WebSocket connected=" + isConnected);
     }
 
     @Override

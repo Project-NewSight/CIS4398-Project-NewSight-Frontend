@@ -23,13 +23,15 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
     private byte[] nv21Buffer = null; // reuse buffer
     private long lastLogTime = 0;
 
+
     public interface FeatureProvider {
         String getActiveFeature();
     }
 
     public FrameAnalyzer(WebSocketManager manager, FeatureProvider provider) {
         this.wsManager = manager;
-        this.featureProvider = () -> null;
+        this.featureProvider = provider;
+
     }
 
     @Override
@@ -55,11 +57,14 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
             jpegStream.reset(); // reuse ByteArrayOutputStream
             YuvImage yuvImage = new YuvImage(nv21Buffer, ImageFormat.NV21, width, height, null);
-            yuvImage.compressToJpeg(new Rect(0, 0, width, height), 40, jpegStream);
+            yuvImage.compressToJpeg(new Rect(0, 0, width, height), 80, jpegStream);
 
             byte[] jpegBytes = jpegStream.toByteArray();
 
-            String activeFeature = featureProvider.getActiveFeature();
+            //String activeFeature = featureProvider.getActiveFeature();
+            String activeFeature = "familiar_face";
+
+            Log.d(TAG, "Sending frame, bytes=" + jpegBytes.length + ", feature=" + activeFeature);
 
             if (wsManager != null && wsManager.isConnected() && activeFeature != null) {
                 wsManager.sendFrame(jpegBytes, activeFeature);
