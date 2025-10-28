@@ -112,10 +112,34 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
 
     @Override
     public void onResultsReceived(String results) {
-        runOnUiThread(() -> Toast.makeText(this,
-                "AI result: " + results.substring(0, Math.min(results.length(), 20)) + "...",
-                Toast.LENGTH_SHORT).show());
+        Log.d("CameraActivity", "WS msg: " + results);
+        try {
+            org.json.JSONObject obj = new org.json.JSONObject(results);
+            boolean ok = obj.optBoolean("ok", false);
+            if (!ok) {
+                runOnUiThread(() ->
+                        Toast.makeText(this, "Backend error: " + obj.optString("error"), Toast.LENGTH_SHORT).show());
+                return;
+            }
+            boolean match = obj.optBoolean("match", false);
+            if (match) {
+                String name = obj.optString("contactName", "Unknown");
+                double conf = obj.optDouble("confidence", 0.0);
+                String pct = String.format("%.1f%%", conf * 100.0);
+                runOnUiThread(() ->
+                        Toast.makeText(this, "Match: " + name + " (" + pct + ")", Toast.LENGTH_SHORT).show());
+            } else {
+                // show the ack for now so you can SEE replies
+                String note = obj.optString("note", "no_match");
+                int len = obj.optInt("len", 0);
+                runOnUiThread(() ->
+                        Toast.makeText(this, "Ack: " + note + " (" + len + " bytes)", Toast.LENGTH_SHORT).show());
+            }
+        } catch (Exception e) {
+            Log.e("CameraActivity", "Bad JSON", e);
+        }
     }
+
 
     @Override
     public void onConnectionStatus(boolean isConnected) {

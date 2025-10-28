@@ -75,12 +75,10 @@ public class WebSocketManager {
     }
 
     private class SocketListener extends WebSocketListener {
-        @Override
-        public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
+        @Override public void onOpen(@NonNull WebSocket ws, @NonNull Response r) {
             connected = true;
-            tryingToReconnect = false;
-            if (listener != null) listener.onConnectionStatus(true);
             Log.i(TAG, "WebSocket connected");
+            if (listener != null) listener.onConnectionStatus(true);
         }
 
         @Override
@@ -88,19 +86,10 @@ public class WebSocketManager {
             if (listener != null) listener.onResultsReceived(text);
         }
 
-        @Override
-        public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, Response response) {
+        @Override public void onFailure(@NonNull WebSocket ws, @NonNull Throwable t, Response r) {
             connected = false;
-            if (listener != null) listener.onConnectionStatus(false);
             Log.e(TAG, "WebSocket failed", t);
-
-            if (ENABLE_RECONNECT && !tryingToReconnect) {
-                tryingToReconnect = true;
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    Log.i(TAG, "Reconnecting WebSocket...");
-                    connect();
-                }, RECONNECT_DELAY_MS);
-            }
+            if (listener != null) listener.onConnectionStatus(false);
         }
 
         @Override
