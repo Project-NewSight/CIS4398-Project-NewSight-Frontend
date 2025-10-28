@@ -27,6 +27,46 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
+    EditText etEmail, etPassword;
+    Button btnLogin;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+
+        // Debug log to confirm activity loaded
+        Toast.makeText(this, "MainActivity started", Toast.LENGTH_SHORT).show();
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        etEmail = findViewById(R.id.etEmail);
+        etPassword = findViewById(R.id.etPassword);
+        btnLogin = findViewById(R.id.btnLogin);
+
+        btnLogin.setOnClickListener(v -> {
+            String email = etEmail.getText().toString().trim();
+            String password = etPassword.getText().toString().trim();
+
+            if (email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(MainActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(MainActivity.this, "Welcome " + email, Toast.LENGTH_SHORT).show();
+
+                // ✅ Go straight to the Home screen
+                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                startActivity(intent);
+                finish(); // close login so user can't go "back" to it
+            }
+        });
+    }
+}
+
 
     private static final int REQUEST_CAMERA_PERMISSION = 1001;
     private static final String TAG = "MainActivity";
@@ -34,6 +74,11 @@ public class MainActivity extends AppCompatActivity {
     private PreviewView previewView;
     private ExecutorService cameraExecutor;
     private WebSocketManager wsManager;
+
+/*
+    EditText etEmail, etPassword;
+    Button btnLogin, btnOpenCamera;
+
 
     private EditText etEmail, etPassword;
     private Button btnLogin, btnOpenCamera;
@@ -45,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Toast.makeText(this, "MainActivity started", Toast.LENGTH_SHORT).show();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main); // login layout
 
@@ -60,7 +106,32 @@ public class MainActivity extends AppCompatActivity {
         wsManager = null; // placeholder for WebSocketManager
         cameraExecutor = Executors.newSingleThreadExecutor();
 
+
         btnLogin.setOnClickListener(v -> handleLogin());
+
+            if (email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(MainActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+            } else {
+                isLoggedIn = true;
+                Toast.makeText(MainActivity.this, "Logged in as " + email, Toast.LENGTH_SHORT).show();
+
+                // Show camera button on successful login
+                btnLogin.setVisibility(View.GONE);
+                etEmail.setVisibility(View.GONE);
+                etPassword.setVisibility(View.GONE);
+                btnOpenCamera.setVisibility(View.VISIBLE);
+
+                // Optional: disable login to prevent multiple clicks
+                btnLogin.setEnabled(false);
+                etEmail.setEnabled(false);
+                etPassword.setEnabled(false);
+
+                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+
 
         btnOpenCamera.setOnClickListener(v -> checkCameraPermission());
     }
@@ -166,3 +237,4 @@ public class MainActivity extends AppCompatActivity {
         if (wsManager != null) wsManager.disconnect();
     }
 }
+*/

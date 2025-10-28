@@ -1,0 +1,882 @@
+.
+├── README.md
+├── app
+│   ├── build
+│   │   ├── generated
+│   │   │   ├── ap_generated_sources
+│   │   │   │   └── debug
+│   │   │   │       └── out
+│   │   │   ├── res
+│   │   │   │   ├── pngs
+│   │   │   │   │   └── debug
+│   │   │   │   └── resValues
+│   │   │   │       └── debug
+│   │   │   └── updated_navigation_xml
+│   │   │       └── debug
+│   │   ├── intermediates
+│   │   │   ├── aar_metadata_check
+│   │   │   │   └── debug
+│   │   │   │       └── checkDebugAarMetadata
+│   │   │   ├── annotation_processor_list
+│   │   │   │   └── debug
+│   │   │   │       └── javaPreCompileDebug
+│   │   │   │           └── annotationProcessors.json
+│   │   │   ├── apk
+│   │   │   │   └── debug
+│   │   │   │       ├── app-debug.apk
+│   │   │   │       └── output-metadata.json
+│   │   │   ├── apk_ide_redirect_file
+│   │   │   │   └── debug
+│   │   │   │       └── createDebugApkListingFileRedirect
+│   │   │   │           └── redirect.txt
+│   │   │   ├── app_metadata
+│   │   │   │   └── debug
+│   │   │   │       └── writeDebugAppMetadata
+│   │   │   │           └── app-metadata.properties
+│   │   │   ├── assets
+│   │   │   │   └── debug
+│   │   │   │       └── mergeDebugAssets
+│   │   │   ├── compatible_screen_manifest
+│   │   │   │   └── debug
+│   │   │   │       └── createDebugCompatibleScreenManifests
+│   │   │   │           └── output-metadata.json
+│   │   │   ├── compile_and_runtime_not_namespaced_r_class_jar
+│   │   │   │   └── debug
+│   │   │   │       └── processDebugResources
+│   │   │   │           └── R.jar
+│   │   │   ├── compiled_navigation_res
+│   │   │   │   └── debug
+│   │   │   │       └── compileDebugNavigationResources
+│   │   │   ├── compressed_assets
+│   │   │   │   └── debug
+│   │   │   │       └── compressDebugAssets
+│   │   │   │           └── out
+│   │   │   ├── data_binding_layout_info_type_merge
+│   │   │   │   └── debug
+│   │   │   │       └── mergeDebugResources
+│   │   │   │           └── out
+│   │   │   ├── data_binding_layout_info_type_package
+│   │   │   │   └── debug
+│   │   │   │       └── packageDebugResources
+│   │   │   │           └── out
+│   │   │   ├── desugar_graph
+│   │   │   │   └── debug
+│   │   │   │       └── dexBuilderDebug
+│   │   │   │           └── out
+│   │   │   │               ├── currentProject
+│   │   │   │               │   ├── dirs_bucket_0
+│   │   │   │               │   │   └── graph.bin
+│   │   │   │               │   ├── dirs_bucket_1
+│   │   │   │               │   │   └── graph.bin
+│   │   │   │               │   ├── dirs_bucket_2
+│   │   │   │               │   │   └── graph.bin
+│   │   │   │               │   ├── dirs_bucket_3
+│   │   │   │               │   │   └── graph.bin
+│   │   │   │               │   ├── jar_e1601fa158fdc11e56b66c3260e598571f03b311fd3ee3d46481aba38e84c8dc_bucket_0
+│   │   │   │               │   │   └── graph.bin
+│   │   │   │               │   ├── jar_e1601fa158fdc11e56b66c3260e598571f03b311fd3ee3d46481aba38e84c8dc_bucket_1
+│   │   │   │               │   │   └── graph.bin
+│   │   │   │               │   ├── jar_e1601fa158fdc11e56b66c3260e598571f03b311fd3ee3d46481aba38e84c8dc_bucket_2
+│   │   │   │               │   │   └── graph.bin
+│   │   │   │               │   └── jar_e1601fa158fdc11e56b66c3260e598571f03b311fd3ee3d46481aba38e84c8dc_bucket_3
+│   │   │   │               │       └── graph.bin
+│   │   │   │               ├── externalLibs
+│   │   │   │               ├── mixedScopes
+│   │   │   │               └── otherProjects
+│   │   │   ├── dex
+│   │   │   │   └── debug
+│   │   │   │       ├── mergeExtDexDebug
+│   │   │   │       │   └── classes.dex
+│   │   │   │       ├── mergeLibDexDebug
+│   │   │   │       │   ├── 0
+│   │   │   │       │   ├── 1
+│   │   │   │       │   ├── 10
+│   │   │   │       │   ├── 11
+│   │   │   │       │   ├── 12
+│   │   │   │       │   ├── 13
+│   │   │   │       │   ├── 14
+│   │   │   │       │   ├── 15
+│   │   │   │       │   ├── 2
+│   │   │   │       │   ├── 3
+│   │   │   │       │   ├── 4
+│   │   │   │       │   ├── 5
+│   │   │   │       │   ├── 6
+│   │   │   │       │   ├── 7
+│   │   │   │       │   ├── 8
+│   │   │   │       │   └── 9
+│   │   │   │       └── mergeProjectDexDebug
+│   │   │   │           ├── 0
+│   │   │   │           │   └── classes.dex
+│   │   │   │           ├── 1
+│   │   │   │           ├── 10
+│   │   │   │           ├── 11
+│   │   │   │           ├── 12
+│   │   │   │           │   └── classes.dex
+│   │   │   │           ├── 13
+│   │   │   │           ├── 14
+│   │   │   │           ├── 15
+│   │   │   │           ├── 2
+│   │   │   │           ├── 3
+│   │   │   │           ├── 4
+│   │   │   │           ├── 5
+│   │   │   │           ├── 6
+│   │   │   │           ├── 7
+│   │   │   │           ├── 8
+│   │   │   │           └── 9
+│   │   │   ├── dex_archive_input_jar_hashes
+│   │   │   │   └── debug
+│   │   │   │       └── dexBuilderDebug
+│   │   │   │           └── out
+│   │   │   ├── dex_number_of_buckets_file
+│   │   │   │   └── debug
+│   │   │   │       └── dexBuilderDebug
+│   │   │   │           └── out
+│   │   │   ├── duplicate_classes_check
+│   │   │   │   └── debug
+│   │   │   │       └── checkDebugDuplicateClasses
+│   │   │   ├── external_file_lib_dex_archives
+│   │   │   │   └── debug
+│   │   │   │       └── desugarDebugFileDependencies
+│   │   │   ├── external_libs_dex_archive
+│   │   │   │   └── debug
+│   │   │   │       └── dexBuilderDebug
+│   │   │   │           └── out
+│   │   │   ├── external_libs_dex_archive_with_artifact_transforms
+│   │   │   │   └── debug
+│   │   │   │       └── dexBuilderDebug
+│   │   │   │           └── out
+│   │   │   ├── incremental
+│   │   │   │   ├── debug
+│   │   │   │   │   ├── mergeDebugResources
+│   │   │   │   │   │   ├── compile-file-map.properties
+│   │   │   │   │   │   ├── merged.dir
+│   │   │   │   │   │   ├── merger.xml
+│   │   │   │   │   │   └── stripped.dir
+│   │   │   │   │   └── packageDebugResources
+│   │   │   │   │       ├── compile-file-map.properties
+│   │   │   │   │       ├── merged.dir
+│   │   │   │   │       ├── merger.xml
+│   │   │   │   │       └── stripped.dir
+│   │   │   │   ├── debug-mergeJavaRes
+│   │   │   │   │   ├── merge-state
+│   │   │   │   │   └── zip-cache
+│   │   │   │   │       ├── +S1e1v5kr9xCNCNzykT1rA==
+│   │   │   │   │       ├── +jirIZRSaTGWS0clcoSNCg==
+│   │   │   │   │       ├── 15H4ldOBVxjn22yD3lvaBg==
+│   │   │   │   │       ├── 1PZZN957mIEAOPVlrh0dhw==
+│   │   │   │   │       ├── 1lJ0Pl7Gxw06ff+yWpxGlg==
+│   │   │   │   │       ├── 1m8tLtHbwObi6GvzZHeYVw==
+│   │   │   │   │       ├── 2hRHdNExcEQR37Ih_aROtg==
+│   │   │   │   │       ├── 4fs19+NgNkdbOGayjVwfUw==
+│   │   │   │   │       ├── 4kX9hAg_oH7M4AxjuqiYfA==
+│   │   │   │   │       ├── 6tvoRBsyUa6eztwga6G9Ig==
+│   │   │   │   │       ├── 6u0JuuR5_5UqZSY0zWKLWg==
+│   │   │   │   │       ├── 7zCRlnHN4PpCXSGwx97V4Q==
+│   │   │   │   │       ├── 9jZHsxNb37R2OkPRkOBylA==
+│   │   │   │   │       ├── Bh3TAx19kBuM2MPN04iaaw==
+│   │   │   │   │       ├── BqFrTvgWK7RQlWFicsArEA==
+│   │   │   │   │       ├── BvsJ5nVFJGqRFcTHSooNVw==
+│   │   │   │   │       ├── DMqW5p5xIjYHKo_FasJ6vg==
+│   │   │   │   │       ├── HaiAiQ6Q3L0hf2Dq49uwww==
+│   │   │   │   │       ├── HvR4kylSHb0oqg_op7xK8A==
+│   │   │   │   │       ├── JJVhOMIxJo8oUzbII+tQtg==
+│   │   │   │   │       ├── L3SHRn0+r8wSuCS7rmk6oA==
+│   │   │   │   │       ├── LL0sqW1zyGwQLdp2pI9qog==
+│   │   │   │   │       ├── MOcr324yExlDB4wSneT07A==
+│   │   │   │   │       ├── MUzYFNV+Yfc_ZxH6Rpsw+Q==
+│   │   │   │   │       ├── NU8SnDUoRTkLzwcKR_yi6A==
+│   │   │   │   │       ├── NwIhYpkaXj74y6X46tQLnw==
+│   │   │   │   │       ├── O7L9JLA5U_L3S1coc106EA==
+│   │   │   │   │       ├── PvR4JTR3_cyNxzfeL5a5dg==
+│   │   │   │   │       ├── QQs2CDDGQWKuyxyQiIFnXw==
+│   │   │   │   │       ├── SbYhH8svrcGN+deiuGW5qA==
+│   │   │   │   │       ├── Sl_DHTWSGXzoqBGkLrZeCw==
+│   │   │   │   │       ├── TP1agJ1u_XN40b6eEcIfsQ==
+│   │   │   │   │       ├── X2tM0XcFVWekJJ7or3pyzQ==
+│   │   │   │   │       ├── Xi0Ps+3bVkJuKQJwdIkJxw==
+│   │   │   │   │       ├── _pKQ+gvOZ2EFMST9jQaSRQ==
+│   │   │   │   │       ├── aAAKe0_6acVgswgeZUF+wA==
+│   │   │   │   │       ├── aY5QT2a59FJkHwcN1Lib4A==
+│   │   │   │   │       ├── eO3NI_Hh7wYf2lpsNan7jA==
+│   │   │   │   │       ├── emYn0gpm_sm1_3zxwgauTA==
+│   │   │   │   │       ├── eqAUcNzNA_wKSQzSdEwt9A==
+│   │   │   │   │       ├── ffFwTm2eMjGIR9ODchfCBA==
+│   │   │   │   │       ├── grlKIHTnn2Yd4XJKtZZlrQ==
+│   │   │   │   │       ├── hXaRexi8o4incVD11cpHEA==
+│   │   │   │   │       ├── it36JfZYqp5tU_uz0W_oSQ==
+│   │   │   │   │       ├── je856TStfP_fepANBX9leQ==
+│   │   │   │   │       ├── jofNdxvHgfJznjz6TP_CaA==
+│   │   │   │   │       ├── keHpEeIJyonbjUD0TJj98A==
+│   │   │   │   │       ├── kjhZWwMbpJ4ys368zyIHdg==
+│   │   │   │   │       ├── lTK3hLZe4xkWm4qPy2aytQ==
+│   │   │   │   │       ├── lhQfK6XyCwGj9yxEVNec3g==
+│   │   │   │   │       ├── lwrGSwJagNFVSOXvSeFf8Q==
+│   │   │   │   │       ├── mbjRA7Bb1UJMWOWeIIXDwg==
+│   │   │   │   │       ├── trQFvl4bF16fePCm_ychGw==
+│   │   │   │   │       ├── vEMappiv2TY4daj8NrK4RQ==
+│   │   │   │   │       ├── xJ8hk_ife9neigrQNUKnnQ==
+│   │   │   │   │       └── zUFSKQFAlmiWXMWysgqoFg==
+│   │   │   │   ├── mergeDebugAssets
+│   │   │   │   │   └── merger.xml
+│   │   │   │   ├── mergeDebugJniLibFolders
+│   │   │   │   │   └── merger.xml
+│   │   │   │   ├── mergeDebugShaders
+│   │   │   │   │   └── merger.xml
+│   │   │   │   ├── packageDebug
+│   │   │   │   │   └── tmp
+│   │   │   │   │       └── debug
+│   │   │   │   │           ├── dex-renamer-state.txt
+│   │   │   │   │           └── zip-cache
+│   │   │   │   │               ├── androidResources
+│   │   │   │   │               └── javaResources0
+│   │   │   │   └── processDebugResources
+│   │   │   │       └── resources-list-for-linked-resources-binary-format-debug.ap_.txt
+│   │   │   ├── javac
+│   │   │   │   └── debug
+│   │   │   │       └── compileDebugJavaWithJavac
+│   │   │   │           └── classes
+│   │   │   │               └── com
+│   │   │   │                   └── example
+│   │   │   │                       └── newsight
+│   │   │   │                           ├── CatalogItemActivity.class
+│   │   │   │                           ├── ColorCueActivity.class
+│   │   │   │                           ├── CommToggleActivity.class
+│   │   │   │                           ├── CommunicateActivity.class
+│   │   │   │                           ├── DetectPeopleActivity.class
+│   │   │   │                           ├── EmergencyActivity.class
+│   │   │   │                           ├── EmergencySetupActivity.class
+│   │   │   │                           ├── HelpAndSupportActivity.class
+│   │   │   │                           ├── HomeActivity.class
+│   │   │   │                           ├── IdentifyClothesActivity.class
+│   │   │   │                           ├── IdentifyObjectActivity.class
+│   │   │   │                           ├── LogoutActivity.class
+│   │   │   │                           ├── MainActivity.class
+│   │   │   │                           ├── MatchOutfitActivity.class
+│   │   │   │                           ├── NavigateActivity.class
+│   │   │   │                           ├── ObserveActivity.class
+│   │   │   │                           ├── ObstacleScanActivity.class
+│   │   │   │                           ├── PingLocationActivity.class
+│   │   │   │                           ├── PrivacyAndDataActivity.class
+│   │   │   │                           ├── ReadAskActivity.class
+│   │   │   │                           ├── ReadTextActivity.class
+│   │   │   │                           ├── SelectDestinationActivity.class
+│   │   │   │                           ├── SendTextAlertActivity.class
+│   │   │   │                           ├── SettingsActivity.class
+│   │   │   │                           ├── SignTranslationActivity.class
+│   │   │   │                           ├── SpeakToTextActivity.class
+│   │   │   │                           ├── StartNavigationActivity.class
+│   │   │   │                           ├── StartStopObservingActivity.class
+│   │   │   │                           ├── StopNavigationActivity.class
+│   │   │   │                           ├── TrustedContactsActivity.class
+│   │   │   │                           ├── UserProfileActivity.class
+│   │   │   │                           ├── VoiceAndHapticsActivity.class
+│   │   │   │                           ├── VoiceCommandActivity.class
+│   │   │   │                           ├── WhereAmIActivity.class
+│   │   │   │                           ├── splash$1.class
+│   │   │   │                           └── splash.class
+│   │   │   ├── linked_resources_binary_format
+│   │   │   │   └── debug
+│   │   │   │       └── processDebugResources
+│   │   │   │           ├── linked-resources-binary-format-debug.ap_
+│   │   │   │           └── output-metadata.json
+│   │   │   ├── local_only_symbol_list
+│   │   │   │   └── debug
+│   │   │   │       └── parseDebugLocalResources
+│   │   │   │           └── R-def.txt
+│   │   │   ├── manifest_merge_blame_file
+│   │   │   │   └── debug
+│   │   │   │       └── processDebugMainManifest
+│   │   │   │           └── manifest-merger-blame-debug-report.txt
+│   │   │   ├── merged_java_res
+│   │   │   │   └── debug
+│   │   │   │       └── mergeDebugJavaResource
+│   │   │   │           └── base.jar
+│   │   │   ├── merged_jni_libs
+│   │   │   │   └── debug
+│   │   │   │       └── mergeDebugJniLibFolders
+│   │   │   │           └── out
+│   │   │   ├── merged_manifest
+│   │   │   │   └── debug
+│   │   │   │       └── processDebugMainManifest
+│   │   │   │           └── AndroidManifest.xml
+│   │   │   ├── merged_manifests
+│   │   │   │   └── debug
+│   │   │   │       └── processDebugManifest
+│   │   │   │           ├── AndroidManifest.xml
+│   │   │   │           └── output-metadata.json
+│   │   │   ├── merged_res
+│   │   │   │   └── debug
+│   │   │   │       └── mergeDebugResources
+│   │   │   │           ├── drawable_ic_launcher_background.xml.flat
+│   │   │   │           ├── drawable_ic_launcher_foreground.xml.flat
+│   │   │   │           ├── drawable_ic_mic.xml.flat
+│   │   │   │           ├── drawable_rectangle_blue.xml.flat
+│   │   │   │           ├── drawable_rectangle_cyan.xml.flat
+│   │   │   │           ├── drawable_rectangle_grey.xml.flat
+│   │   │   │           ├── drawable_rectangle_purple.xml.flat
+│   │   │   │           ├── drawable_rectangle_red.xml.flat
+│   │   │   │           ├── drawable_rectangle_teal.xml.flat
+│   │   │   │           ├── drawable_rectangle_yellow.xml.flat
+│   │   │   │           ├── drawable_splash.png.flat
+│   │   │   │           ├── layout_activity_colorcue.xml.flat
+│   │   │   │           ├── layout_activity_communicate.xml.flat
+│   │   │   │           ├── layout_activity_emergency.xml.flat
+│   │   │   │           ├── layout_activity_home.xml.flat
+│   │   │   │           ├── layout_activity_main.xml.flat
+│   │   │   │           ├── layout_activity_navigate.xml.flat
+│   │   │   │           ├── layout_activity_observe.xml.flat
+│   │   │   │           ├── layout_activity_read_ask.xml.flat
+│   │   │   │           ├── layout_activity_settings.xml.flat
+│   │   │   │           ├── layout_activity_splash.xml.flat
+│   │   │   │           ├── mipmap-anydpi-v26_ic_launcher.xml.flat
+│   │   │   │           ├── mipmap-anydpi-v26_ic_launcher_round.xml.flat
+│   │   │   │           ├── mipmap-hdpi_ic_launcher.webp.flat
+│   │   │   │           ├── mipmap-hdpi_ic_launcher_round.webp.flat
+│   │   │   │           ├── mipmap-mdpi_ic_launcher.webp.flat
+│   │   │   │           ├── mipmap-mdpi_ic_launcher_round.webp.flat
+│   │   │   │           ├── mipmap-xhdpi_ic_launcher.webp.flat
+│   │   │   │           ├── mipmap-xhdpi_ic_launcher_round.webp.flat
+│   │   │   │           ├── mipmap-xxhdpi_ic_launcher.webp.flat
+│   │   │   │           ├── mipmap-xxhdpi_ic_launcher_round.webp.flat
+│   │   │   │           ├── mipmap-xxxhdpi_ic_launcher.webp.flat
+│   │   │   │           ├── mipmap-xxxhdpi_ic_launcher_round.webp.flat
+│   │   │   │           ├── values-af_values-af.arsc.flat
+│   │   │   │           ├── values-am_values-am.arsc.flat
+│   │   │   │           ├── values-ar_values-ar.arsc.flat
+│   │   │   │           ├── values-as_values-as.arsc.flat
+│   │   │   │           ├── values-az_values-az.arsc.flat
+│   │   │   │           ├── values-b+es+419_values-b+es+419.arsc.flat
+│   │   │   │           ├── values-b+sr+Latn_values-b+sr+Latn.arsc.flat
+│   │   │   │           ├── values-be_values-be.arsc.flat
+│   │   │   │           ├── values-bg_values-bg.arsc.flat
+│   │   │   │           ├── values-bn_values-bn.arsc.flat
+│   │   │   │           ├── values-bs_values-bs.arsc.flat
+│   │   │   │           ├── values-ca_values-ca.arsc.flat
+│   │   │   │           ├── values-cs_values-cs.arsc.flat
+│   │   │   │           ├── values-da_values-da.arsc.flat
+│   │   │   │           ├── values-de_values-de.arsc.flat
+│   │   │   │           ├── values-el_values-el.arsc.flat
+│   │   │   │           ├── values-en-rAU_values-en-rAU.arsc.flat
+│   │   │   │           ├── values-en-rCA_values-en-rCA.arsc.flat
+│   │   │   │           ├── values-en-rGB_values-en-rGB.arsc.flat
+│   │   │   │           ├── values-en-rIN_values-en-rIN.arsc.flat
+│   │   │   │           ├── values-en-rXC_values-en-rXC.arsc.flat
+│   │   │   │           ├── values-es-rUS_values-es-rUS.arsc.flat
+│   │   │   │           ├── values-es_values-es.arsc.flat
+│   │   │   │           ├── values-et_values-et.arsc.flat
+│   │   │   │           ├── values-eu_values-eu.arsc.flat
+│   │   │   │           ├── values-fa_values-fa.arsc.flat
+│   │   │   │           ├── values-fi_values-fi.arsc.flat
+│   │   │   │           ├── values-fr-rCA_values-fr-rCA.arsc.flat
+│   │   │   │           ├── values-fr_values-fr.arsc.flat
+│   │   │   │           ├── values-gl_values-gl.arsc.flat
+│   │   │   │           ├── values-gu_values-gu.arsc.flat
+│   │   │   │           ├── values-h320dp-port-v13_values-h320dp-port-v13.arsc.flat
+│   │   │   │           ├── values-h360dp-land-v13_values-h360dp-land-v13.arsc.flat
+│   │   │   │           ├── values-h480dp-land-v13_values-h480dp-land-v13.arsc.flat
+│   │   │   │           ├── values-h480dp-v13_values-h480dp-v13.arsc.flat
+│   │   │   │           ├── values-h550dp-port-v13_values-h550dp-port-v13.arsc.flat
+│   │   │   │           ├── values-h720dp-v13_values-h720dp-v13.arsc.flat
+│   │   │   │           ├── values-hdpi-v4_values-hdpi-v4.arsc.flat
+│   │   │   │           ├── values-hi_values-hi.arsc.flat
+│   │   │   │           ├── values-hr_values-hr.arsc.flat
+│   │   │   │           ├── values-hu_values-hu.arsc.flat
+│   │   │   │           ├── values-hy_values-hy.arsc.flat
+│   │   │   │           ├── values-in_values-in.arsc.flat
+│   │   │   │           ├── values-is_values-is.arsc.flat
+│   │   │   │           ├── values-it_values-it.arsc.flat
+│   │   │   │           ├── values-iw_values-iw.arsc.flat
+│   │   │   │           ├── values-ja_values-ja.arsc.flat
+│   │   │   │           ├── values-ka_values-ka.arsc.flat
+│   │   │   │           ├── values-kk_values-kk.arsc.flat
+│   │   │   │           ├── values-km_values-km.arsc.flat
+│   │   │   │           ├── values-kn_values-kn.arsc.flat
+│   │   │   │           ├── values-ko_values-ko.arsc.flat
+│   │   │   │           ├── values-ky_values-ky.arsc.flat
+│   │   │   │           ├── values-land_values-land.arsc.flat
+│   │   │   │           ├── values-large-v4_values-large-v4.arsc.flat
+│   │   │   │           ├── values-ldltr-v21_values-ldltr-v21.arsc.flat
+│   │   │   │           ├── values-ldrtl-v17_values-ldrtl-v17.arsc.flat
+│   │   │   │           ├── values-lo_values-lo.arsc.flat
+│   │   │   │           ├── values-lt_values-lt.arsc.flat
+│   │   │   │           ├── values-lv_values-lv.arsc.flat
+│   │   │   │           ├── values-mk_values-mk.arsc.flat
+│   │   │   │           ├── values-ml_values-ml.arsc.flat
+│   │   │   │           ├── values-mn_values-mn.arsc.flat
+│   │   │   │           ├── values-mr_values-mr.arsc.flat
+│   │   │   │           ├── values-ms_values-ms.arsc.flat
+│   │   │   │           ├── values-my_values-my.arsc.flat
+│   │   │   │           ├── values-nb_values-nb.arsc.flat
+│   │   │   │           ├── values-ne_values-ne.arsc.flat
+│   │   │   │           ├── values-night-v8_values-night-v8.arsc.flat
+│   │   │   │           ├── values-nl_values-nl.arsc.flat
+│   │   │   │           ├── values-or_values-or.arsc.flat
+│   │   │   │           ├── values-pa_values-pa.arsc.flat
+│   │   │   │           ├── values-pl_values-pl.arsc.flat
+│   │   │   │           ├── values-port_values-port.arsc.flat
+│   │   │   │           ├── values-pt-rBR_values-pt-rBR.arsc.flat
+│   │   │   │           ├── values-pt-rPT_values-pt-rPT.arsc.flat
+│   │   │   │           ├── values-pt_values-pt.arsc.flat
+│   │   │   │           ├── values-ro_values-ro.arsc.flat
+│   │   │   │           ├── values-ru_values-ru.arsc.flat
+│   │   │   │           ├── values-si_values-si.arsc.flat
+│   │   │   │           ├── values-sk_values-sk.arsc.flat
+│   │   │   │           ├── values-sl_values-sl.arsc.flat
+│   │   │   │           ├── values-sq_values-sq.arsc.flat
+│   │   │   │           ├── values-sr_values-sr.arsc.flat
+│   │   │   │           ├── values-sv_values-sv.arsc.flat
+│   │   │   │           ├── values-sw600dp-v13_values-sw600dp-v13.arsc.flat
+│   │   │   │           ├── values-sw_values-sw.arsc.flat
+│   │   │   │           ├── values-ta_values-ta.arsc.flat
+│   │   │   │           ├── values-te_values-te.arsc.flat
+│   │   │   │           ├── values-th_values-th.arsc.flat
+│   │   │   │           ├── values-tl_values-tl.arsc.flat
+│   │   │   │           ├── values-tr_values-tr.arsc.flat
+│   │   │   │           ├── values-uk_values-uk.arsc.flat
+│   │   │   │           ├── values-ur_values-ur.arsc.flat
+│   │   │   │           ├── values-uz_values-uz.arsc.flat
+│   │   │   │           ├── values-v16_values-v16.arsc.flat
+│   │   │   │           ├── values-v17_values-v17.arsc.flat
+│   │   │   │           ├── values-v18_values-v18.arsc.flat
+│   │   │   │           ├── values-v21_values-v21.arsc.flat
+│   │   │   │           ├── values-v22_values-v22.arsc.flat
+│   │   │   │           ├── values-v23_values-v23.arsc.flat
+│   │   │   │           ├── values-v24_values-v24.arsc.flat
+│   │   │   │           ├── values-v25_values-v25.arsc.flat
+│   │   │   │           ├── values-v26_values-v26.arsc.flat
+│   │   │   │           ├── values-v28_values-v28.arsc.flat
+│   │   │   │           ├── values-v31_values-v31.arsc.flat
+│   │   │   │           ├── values-v34_values-v34.arsc.flat
+│   │   │   │           ├── values-v35_values-v35.arsc.flat
+│   │   │   │           ├── values-vi_values-vi.arsc.flat
+│   │   │   │           ├── values-w320dp-land-v13_values-w320dp-land-v13.arsc.flat
+│   │   │   │           ├── values-w360dp-port-v13_values-w360dp-port-v13.arsc.flat
+│   │   │   │           ├── values-w400dp-port-v13_values-w400dp-port-v13.arsc.flat
+│   │   │   │           ├── values-w600dp-land-v13_values-w600dp-land-v13.arsc.flat
+│   │   │   │           ├── values-watch-v20_values-watch-v20.arsc.flat
+│   │   │   │           ├── values-watch-v21_values-watch-v21.arsc.flat
+│   │   │   │           ├── values-xlarge-v4_values-xlarge-v4.arsc.flat
+│   │   │   │           ├── values-zh-rCN_values-zh-rCN.arsc.flat
+│   │   │   │           ├── values-zh-rHK_values-zh-rHK.arsc.flat
+│   │   │   │           ├── values-zh-rTW_values-zh-rTW.arsc.flat
+│   │   │   │           ├── values-zu_values-zu.arsc.flat
+│   │   │   │           ├── values_values.arsc.flat
+│   │   │   │           ├── xml_backup_rules.xml.flat
+│   │   │   │           └── xml_data_extraction_rules.xml.flat
+│   │   │   ├── merged_res_blame_folder
+│   │   │   │   └── debug
+│   │   │   │       └── mergeDebugResources
+│   │   │   │           └── out
+│   │   │   │               ├── multi-v2
+│   │   │   │               │   ├── mergeDebugResources.json
+│   │   │   │               │   ├── values-af.json
+│   │   │   │               │   ├── values-am.json
+│   │   │   │               │   ├── values-ar.json
+│   │   │   │               │   ├── values-as.json
+│   │   │   │               │   ├── values-az.json
+│   │   │   │               │   ├── values-b+es+419.json
+│   │   │   │               │   ├── values-b+sr+Latn.json
+│   │   │   │               │   ├── values-be.json
+│   │   │   │               │   ├── values-bg.json
+│   │   │   │               │   ├── values-bn.json
+│   │   │   │               │   ├── values-bs.json
+│   │   │   │               │   ├── values-ca.json
+│   │   │   │               │   ├── values-cs.json
+│   │   │   │               │   ├── values-da.json
+│   │   │   │               │   ├── values-de.json
+│   │   │   │               │   ├── values-el.json
+│   │   │   │               │   ├── values-en-rAU.json
+│   │   │   │               │   ├── values-en-rCA.json
+│   │   │   │               │   ├── values-en-rGB.json
+│   │   │   │               │   ├── values-en-rIN.json
+│   │   │   │               │   ├── values-en-rXC.json
+│   │   │   │               │   ├── values-es-rUS.json
+│   │   │   │               │   ├── values-es.json
+│   │   │   │               │   ├── values-et.json
+│   │   │   │               │   ├── values-eu.json
+│   │   │   │               │   ├── values-fa.json
+│   │   │   │               │   ├── values-fi.json
+│   │   │   │               │   ├── values-fr-rCA.json
+│   │   │   │               │   ├── values-fr.json
+│   │   │   │               │   ├── values-gl.json
+│   │   │   │               │   ├── values-gu.json
+│   │   │   │               │   ├── values-h320dp-port-v13.json
+│   │   │   │               │   ├── values-h360dp-land-v13.json
+│   │   │   │               │   ├── values-h480dp-land-v13.json
+│   │   │   │               │   ├── values-h480dp-v13.json
+│   │   │   │               │   ├── values-h550dp-port-v13.json
+│   │   │   │               │   ├── values-h720dp-v13.json
+│   │   │   │               │   ├── values-hdpi-v4.json
+│   │   │   │               │   ├── values-hi.json
+│   │   │   │               │   ├── values-hr.json
+│   │   │   │               │   ├── values-hu.json
+│   │   │   │               │   ├── values-hy.json
+│   │   │   │               │   ├── values-in.json
+│   │   │   │               │   ├── values-is.json
+│   │   │   │               │   ├── values-it.json
+│   │   │   │               │   ├── values-iw.json
+│   │   │   │               │   ├── values-ja.json
+│   │   │   │               │   ├── values-ka.json
+│   │   │   │               │   ├── values-kk.json
+│   │   │   │               │   ├── values-km.json
+│   │   │   │               │   ├── values-kn.json
+│   │   │   │               │   ├── values-ko.json
+│   │   │   │               │   ├── values-ky.json
+│   │   │   │               │   ├── values-land.json
+│   │   │   │               │   ├── values-large-v4.json
+│   │   │   │               │   ├── values-ldltr-v21.json
+│   │   │   │               │   ├── values-ldrtl-v17.json
+│   │   │   │               │   ├── values-lo.json
+│   │   │   │               │   ├── values-lt.json
+│   │   │   │               │   ├── values-lv.json
+│   │   │   │               │   ├── values-mk.json
+│   │   │   │               │   ├── values-ml.json
+│   │   │   │               │   ├── values-mn.json
+│   │   │   │               │   ├── values-mr.json
+│   │   │   │               │   ├── values-ms.json
+│   │   │   │               │   ├── values-my.json
+│   │   │   │               │   ├── values-nb.json
+│   │   │   │               │   ├── values-ne.json
+│   │   │   │               │   ├── values-night-v8.json
+│   │   │   │               │   ├── values-nl.json
+│   │   │   │               │   ├── values-or.json
+│   │   │   │               │   ├── values-pa.json
+│   │   │   │               │   ├── values-pl.json
+│   │   │   │               │   ├── values-port.json
+│   │   │   │               │   ├── values-pt-rBR.json
+│   │   │   │               │   ├── values-pt-rPT.json
+│   │   │   │               │   ├── values-pt.json
+│   │   │   │               │   ├── values-ro.json
+│   │   │   │               │   ├── values-ru.json
+│   │   │   │               │   ├── values-si.json
+│   │   │   │               │   ├── values-sk.json
+│   │   │   │               │   ├── values-sl.json
+│   │   │   │               │   ├── values-sq.json
+│   │   │   │               │   ├── values-sr.json
+│   │   │   │               │   ├── values-sv.json
+│   │   │   │               │   ├── values-sw.json
+│   │   │   │               │   ├── values-sw600dp-v13.json
+│   │   │   │               │   ├── values-ta.json
+│   │   │   │               │   ├── values-te.json
+│   │   │   │               │   ├── values-th.json
+│   │   │   │               │   ├── values-tl.json
+│   │   │   │               │   ├── values-tr.json
+│   │   │   │               │   ├── values-uk.json
+│   │   │   │               │   ├── values-ur.json
+│   │   │   │               │   ├── values-uz.json
+│   │   │   │               │   ├── values-v16.json
+│   │   │   │               │   ├── values-v17.json
+│   │   │   │               │   ├── values-v18.json
+│   │   │   │               │   ├── values-v21.json
+│   │   │   │               │   ├── values-v22.json
+│   │   │   │               │   ├── values-v23.json
+│   │   │   │               │   ├── values-v24.json
+│   │   │   │               │   ├── values-v25.json
+│   │   │   │               │   ├── values-v26.json
+│   │   │   │               │   ├── values-v28.json
+│   │   │   │               │   ├── values-v31.json
+│   │   │   │               │   ├── values-v34.json
+│   │   │   │               │   ├── values-v35.json
+│   │   │   │               │   ├── values-vi.json
+│   │   │   │               │   ├── values-w320dp-land-v13.json
+│   │   │   │               │   ├── values-w360dp-port-v13.json
+│   │   │   │               │   ├── values-w400dp-port-v13.json
+│   │   │   │               │   ├── values-w600dp-land-v13.json
+│   │   │   │               │   ├── values-watch-v20.json
+│   │   │   │               │   ├── values-watch-v21.json
+│   │   │   │               │   ├── values-xlarge-v4.json
+│   │   │   │               │   ├── values-zh-rCN.json
+│   │   │   │               │   ├── values-zh-rHK.json
+│   │   │   │               │   ├── values-zh-rTW.json
+│   │   │   │               │   ├── values-zu.json
+│   │   │   │               │   └── values.json
+│   │   │   │               └── single
+│   │   │   │                   └── mergeDebugResources.json
+│   │   │   ├── merged_shaders
+│   │   │   │   └── debug
+│   │   │   │       └── mergeDebugShaders
+│   │   │   │           └── out
+│   │   │   ├── mixed_scope_dex_archive
+│   │   │   │   └── debug
+│   │   │   │       └── dexBuilderDebug
+│   │   │   │           └── out
+│   │   │   ├── navigation_json
+│   │   │   │   └── debug
+│   │   │   │       └── extractDeepLinksDebug
+│   │   │   │           └── navigation.json
+│   │   │   ├── nested_resources_validation_report
+│   │   │   │   └── debug
+│   │   │   │       └── generateDebugResources
+│   │   │   │           └── nestedResourcesValidationReport.txt
+│   │   │   ├── packaged_manifests
+│   │   │   │   └── debug
+│   │   │   │       └── processDebugManifestForPackage
+│   │   │   │           ├── AndroidManifest.xml
+│   │   │   │           └── output-metadata.json
+│   │   │   ├── packaged_res
+│   │   │   │   └── debug
+│   │   │   │       └── packageDebugResources
+│   │   │   │           ├── drawable
+│   │   │   │           │   ├── ic_launcher_background.xml
+│   │   │   │           │   ├── ic_launcher_foreground.xml
+│   │   │   │           │   ├── ic_mic.xml
+│   │   │   │           │   ├── rectangle_blue.xml
+│   │   │   │           │   ├── rectangle_cyan.xml
+│   │   │   │           │   ├── rectangle_grey.xml
+│   │   │   │           │   ├── rectangle_purple.xml
+│   │   │   │           │   ├── rectangle_red.xml
+│   │   │   │           │   ├── rectangle_teal.xml
+│   │   │   │           │   ├── rectangle_yellow.xml
+│   │   │   │           │   └── splash.png
+│   │   │   │           ├── layout
+│   │   │   │           │   ├── activity_colorcue.xml
+│   │   │   │           │   ├── activity_communicate.xml
+│   │   │   │           │   ├── activity_emergency.xml
+│   │   │   │           │   ├── activity_home.xml
+│   │   │   │           │   ├── activity_main.xml
+│   │   │   │           │   ├── activity_navigate.xml
+│   │   │   │           │   ├── activity_observe.xml
+│   │   │   │           │   ├── activity_read_ask.xml
+│   │   │   │           │   ├── activity_settings.xml
+│   │   │   │           │   └── activity_splash.xml
+│   │   │   │           ├── mipmap-anydpi-v26
+│   │   │   │           │   ├── ic_launcher.xml
+│   │   │   │           │   └── ic_launcher_round.xml
+│   │   │   │           ├── mipmap-hdpi-v4
+│   │   │   │           │   ├── ic_launcher.webp
+│   │   │   │           │   └── ic_launcher_round.webp
+│   │   │   │           ├── mipmap-mdpi-v4
+│   │   │   │           │   ├── ic_launcher.webp
+│   │   │   │           │   └── ic_launcher_round.webp
+│   │   │   │           ├── mipmap-xhdpi-v4
+│   │   │   │           │   ├── ic_launcher.webp
+│   │   │   │           │   └── ic_launcher_round.webp
+│   │   │   │           ├── mipmap-xxhdpi-v4
+│   │   │   │           │   ├── ic_launcher.webp
+│   │   │   │           │   └── ic_launcher_round.webp
+│   │   │   │           ├── mipmap-xxxhdpi-v4
+│   │   │   │           │   ├── ic_launcher.webp
+│   │   │   │           │   └── ic_launcher_round.webp
+│   │   │   │           ├── values
+│   │   │   │           │   └── values.xml
+│   │   │   │           ├── values-night-v8
+│   │   │   │           │   └── values-night-v8.xml
+│   │   │   │           └── xml
+│   │   │   │               ├── backup_rules.xml
+│   │   │   │               └── data_extraction_rules.xml
+│   │   │   ├── project_dex_archive
+│   │   │   │   └── debug
+│   │   │   │       └── dexBuilderDebug
+│   │   │   │           └── out
+│   │   │   │               ├── 8c75e8d4543d13bff187091bacd82632ad8dc9d4d0f516758b2326f385b087f6_0.jar
+│   │   │   │               ├── 8c75e8d4543d13bff187091bacd82632ad8dc9d4d0f516758b2326f385b087f6_1.jar
+│   │   │   │               ├── 8c75e8d4543d13bff187091bacd82632ad8dc9d4d0f516758b2326f385b087f6_2.jar
+│   │   │   │               ├── 8c75e8d4543d13bff187091bacd82632ad8dc9d4d0f516758b2326f385b087f6_3.jar
+│   │   │   │               └── com
+│   │   │   │                   └── example
+│   │   │   │                       └── newsight
+│   │   │   │                           ├── CatalogItemActivity.dex
+│   │   │   │                           ├── ColorCueActivity.dex
+│   │   │   │                           ├── CommToggleActivity.dex
+│   │   │   │                           ├── CommunicateActivity.dex
+│   │   │   │                           ├── DetectPeopleActivity.dex
+│   │   │   │                           ├── EmergencyActivity.dex
+│   │   │   │                           ├── EmergencySetupActivity.dex
+│   │   │   │                           ├── HelpAndSupportActivity.dex
+│   │   │   │                           ├── HomeActivity.dex
+│   │   │   │                           ├── IdentifyClothesActivity.dex
+│   │   │   │                           ├── IdentifyObjectActivity.dex
+│   │   │   │                           ├── LogoutActivity.dex
+│   │   │   │                           ├── MainActivity.dex
+│   │   │   │                           ├── MatchOutfitActivity.dex
+│   │   │   │                           ├── NavigateActivity.dex
+│   │   │   │                           ├── ObserveActivity.dex
+│   │   │   │                           ├── ObstacleScanActivity.dex
+│   │   │   │                           ├── PingLocationActivity.dex
+│   │   │   │                           ├── PrivacyAndDataActivity.dex
+│   │   │   │                           ├── ReadAskActivity.dex
+│   │   │   │                           ├── ReadTextActivity.dex
+│   │   │   │                           ├── SelectDestinationActivity.dex
+│   │   │   │                           ├── SendTextAlertActivity.dex
+│   │   │   │                           ├── SettingsActivity.dex
+│   │   │   │                           ├── SignTranslationActivity.dex
+│   │   │   │                           ├── SpeakToTextActivity.dex
+│   │   │   │                           ├── StartNavigationActivity.dex
+│   │   │   │                           ├── StartStopObservingActivity.dex
+│   │   │   │                           ├── StopNavigationActivity.dex
+│   │   │   │                           ├── TrustedContactsActivity.dex
+│   │   │   │                           ├── UserProfileActivity.dex
+│   │   │   │                           ├── VoiceAndHapticsActivity.dex
+│   │   │   │                           ├── VoiceCommandActivity.dex
+│   │   │   │                           ├── WhereAmIActivity.dex
+│   │   │   │                           ├── splash$1.dex
+│   │   │   │                           └── splash.dex
+│   │   │   ├── runtime_symbol_list
+│   │   │   │   └── debug
+│   │   │   │       └── processDebugResources
+│   │   │   │           └── R.txt
+│   │   │   ├── signing_config_versions
+│   │   │   │   └── debug
+│   │   │   │       └── writeDebugSigningConfigVersions
+│   │   │   │           └── signing-config-versions.json
+│   │   │   ├── source_set_path_map
+│   │   │   │   └── debug
+│   │   │   │       └── mapDebugSourceSetPaths
+│   │   │   │           └── file-map.txt
+│   │   │   ├── stable_resource_ids_file
+│   │   │   │   └── debug
+│   │   │   │       └── processDebugResources
+│   │   │   │           └── stableIds.txt
+│   │   │   ├── sub_project_dex_archive
+│   │   │   │   └── debug
+│   │   │   │       └── dexBuilderDebug
+│   │   │   │           └── out
+│   │   │   ├── symbol_list_with_package_name
+│   │   │   │   └── debug
+│   │   │   │       └── processDebugResources
+│   │   │   │           └── package-aware-r.txt
+│   │   │   └── validate_signing_config
+│   │   │       └── debug
+│   │   │           └── validateSigningDebug
+│   │   ├── outputs
+│   │   │   └── logs
+│   │   │       └── manifest-merger-debug-report.txt
+│   │   └── tmp
+│   │       └── compileDebugJavaWithJavac
+│   │           ├── compileTransaction
+│   │           │   ├── backup-dir
+│   │           │   └── stash-dir
+│   │           │       ├── CatelogItemActivity.class.uniqueId4
+│   │           │       ├── ColorCueActivity.class.uniqueId3
+│   │           │       ├── CommunicateActivity.class.uniqueId0
+│   │           │       ├── EmergencyActivity.class.uniqueId5
+│   │           │       ├── HomeActivity.class.uniqueId6
+│   │           │       ├── ObserveActivity.class.uniqueId1
+│   │           │       └── SettingsActivity.class.uniqueId2
+│   │           └── previous-compilation-data.bin
+│   ├── build.gradle.kts
+│   ├── proguard-rules.pro
+│   └── src
+│       ├── androidTest
+│       │   └── java
+│       │       └── com
+│       │           └── example
+│       │               └── newsight
+│       │                   └── ExampleInstrumentedTest.java
+│       ├── main
+│       │   ├── AndroidManifest.xml
+│       │   ├── java
+│       │   │   └── com
+│       │   │       └── example
+│       │   │           └── newsight
+│       │   │               ├── CatalogItemActivity.java
+│       │   │               ├── ColorCueActivity.java
+│       │   │               ├── CommToggleActivity.java
+│       │   │               ├── CommunicateActivity.java
+│       │   │               ├── DetectPeopleActivity.java
+│       │   │               ├── EmergencyActivity.java
+│       │   │               ├── EmergencySetupActivity.java
+│       │   │               ├── HelpAndSupportActivity.java
+│       │   │               ├── HomeActivity.java
+│       │   │               ├── IdentifyClothesActivity.java
+│       │   │               ├── IdentifyObjectActivity.java
+│       │   │               ├── LogoutActivity.java
+│       │   │               ├── MainActivity.java
+│       │   │               ├── MatchOutfitActivity.java
+│       │   │               ├── NavigateActivity.java
+│       │   │               ├── ObserveActivity.java
+│       │   │               ├── ObstacleScanActivity.java
+│       │   │               ├── PingLocationActivity.java
+│       │   │               ├── PrivacyAndDataActivity.java
+│       │   │               ├── ReadAskActivity.java
+│       │   │               ├── ReadTextActivity.java
+│       │   │               ├── SelectDestinationActivity.java
+│       │   │               ├── SendTextAlertActivity.java
+│       │   │               ├── SettingsActivity.java
+│       │   │               ├── SignTranslationActivity.java
+│       │   │               ├── SpeakToTextActivity.java
+│       │   │               ├── StartNavigationActivity.java
+│       │   │               ├── StartStopObservingActivity.java
+│       │   │               ├── StopNavigationActivity.java
+│       │   │               ├── TrustedContactsActivity.java
+│       │   │               ├── UserProfileActivity.java
+│       │   │               ├── VoiceAndHapticsActivity.java
+│       │   │               ├── VoiceCommandActivity.java
+│       │   │               ├── WhereAmIActivity.java
+│       │   │               └── splash.java
+│       │   └── res
+│       │       ├── drawable
+│       │       │   ├── ic_launcher_background.xml
+│       │       │   ├── ic_launcher_foreground.xml
+│       │       │   ├── ic_mic.xml
+│       │       │   ├── rectangle_blue.xml
+│       │       │   ├── rectangle_cyan.xml
+│       │       │   ├── rectangle_grey.xml
+│       │       │   ├── rectangle_purple.xml
+│       │       │   ├── rectangle_red.xml
+│       │       │   ├── rectangle_teal.xml
+│       │       │   ├── rectangle_yellow.xml
+│       │       │   └── splash.png
+│       │       ├── layout
+│       │       │   ├── activity_colorcue.xml
+│       │       │   ├── activity_communicate.xml
+│       │       │   ├── activity_emergency.xml
+│       │       │   ├── activity_home.xml
+│       │       │   ├── activity_main.xml
+│       │       │   ├── activity_navigate.xml
+│       │       │   ├── activity_observe.xml
+│       │       │   ├── activity_read_ask.xml
+│       │       │   ├── activity_settings.xml
+│       │       │   └── activity_splash.xml
+│       │       ├── mipmap-anydpi-v26
+│       │       │   ├── ic_launcher.xml
+│       │       │   └── ic_launcher_round.xml
+│       │       ├── mipmap-hdpi
+│       │       │   ├── ic_launcher.webp
+│       │       │   └── ic_launcher_round.webp
+│       │       ├── mipmap-mdpi
+│       │       │   ├── ic_launcher.webp
+│       │       │   └── ic_launcher_round.webp
+│       │       ├── mipmap-xhdpi
+│       │       │   ├── ic_launcher.webp
+│       │       │   └── ic_launcher_round.webp
+│       │       ├── mipmap-xxhdpi
+│       │       │   ├── ic_launcher.webp
+│       │       │   └── ic_launcher_round.webp
+│       │       ├── mipmap-xxxhdpi
+│       │       │   ├── ic_launcher.webp
+│       │       │   └── ic_launcher_round.webp
+│       │       ├── values
+│       │       │   ├── colors.xml
+│       │       │   ├── strings.xml
+│       │       │   ├── styles.xml
+│       │       │   └── themes.xml
+│       │       ├── values-night
+│       │       │   └── themes.xml
+│       │       └── xml
+│       │           ├── backup_rules.xml
+│       │           └── data_extraction_rules.xml
+│       └── test
+│           └── java
+│               └── com
+│                   └── example
+│                       └── newsight
+│                           └── ExampleUnitTest.java
+├── build
+│   └── reports
+│       └── problems
+│           └── problems-report.html
+├── build.gradle.kts
+├── gradle
+│   ├── libs.versions.toml
+│   └── wrapper
+│       ├── gradle-wrapper.jar
+│       └── gradle-wrapper.properties
+├── gradle.properties
+├── gradlew
+├── gradlew.bat
+├── local.properties
+├── settings.gradle.kts
+└── structure.txt
+
+282 directories, 598 files
