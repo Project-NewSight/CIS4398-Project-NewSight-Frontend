@@ -33,8 +33,13 @@
 
         <!-- MainActivity -->
         <activity
+
             android:name=".MainActivity"
-            android:exported="true" />
+            android:exported="false" />
+        <!-- CameraActivity -->
+        <activity
+            android:name=".CameraActivity"
+            android:exported="false"/>
 
     </application>
 

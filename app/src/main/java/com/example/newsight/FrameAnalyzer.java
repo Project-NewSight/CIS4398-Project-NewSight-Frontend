@@ -18,11 +18,11 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
     private static final String TAG = "FrameAnalyzer";
     private final WebSocketManager wsManager;
-    private final FeatureProvider featureProvider;
-    private final ByteArrayOutputStream jpegStream = new ByteArrayOutputStream();
-    private byte[] nv21Buffer = null; // reuse buffer
-    private long lastLogTime = 0;
+    private final FeatureProvider featureProvider;          // <-- keep provider reference
 
+    private final ByteArrayOutputStream jpegStream = new ByteArrayOutputStream();
+    private byte[] nv21Buffer = null;
+    private long lastLogTime = 0;
 
     public interface FeatureProvider {
         String getActiveFeature();
@@ -30,75 +30,65 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
     public FrameAnalyzer(WebSocketManager manager, FeatureProvider provider) {
         this.wsManager = manager;
-        this.featureProvider = provider;
-
+        this.featureProvider = provider;                    // <-- IMPORTANT: do NOT set () -> null
     }
 
     @Override
     @SuppressLint("UnsafeOptInUsageError")
     public void analyze(@NonNull ImageProxy imageProxy) {
         Image image = imageProxy.getImage();
-        if (image == null) {
-            imageProxy.close();
-            return;
-        }
+        if (image == null) { imageProxy.close(); return; }
 
         try {
-            int width = image.getWidth();
-            int height = image.getHeight();
+            // ---- YUV_420_888 -> NV21 -> JPEG (same as you had) ----
+            ByteBuffer yBuffer = image.getPlanes()[0].getBuffer();
+            ByteBuffer uBuffer = image.getPlanes()[1].getBuffer();
+            ByteBuffer vBuffer = image.getPlanes()[2].getBuffer();
 
-            // Reuse buffer
-            int requiredLength = width * height * 3 / 2; // NV21 size
-            if (nv21Buffer == null || nv21Buffer.length < requiredLength) {
-                nv21Buffer = new byte[requiredLength];
+            int ySize = yBuffer.remaining();
+            int uSize = uBuffer.remaining();
+            int vSize = vBuffer.remaining();
+
+            if (nv21Buffer == null || nv21Buffer.length < ySize + uSize + vSize) {
+                nv21Buffer = new byte[ySize + uSize + vSize];
             }
 
-            yuv420ToNv21(image, nv21Buffer);
+            // NV21 = Y + V + U
+            yBuffer.get(nv21Buffer, 0, ySize);
+            vBuffer.get(nv21Buffer, ySize, vSize);
+            uBuffer.get(nv21Buffer, ySize + vSize, uSize);
 
-            jpegStream.reset(); // reuse ByteArrayOutputStream
-            YuvImage yuvImage = new YuvImage(nv21Buffer, ImageFormat.NV21, width, height, null);
-            yuvImage.compressToJpeg(new Rect(0, 0, width, height), 80, jpegStream);
+            YuvImage yuvImage = new YuvImage(nv21Buffer, ImageFormat.NV21,
+                    imageProxy.getWidth(), imageProxy.getHeight(), null);
 
+            jpegStream.reset();
+            yuvImage.compressToJpeg(new Rect(0, 0, imageProxy.getWidth(), imageProxy.getHeight()),
+                    80, jpegStream);
             byte[] jpegBytes = jpegStream.toByteArray();
 
-            //String activeFeature = featureProvider.getActiveFeature();
-            String activeFeature = "familiar_face";
+            // ---- Send only if feature is active and socket connected ----
+            String feature = (featureProvider != null) ? featureProvider.getActiveFeature() : null;
+            if (feature != null && wsManager != null && wsManager.isConnected()) {
+                // Choose ONE of these based on your backend:
 
-            Log.d(TAG, "Sending frame, bytes=" + jpegBytes.length + ", feature=" + activeFeature);
+                // A) text control + binary (preferred, matches current WebSocketManager.sendFrame)
+                wsManager.sendFrame(jpegBytes, feature);
 
-            if (wsManager != null && wsManager.isConnected() && activeFeature != null) {
-                wsManager.sendFrame(jpegBytes, activeFeature);
+                // B) single JSON with base64 (if your FastAPI expects one message)
+                // wsManager.sendFrameAsJsonBase64(jpegBytes, feature);
+
             } else {
                 long now = System.currentTimeMillis();
                 if (now - lastLogTime > 2000) {
-                    Log.d(TAG, "Skipping frame, no feature active or WS not connected");
+                    Log.d(TAG, "Skip send (feature=" + feature +
+                            ", connected=" + (wsManager != null && wsManager.isConnected()) + ")");
                     lastLogTime = now;
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "Frame conversion failed", e);
+            Log.e(TAG, "analyze error", e);
         } finally {
             imageProxy.close();
-        }
-    }
-
-    private void yuv420ToNv21(Image image, byte[] out) {
-        Image.Plane[] planes = image.getPlanes();
-        ByteBuffer yBuffer = planes[0].getBuffer();
-        ByteBuffer uBuffer = planes[1].getBuffer();
-        ByteBuffer vBuffer = planes[2].getBuffer();
-
-        yBuffer.rewind();
-        uBuffer.rewind();
-        vBuffer.rewind();
-
-        int ySize = yBuffer.remaining();
-        yBuffer.get(out, 0, ySize);
-
-        int uvPos = ySize;
-        while (vBuffer.hasRemaining() && uBuffer.hasRemaining()) {
-            out[uvPos++] = vBuffer.get();
-            out[uvPos++] = uBuffer.get();
         }
     }
 }

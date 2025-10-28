@@ -4,7 +4,11 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -26,7 +30,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements WebSocketManager.WsListener {
 
     private static final int REQUEST_CAMERA_PERMISSION = 1001;
     private static final String TAG = "MainActivity";
@@ -40,13 +44,12 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout cameraContainer;
 
     private boolean isLoggedIn = false;
-
-    private String currentFeature = "navigation"; // default feature
+    private String currentFeature = "familiar_face"; // default
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main); // login layout
+        setContentView(R.layout.activity_main);
 
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
@@ -54,14 +57,12 @@ public class MainActivity extends AppCompatActivity {
         btnOpenCamera = findViewById(R.id.btnOpenCamera);
         cameraContainer = findViewById(R.id.cameraContainer);
 
-        btnOpenCamera.setVisibility(View.GONE);
-        cameraContainer.setVisibility(View.GONE);
+        btnOpenCamera.setVisibility(android.view.View.GONE);
+        cameraContainer.setVisibility(android.view.View.GONE);
 
-        wsManager = null; // placeholder for WebSocketManager
         cameraExecutor = Executors.newSingleThreadExecutor();
 
         btnLogin.setOnClickListener(v -> handleLogin());
-
         btnOpenCamera.setOnClickListener(v -> checkCameraPermission());
     }
 
@@ -74,17 +75,20 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Mock login success
+        // Simulated login success
         isLoggedIn = true;
         Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
 
-        // Hide login UI
-        etEmail.setVisibility(View.GONE);
-        etPassword.setVisibility(View.GONE);
-        btnLogin.setVisibility(View.GONE);
 
-        // Show camera button
-        btnOpenCamera.setVisibility(View.VISIBLE);
+        String wsUrl = "ws://10.0.2.2:8000/ws/verify";
+        wsManager = new WebSocketManager(wsUrl, this);
+        wsManager.connect();
+
+        // Hide login UI
+        etEmail.setVisibility(android.view.View.GONE);
+        etPassword.setVisibility(android.view.View.GONE);
+        btnLogin.setVisibility(android.view.View.GONE);
+        btnOpenCamera.setVisibility(android.view.View.VISIBLE);
     }
 
     private void checkCameraPermission() {
@@ -103,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openCamera() {
-        cameraContainer.setVisibility(View.VISIBLE);
+        cameraContainer.setVisibility(android.view.View.VISIBLE);
 
         if (previewView == null) {
             previewView = new PreviewView(this);
@@ -132,7 +136,10 @@ public class MainActivity extends AppCompatActivity {
                 ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build();
+
                 FrameAnalyzer.FeatureProvider provider = () -> currentFeature;
+
+                // ✅ Pass active WebSocketManager
                 imageAnalysis.setAnalyzer(cameraExecutor, new FrameAnalyzer(wsManager, provider));
 
                 cameraProvider.unbindAll();
@@ -149,12 +156,11 @@ public class MainActivity extends AppCompatActivity {
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 openCamera();
             } else {
-                Toast.makeText(this, "Camera permission is required", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Camera permission required", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -164,5 +170,23 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         cameraExecutor.shutdown();
         if (wsManager != null) wsManager.disconnect();
+    }
+
+    // 🔹 WebSocketManager.WsListener implementation
+    @Override
+    public void onResultsReceived(String results) {
+        runOnUiThread(() -> {
+            Log.d(TAG, "Backend results: " + results);
+            Toast.makeText(this, "Backend: " + results, Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    @Override
+    public void onConnectionStatus(boolean isConnected) {
+        runOnUiThread(() -> {
+            String status = isConnected ? "Connected to backend" : "Disconnected";
+            Log.i(TAG, status);
+            Toast.makeText(this, status, Toast.LENGTH_SHORT).show();
+        });
     }
 }

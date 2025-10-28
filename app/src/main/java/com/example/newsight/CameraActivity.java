@@ -63,11 +63,24 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     }
 
     private void setActiveFeature(String feature) {
-        activeFeature = feature;
-        String message = (feature != null) ? feature + " feature active" : "Feature streaming stopped";
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-        Log.d(TAG, "Active feature set to: " + activeFeature);
+        // write to the FIELD, not a shadowed local
+        this.activeFeature = feature;
+
+        Toast.makeText(this,
+                (feature != null) ? feature + " feature active" : "Feature streaming stopped",
+                Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Active feature set to: " + this.activeFeature);
+
+        // If WS is already connected, notify backend immediately
+        if (wsManager != null && wsManager.isConnected() && feature != null) {
+            // pick ONE name and use it consistently. If your WS manager method is setFeature(...), use that:
+            wsManager.setFeature(feature);
+            // If your method is actually named setActiveFeature(...), then call that instead:
+            // wsManager.setActiveFeature(feature);
+        }
     }
+
+
 
     private void initCameraAndBackend() {
         if (backendEnabled) {
@@ -147,13 +160,12 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
                 isConnected ? "✅ Connected to backend" : "⚠️ Backend not available",
                 Toast.LENGTH_SHORT).show());
         Log.d(TAG, "WebSocket connected=" + isConnected);
-    }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        cameraExecutor.shutdown();
-        if (wsManager != null) wsManager.disconnect();
+        if (isConnected && wsManager != null && activeFeature != null) {
+            // keep method name consistent with what you implement in WebSocketManager
+            wsManager.setFeature(activeFeature);
+            // or: wsManager.setActiveFeature(activeFeature);
+        }
     }
 
     @Override
