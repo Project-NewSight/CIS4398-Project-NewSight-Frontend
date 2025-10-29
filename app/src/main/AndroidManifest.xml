@@ -48,7 +48,8 @@
         <activity android:name=".DetectionActivity" android:exported="true" />
         <activity android:name=".ObstacleActivity" 
             android:exported="true"
-            android:screenOrientation="landscape" />
+            android:screenOrientation="landscape"
+            tools:ignore="DiscouragedApi" />
 
         <!-- ColorCueActivity -->
         <activity

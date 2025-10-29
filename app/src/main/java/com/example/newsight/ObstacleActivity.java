@@ -1,6 +1,7 @@
 package com.example.newsight;
 
 import android.Manifest;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -32,6 +33,9 @@ public class ObstacleActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // force lancscape
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+
         setContentView(R.layout.activity_obstacle);
 
         previewView = findViewById(R.id.previewView);
