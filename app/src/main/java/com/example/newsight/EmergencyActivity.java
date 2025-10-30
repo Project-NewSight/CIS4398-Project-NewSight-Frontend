@@ -44,7 +44,7 @@ public class EmergencyActivity extends AppCompatActivity {
         btnOpenCamera.setOnClickListener(v -> {
             // Launch MainActivity and open camera directly
             Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra("open_camera", true); // signal MainActivity to open camera immediately
+            intent.putExtra("feature", "emergency"); // signal MainActivity to open camera immediately
             startActivity(intent);
         });
     }

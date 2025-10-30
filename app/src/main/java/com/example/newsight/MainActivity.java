@@ -31,6 +31,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity implements WebSocketManager.WsListener {
+
     private static final int REQUEST_CAMERA_PERMISSION = 1001;
     private static final String TAG = "MainActivity";
 
@@ -42,25 +43,25 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     private WebSocketManager wsManager;
 
     private boolean isLoggedIn = false;
-    private String currentFeature = "navigation"; // default
+    private String currentFeature = "none"; // dynamic feature name (e.g., "emergency", "detect_people", etc.)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Edge to edge support
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
         Toast.makeText(this, "MainActivity started", Toast.LENGTH_SHORT).show();
 
-        // Insets padding
+        // Apply window insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
+        // Initialize views
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
@@ -74,28 +75,22 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
         btnLogin.setOnClickListener(v -> handleLogin());
         btnOpenCamera.setOnClickListener(v -> checkCameraPermission());
-        if (getIntent().getBooleanExtra("open_camera", false)) {
-            // Assume user was already logged in if launched from Emergency
+
+        // ✅ Dynamic feature handling
+        String featureFromIntent = getIntent().getStringExtra("feature");
+        if (featureFromIntent != null && !featureFromIntent.isEmpty()) {
+            currentFeature = featureFromIntent;
             isLoggedIn = true;
+
+            // Hide login UI since user came from a feature activity
             etEmail.setVisibility(android.view.View.GONE);
             etPassword.setVisibility(android.view.View.GONE);
             btnLogin.setVisibility(android.view.View.GONE);
             btnOpenCamera.setVisibility(android.view.View.VISIBLE);
 
+            Log.i(TAG, "Launching feature: " + currentFeature);
             checkCameraPermission();
         }
-
-        if (getIntent().getBooleanExtra("detect_people", false)) {
-            // Assume user was already logged in if launched from detect people
-            isLoggedIn = true;
-            etEmail.setVisibility(android.view.View.GONE);
-            etPassword.setVisibility(android.view.View.GONE);
-            btnLogin.setVisibility(android.view.View.GONE);
-            btnOpenCamera.setVisibility(android.view.View.VISIBLE);
-
-            checkCameraPermission();
-        }
-
     }
 
     private void handleLogin() {
@@ -116,12 +111,12 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         btnLogin.setVisibility(android.view.View.GONE);
         btnOpenCamera.setVisibility(android.view.View.VISIBLE);
 
-        // Start HomeActivity immediately
+        // Start HomeActivity
         Intent intent = new Intent(MainActivity.this, HomeActivity.class);
         startActivity(intent);
 
-        // Initialize WebSocket
-        String wsUrl = "wss://your-backend-url/ws"; // TODO: replace with actual URL
+        // Initialize WebSocket connection
+        String wsUrl = "wss://your-backend-url/ws"; // TODO: replace with your actual backend URL
         wsManager = new WebSocketManager(wsUrl, this);
         wsManager.connect();
     }
@@ -177,6 +172,8 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
                 cameraProvider.unbindAll();
                 cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
+
+                Log.i(TAG, "Camera started for feature: " + currentFeature);
 
             } catch (ExecutionException | InterruptedException e) {
                 Log.e(TAG, "Camera initialization failed", e);
