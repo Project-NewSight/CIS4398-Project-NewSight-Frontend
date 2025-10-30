@@ -4,6 +4,9 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Log;
+import android.view.View;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
@@ -26,24 +29,15 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-public class MainActivity extends AppCompatActivity implements WebSocketManager.WsListener {
-
-    private static final int REQUEST_CAMERA_PERMISSION = 1001;
     private static final String TAG = "MainActivity";
+    EditText etEmail, etPassword;
+    Button btnLogin, btnOpenCamera, btnTestVibration; // Added test button
 
-    private EditText etEmail, etPassword;
-    private Button btnLogin, btnOpenCamera;
-    private FrameLayout cameraContainer;
-    private PreviewView previewView;
-    private ExecutorService cameraExecutor;
-    private WebSocketManager wsManager;
+    private static final int REQUEST_CAMERA_PERMISSION = 100;
+    private static final int REQUEST_IMAGE_CAPTURE = 101;
+    private VibrationMotor vibrationMotor;
 
     private boolean isLoggedIn = false;
-    private String currentFeature = "none"; // dynamic feature name (e.g., "emergency", "detect_people", etc.)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,9 +46,8 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        Toast.makeText(this, "MainActivity started", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "onCreate called");
 
-        // Apply window insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -66,73 +59,233 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
         btnOpenCamera = findViewById(R.id.btnOpenCamera);
-        cameraContainer = findViewById(R.id.cameraContainer);
+        btnTestVibration = findViewById(R.id.btnTestVibration);
 
-        btnOpenCamera.setVisibility(android.view.View.GONE);
-        cameraContainer.setVisibility(android.view.View.GONE);
+        Log.d(TAG, "Views initialized");
 
-        cameraExecutor = Executors.newSingleThreadExecutor();
+        // Test vibration permission on startup
+        testVibrationPermission();
 
-        btnLogin.setOnClickListener(v -> handleLogin());
-        btnOpenCamera.setOnClickListener(v -> checkCameraPermission());
+        // Hide buttons initially
+        btnOpenCamera.setVisibility(View.GONE);
+        btnTestVibration.setVisibility(View.GONE);
 
-        // ✅ Dynamic feature handling
-        String featureFromIntent = getIntent().getStringExtra("feature");
-        if (featureFromIntent != null && !featureFromIntent.isEmpty()) {
-            currentFeature = featureFromIntent;
-            isLoggedIn = true;
+        btnLogin.setOnClickListener(v -> {
+            Log.d(TAG, "Login button clicked");
+            String email = etEmail.getText().toString().trim();
+            String password = etPassword.getText().toString().trim();
 
-            // Hide login UI since user came from a feature activity
-            etEmail.setVisibility(android.view.View.GONE);
-            etPassword.setVisibility(android.view.View.GONE);
-            btnLogin.setVisibility(android.view.View.GONE);
-            btnOpenCamera.setVisibility(android.view.View.VISIBLE);
+            if (email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(MainActivity.this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+            } else {
+                isLoggedIn = true;
+                Log.d(TAG, "Login successful, isLoggedIn = " + isLoggedIn);
+                Toast.makeText(MainActivity.this, "Logged in as " + email, Toast.LENGTH_SHORT).show();
 
-            Log.i(TAG, "Launching feature: " + currentFeature);
-            checkCameraPermission();
-        }
+                // Show camera and vibration test buttons
+                btnLogin.setVisibility(View.GONE);
+                etEmail.setVisibility(View.GONE);
+                etPassword.setVisibility(View.GONE);
+                btnOpenCamera.setVisibility(View.VISIBLE);
+                btnTestVibration.setVisibility(View.VISIBLE);
+
+                Log.d(TAG, "Camera and Vibration buttons visible");
+            }
+        });
+
+        btnOpenCamera.setOnClickListener(v -> {
+            Log.d(TAG, "Camera button clicked!");
+
+            if (!isLoggedIn) {
+                Log.d(TAG, "Not logged in");
+                Toast.makeText(MainActivity.this, "Please login first", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Log.d(TAG, "Checking camera permission...");
+            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Permission not granted, requesting...");
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+            } else {
+                Log.d(TAG, "Permission already granted, opening camera...");
+                openCamera();
+            }
+        });
+
+        // Test vibration button
+        btnTestVibration.setOnClickListener(v -> {
+            Log.d(TAG, "Test Vibration button clicked");
+            testPatternGenerator();
+        });
+
+        Log.d(TAG, "onCreate complete");
     }
 
-    private void handleLogin() {
-        String email = etEmail.getText().toString().trim();
-        String password = etPassword.getText().toString().trim();
+    private void testVibrationPermission() {
+        boolean canVibrate = HapticPermissionHelper.canVibrate(this);
 
-        if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        isLoggedIn = true;
-        Toast.makeText(this, "Logged in as " + email, Toast.LENGTH_SHORT).show();
-
-        // Hide login UI
-        etEmail.setVisibility(android.view.View.GONE);
-        etPassword.setVisibility(android.view.View.GONE);
-        btnLogin.setVisibility(android.view.View.GONE);
-        btnOpenCamera.setVisibility(android.view.View.VISIBLE);
-
-        // Start HomeActivity
-        Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-        startActivity(intent);
-
-        // Initialize WebSocket connection
-        String wsUrl = "wss://your-backend-url/ws"; // TODO: replace with your actual backend URL
-        wsManager = new WebSocketManager(wsUrl, this);
-        wsManager.connect();
-    }
-
-    private void checkCameraPermission() {
-        if (!isLoggedIn) {
-            Toast.makeText(this, "Please login first", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+        if (canVibrate) {
+            Log.d(TAG, "✓ Vibration is ready to use");
+            Toast.makeText(this, "Vibration permission: OK", Toast.LENGTH_SHORT).show();
         } else {
-            openCamera();
+            Log.e(TAG, "✗ Vibration not available");
+            Toast.makeText(this, "Vibration not available", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void testVibration() {
+        Log.d(TAG, "=== Testing VibrationMotor Class ===");
+
+        if (!HapticPermissionHelper.canVibrate(this)) {
+            Toast.makeText(this, "Cannot vibrate - check permissions", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            // Initialize VibrationMotor
+            vibrationMotor = new VibrationMotor(this);
+            vibrationMotor.initialize();
+
+            // Test 1: Simple vibration
+            Log.d(TAG, "Test 1: Simple 500ms vibration");
+            vibrationMotor.vibrateSimple(500, 70);
+
+            // Wait a bit before next test
+            new android.os.Handler().postDelayed(() -> {
+                // Test 2: Pattern vibration
+                Log.d(TAG, "Test 2: Pattern vibration");
+                long[] timings = {0, 200, 100, 200};
+                int[] intensities = {0, 150, 0, 150};
+                VibrationPattern pattern = new VibrationPattern(timings, intensities, -1);
+
+                vibrationMotor.triggerVibration(pattern, 500, 80);
+            }, 1000);
+
+            Toast.makeText(this, "Testing VibrationMotor - Check Logcat", Toast.LENGTH_LONG).show();
+
+        } catch (VibrationMotor.VibrationException e) {
+            Log.e(TAG, "VibrationMotor error: " + e.getMessage());
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void testVibrationPattern() {
+        Log.d(TAG, "=== Testing VibrationPattern Class ===");
+
+        // Test 1: Create a simple pattern
+        long[] timings = {0, 200, 100, 200};
+        int[] intensities = {0, 150, 0, 150};
+        VibrationPattern pattern = new VibrationPattern(timings, intensities, -1);
+
+        Log.d(TAG, "Pattern created: " + pattern.toString());
+        Log.d(TAG, "Duration: " + pattern.getDuration() + "ms");
+        Log.d(TAG, "Is valid: " + pattern.validate());
+
+        // Test 2: Create pattern with simplified constructor
+        long[] simpleTimings = {0, 500};
+        VibrationPattern simplePattern = new VibrationPattern(simpleTimings, -1);
+
+        Log.d(TAG, "Simple pattern: " + simplePattern.toString());
+        Log.d(TAG, "Simple pattern valid: " + simplePattern.validate());
+
+        // Test 3: Create invalid pattern
+        long[] badTimings = {0, 200, 100};
+        int[] badIntensities = {0, 150}; // Mismatch
+        VibrationPattern badPattern = new VibrationPattern(badTimings, badIntensities, -1);
+
+        Log.d(TAG, "Bad pattern valid: " + badPattern.validate()); // Should be false
+
+        Toast.makeText(this, "Check Logcat for VibrationPattern tests", Toast.LENGTH_LONG).show();
+    }
+
+    private void testPatternGenerator() {
+        Log.d(TAG, "=== Testing PatternGenerator ===");
+
+        if (!HapticPermissionHelper.canVibrate(this)) {
+            Toast.makeText(this, "Cannot vibrate", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            vibrationMotor = new VibrationMotor(this);
+            vibrationMotor.initialize();
+            PatternGenerator generator = new PatternGenerator();
+
+            Log.d(TAG, "Pattern library has " + generator.getPatternCount() + " patterns");
+
+            testPatternSequence(generator, 0);
+
+            Toast.makeText(this, "Testing all patterns - feel the vibrations!",
+                    Toast.LENGTH_LONG).show();
+
+        } catch (VibrationMotor.VibrationException e) {
+            Log.e(TAG, "Error: " + e.getMessage());
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void testPatternSequence(PatternGenerator generator, int step) {
+        android.os.Handler handler = new android.os.Handler();
+
+        switch (step) {
+            case 0:
+                Log.d(TAG, "Testing: RIGHT turn");
+                VibrationPattern right = generator.generateDirectionalPattern(
+                        PatternGenerator.Direction.RIGHT, 80);
+                vibrationMotor.triggerVibration(right, 500, 80);
+                handler.postDelayed(() -> testPatternSequence(generator, 1), 1500);
+                break;
+
+            case 1:
+                Log.d(TAG, "Testing: LEFT turn");
+                VibrationPattern left = generator.generateDirectionalPattern(
+                        PatternGenerator.Direction.LEFT, 80);
+                vibrationMotor.triggerVibration(left, 500, 80);
+                handler.postDelayed(() -> testPatternSequence(generator, 2), 1500);
+                break;
+
+            case 2:
+                Log.d(TAG, "Testing: FORWARD");
+                VibrationPattern forward = generator.generateDirectionalPattern(
+                        PatternGenerator.Direction.FORWARD, 80);
+                vibrationMotor.triggerVibration(forward, 500, 80);
+                handler.postDelayed(() -> testPatternSequence(generator, 3), 1500);
+                break;
+
+            case 3:
+                Log.d(TAG, "Testing: OBSTACLE WARNING");
+                VibrationPattern warning = generator.generateObstacleWarningPattern();
+                vibrationMotor.triggerVibration(warning, 600, 100);
+                handler.postDelayed(() -> testPatternSequence(generator, 4), 2000);
+                break;
+
+            case 4:
+                Log.d(TAG, "Testing: CROSSWALK STOP");
+                VibrationPattern stop = generator.generateCrosswalkStopPattern();
+                vibrationMotor.triggerVibration(stop, 850, 80);
+                handler.postDelayed(() -> testPatternSequence(generator, 5), 2000);
+                break;
+
+            case 5:
+                Log.d(TAG, "Testing: ARRIVAL CELEBRATION");
+                VibrationPattern celebration = generator.generateArrivalCelebrationPattern();
+                vibrationMotor.triggerVibration(celebration, 1600, 70);
+                Log.d(TAG, "Pattern test sequence complete!");
+                break;
+        }
+    }
+
+    private void openCamera() {
+        Log.d(TAG, "openCamera() called");
+        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        try {
+            Log.d(TAG, "Launching camera intent...");
+            startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
+        } catch (Exception e) {
+            Log.e(TAG, "Error opening camera: " + e.getMessage());
+            Toast.makeText(this, "Camera not available", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -186,11 +339,15 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        Log.d(TAG, "onRequestPermissionsResult called, requestCode=" + requestCode);
+
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Camera permission granted!");
                 openCamera();
             } else {
-                Toast.makeText(this, "Camera permission required", Toast.LENGTH_LONG).show();
+                Log.d(TAG, "Camera permission denied");
+                Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -198,25 +355,8 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        cameraExecutor.shutdown();
-        if (wsManager != null) wsManager.disconnect();
-    }
-
-    // WebSocket callbacks
-    @Override
-    public void onResultsReceived(String results) {
-        runOnUiThread(() -> {
-            Log.d(TAG, "Backend results: " + results);
-            Toast.makeText(this, "Backend: " + results, Toast.LENGTH_SHORT).show();
-        });
-    }
-
-    @Override
-    public void onConnectionStatus(boolean isConnected) {
-        runOnUiThread(() -> {
-            String status = isConnected ? "Connected to backend" : "Disconnected";
-            Log.i(TAG, status);
-            Toast.makeText(this, status, Toast.LENGTH_SHORT).show();
-        });
+        if (vibrationMotor != null) {
+            vibrationMotor.close();
+        }
     }
 }
