@@ -7,20 +7,27 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.Preview;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-public class MainActivity extends AppCompatActivity {
+import com.google.common.util.concurrent.ListenableFuture;
 
     private static final String TAG = "MainActivity";
     EditText etEmail, etPassword;
@@ -35,6 +42,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Edge to edge support
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
@@ -278,6 +287,49 @@ public class MainActivity extends AppCompatActivity {
             Log.e(TAG, "Error opening camera: " + e.getMessage());
             Toast.makeText(this, "Camera not available", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void openCamera() {
+        cameraContainer.setVisibility(android.view.View.VISIBLE);
+
+        if (previewView == null) {
+            previewView = new PreviewView(this);
+            cameraContainer.addView(previewView,
+                    new FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.MATCH_PARENT,
+                            FrameLayout.LayoutParams.MATCH_PARENT));
+        }
+
+        startCamera();
+    }
+
+    private void startCamera() {
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
+                ProcessCameraProvider.getInstance(this);
+
+        cameraProviderFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+
+                Preview preview = new Preview.Builder().build();
+                preview.setSurfaceProvider(previewView.getSurfaceProvider());
+
+                CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
+
+                ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build();
+
+                FrameAnalyzer.FeatureProvider provider = () -> currentFeature;
+                imageAnalysis.setAnalyzer(cameraExecutor, new FrameAnalyzer(wsManager, provider));
+
+                cameraProvider.unbindAll();
+                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
+
+            } catch (ExecutionException | InterruptedException e) {
+                Log.e(TAG, "Camera initialization failed", e);
+            }
+        }, ContextCompat.getMainExecutor(this));
     }
 
     @Override

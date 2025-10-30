@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#000000">
+
+    <!-- Home Bar -->
+    <FrameLayout
+        android:id="@+id/btnHome"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Go to Home">
+
+        <TextView
+            style="@style/ShadowText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Home"
+            android:textColor="@color/white"
+            android:textSize="45sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <!-- Main Navigation Grid -->
+    <GridLayout
+        android:id="@+id/navGrid"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:columnCount="2"
+        android:rowCount="2"
+        android:useDefaultMargins="false"
+        android:alignmentMode="alignBounds"
+        android:gravity="center">
+
+        <!--  Find My Location  -->
+        <FrameLayout
+            android:id="@+id/btnFindLocation"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1"
+            android:background="@drawable/rectangle_light_blue"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Find My Location">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Find My Location"
+                android:textColor="@color/white"
+                android:textSize="45sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!-- 🟧 Obstacle Detection (Top Right) -->
+        <FrameLayout
+            android:id="@+id/btnObstacleDetection"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_columnWeight="1"
+            android:layout_rowWeight="1"
+            android:background="@drawable/rectangle_orange"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Obstacle Detection">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Obstacle Detection"
+                android:textColor="@color/white"
+                android:textSize="45sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!-- Get Directions  -->
+        <FrameLayout
+            android:id="@+id/btnGetDirections"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_columnSpan="2"
+            android:layout_rowWeight="1"
+            android:background="@drawable/rectangle_green"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Get Directions">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Get Directions"
+                android:textColor="@color/white"
+                android:textSize="55sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+    </GridLayout>
+
+    <!-- 🎤 Mic Bar -->
+    <FrameLayout
+        android:id="@+id/btnMic"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Activate Voice Command">
+
+        <ImageView
+            style="@style/MicIconStyle"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_mic"
+            android:contentDescription="Microphone Icon" />
+    </FrameLayout>
+</LinearLayout>
