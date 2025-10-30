@@ -43,7 +43,6 @@ import com.google.common.util.concurrent.ListenableFuture;
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Edge to edge support
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
@@ -55,6 +54,7 @@ import com.google.common.util.concurrent.ListenableFuture;
             return insets;
         });
 
+        // Initialize views
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
@@ -325,6 +325,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 
                 cameraProvider.unbindAll();
                 cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
+
+                Log.i(TAG, "Camera started for feature: " + currentFeature);
 
             } catch (ExecutionException | InterruptedException e) {
                 Log.e(TAG, "Camera initialization failed", e);

@@ -44,7 +44,7 @@
             FrameLayout btnDetectPeople = findViewById(R.id.btnDetectPeople);
             btnDetectPeople.setOnClickListener(v -> {
                 Intent intent = new Intent(this, MainActivity.class);
-                intent.putExtra("detect_people", true);
+                intent.putExtra("feature", "detect_people");
                 startActivity(intent);
             });
         }
