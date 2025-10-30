@@ -29,7 +29,7 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
     public FrameAnalyzer(WebSocketManager manager, FeatureProvider provider) {
         this.wsManager = manager;
-        this.featureProvider = () -> null;
+        this.featureProvider = provider;
     }
 
     @Override
@@ -63,10 +63,16 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
             if (wsManager != null && wsManager.isConnected() && activeFeature != null) {
                 wsManager.sendFrame(jpegBytes, activeFeature);
+                long now = System.currentTimeMillis();
+                if (now - lastLogTime > 2000) {
+                    Log.d(TAG, "Sending frame - Feature: " + activeFeature + ", Size: " + jpegBytes.length + " bytes");
+                    lastLogTime = now;
+                }
             } else {
                 long now = System.currentTimeMillis();
                 if (now - lastLogTime > 2000) {
-                    Log.d(TAG, "Skipping frame, no feature active or WS not connected");
+                    Log.d(TAG, "Skipping frame - WS: " + (wsManager != null ? wsManager.isConnected() : "null") + 
+                               ", Feature: " + activeFeature);
                     lastLogTime = now;
                 }
             }

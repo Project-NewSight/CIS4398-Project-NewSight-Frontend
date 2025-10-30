@@ -46,9 +46,7 @@
             android:background="@drawable/rectangle_light_blue"
             android:clickable="true"
             android:focusable="true"
-            android:contentDescription="Ping Current Location"
-            android:padding="0dp"
-            android:layout_margin="0dp">
+            android:contentDescription="Ping Current Location">
 
             <TextView
                 style="@style/ShadowText"
@@ -70,9 +68,7 @@
             android:background="@drawable/rectangle_red"
             android:clickable="true"
             android:focusable="true"
-            android:contentDescription="Send Emergency Text Alert"
-            android:padding="0dp"
-            android:layout_margin="0dp">
+            android:contentDescription="Send Emergency Text Alert">
 
             <TextView
                 style="@style/ShadowText"
@@ -80,6 +76,28 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:text="Send Text Alert"
+                android:textColor="@color/white"
+                android:textSize="50sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!-- 📷 Open Camera Button -->
+        <FrameLayout
+            android:id="@+id/btnOpenCamera"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_green"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Open Camera">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Open Camera"
                 android:textColor="@color/white"
                 android:textSize="50sp"
                 android:textStyle="bold" />
@@ -94,9 +112,7 @@
         android:background="@drawable/rectangle_deep_blue"
         android:clickable="true"
         android:focusable="true"
-        android:contentDescription="Activate Voice Command"
-        android:padding="0dp"
-        android:layout_margin="0dp">
+        android:contentDescription="Activate Voice Command">
 
         <ImageView
             style="@style/MicIconStyle"

@@ -46,11 +46,22 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
         previewView = findViewById(R.id.previewView);
         cameraExecutor = Executors.newSingleThreadExecutor();
 
+        // Initialize the buttons
+        btnNavigation = findViewById(R.id.btnNavigation);
+        btnASL = findViewById(R.id.btnASL);
+        btnObjectDetection = findViewById(R.id.btnObjectDetection);
+        btnStopFeature = findViewById(R.id.btnStopFeature);
 
         btnNavigation.setOnClickListener(v -> setActiveFeature("navigation"));
         btnASL.setOnClickListener(v -> setActiveFeature("asl_detection"));
         btnObjectDetection.setOnClickListener(v -> setActiveFeature("object_detection"));
         btnStopFeature.setOnClickListener(v -> setActiveFeature(null));
+
+        // Check if an initial feature was passed
+        String featureFromIntent = getIntent().getStringExtra("feature");
+        if (featureFromIntent != null) {
+            setActiveFeature(featureFromIntent); // starts feature automatically
+        }
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -65,6 +76,7 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     private void setActiveFeature(String feature) {
         activeFeature = feature;
         String message = (feature != null) ? feature + " feature active" : "Feature streaming stopped";
+        Log.d(TAG, "Active feature changed to: " + feature);
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
@@ -119,7 +131,7 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     @Override
     public void onConnectionStatus(boolean isConnected) {
         runOnUiThread(() -> Toast.makeText(this,
-                isConnected ? "✅ Connected to backend" : "⚠️ Backend not available",
+                isConnected ? "Connected to backend" : "Backend not available",
                 Toast.LENGTH_SHORT).show());
     }
 
