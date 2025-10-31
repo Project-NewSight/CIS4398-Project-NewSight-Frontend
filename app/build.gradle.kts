@@ -32,10 +32,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     kotlin{
-        jvmToolchain(11)//tirth patel was here
+        jvmToolchain(11)
     }
     buildFeatures {
         compose = true
+    }
+    kotlinOptions {
+        jvmTarget = "11"
     }
 }
 
