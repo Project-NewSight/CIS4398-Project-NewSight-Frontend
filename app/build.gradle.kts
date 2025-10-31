@@ -53,17 +53,4 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-
-
-    // CameraX dependencies for camera stream
-    val cameraxVersion = "1.3.1"
-    implementation("androidx.camera:camera-core:" + cameraxVersion)
-    implementation("androidx.camera:camera-camera2:" + cameraxVersion)
-    implementation("androidx.camera:camera-lifecycle:" + cameraxVersion)
-    implementation("androidx.camera:camera-view:" + cameraxVersion)
-
-    // TensorFlow Lite dependencies for object detection
-    implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.4")
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
-
 }
