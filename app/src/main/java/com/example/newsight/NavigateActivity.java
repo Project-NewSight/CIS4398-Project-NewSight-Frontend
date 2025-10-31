@@ -1,8 +1,6 @@
 package com.example.newsight;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.widget.FrameLayout;
 import android.content.Intent;
@@ -40,9 +38,6 @@ public class NavigateActivity extends AppCompatActivity {
         btnObstacleDetection.setOnClickListener(v -> {
             Intent intent = new Intent(NavigateActivity.this, ObstacleActivity.class);
             startActivity(intent);
-            super.onResume();
-            // 确保返回时回到竖屏
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         });
 
         //  GET DIRECTIONS → Launch direction submenu
