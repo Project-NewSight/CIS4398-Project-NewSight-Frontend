@@ -8,6 +8,9 @@
     <!-- Optional: declare camera feature (not required for install on devices without camera) -->
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
+    <!-- Vibrations Permissions -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
