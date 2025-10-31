@@ -2,12 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="true" />
-
     <!-- Camera permission -->
     <uses-permission android:name="android.permission.CAMERA" />
 
@@ -16,7 +10,6 @@
 
     <!-- Vibrations Permissions -->
     <uses-permission android:name="android.permission.VIBRATE" />
-
 
     <application
         android:allowBackup="true"
@@ -52,12 +45,6 @@
         <!-- Observation / Detection -->
         <activity android:name=".ObserveActivity" android:exported="true" />
         <activity android:name=".DetectionActivity" android:exported="true" />
-
-        <activity android:name=".ObstacleActivity" 
-            android:exported="true"
-            android:screenOrientation="landscape"
-            tools:ignore="DiscouragedApi" />
-
 
         <!-- Color Cue -->
         <activity android:name=".ColorCueActivity" android:exported="true" />
