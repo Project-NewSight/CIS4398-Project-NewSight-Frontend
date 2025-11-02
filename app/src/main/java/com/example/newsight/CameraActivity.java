@@ -60,6 +60,12 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
         } else {
             initCameraAndBackend();
         }
+        // Check if an initial feature was passed
+        String featureFromIntent = getIntent().getStringExtra("feature");
+        if (featureFromIntent != null) {
+            setActiveFeature(featureFromIntent); // starts people detection automatically
+        }
+
     }
 
     private void setActiveFeature(String feature) {
@@ -157,7 +163,7 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     @Override
     public void onConnectionStatus(boolean isConnected) {
         runOnUiThread(() -> Toast.makeText(this,
-                isConnected ? "✅ Connected to backend" : "⚠️ Backend not available",
+                isConnected ? "Connected to backend" : "Backend not available",
                 Toast.LENGTH_SHORT).show());
         Log.d(TAG, "WebSocket connected=" + isConnected);
 

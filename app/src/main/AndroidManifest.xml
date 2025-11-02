@@ -2,16 +2,23 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
+
     <!-- Camera permission -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
-    <!-- Optional: declare camera feature -->
-    <uses-feature android:name="android.hardware.camera.any" android:required="true" />
+    <!-- Optional: declare camera feature (not required for install on devices without camera) -->
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
+    <!-- Vibrations Permissions -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
 
     <application
-        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -21,7 +28,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NewSight">
 
-        <!-- SplashActivity as launcher -->
+        <!-- Launcher Activity -->
         <activity
             android:name=".splash"
             android:exported="true">
@@ -31,16 +38,48 @@
             </intent-filter>
         </activity>
 
-        <!-- MainActivity -->
-        <activity
+        <!-- Main Activities -->
+        <activity android:name=".MainActivity" android:exported="true" />
+        <activity android:name=".HomeActivity" android:exported="true" />
 
-            android:name=".MainActivity"
-            android:exported="false" />
-        <!-- CameraActivity -->
-        <activity
-            android:name=".CameraActivity"
-            android:exported="false"/>
+        <!-- Navigation Activities -->
+        <activity android:name=".NavigateActivity" android:exported="true" />
+        <activity android:name=".GetDirectionsActivity" android:exported="true" />
 
+        <!-- Communication Activities -->
+        <activity android:name=".CommunicateActivity" android:exported="true" />
+
+        <!-- Observation / Detection -->
+        <activity android:name=".ObserveActivity" android:exported="true" />
+        <activity android:name=".DetectionActivity" android:exported="true" />
+
+        <activity android:name=".ObstacleActivity" 
+            android:exported="true"
+            android:screenOrientation="landscape"
+            tools:ignore="DiscouragedApi" />
+
+
+        <!-- Color Cue -->
+        <activity android:name=".ColorCueActivity" android:exported="true" />
+
+        <!-- Emergency -->
+        <activity android:name=".EmergencyActivity" android:exported="true" />
+        <activity android:name=".EmergencySetupActivity" android:exported="true" />
+
+        <!-- Settings & Profile -->
+        <activity android:name=".SettingsActivity" android:exported="true" />
+        <activity android:name=".UserProfileActivity" android:exported="true" />
+        <activity android:name=".TrustedContactsActivity" android:exported="true" />
+        <activity android:name=".AddContactActivity" android:exported="true" />
+        <activity android:name=".VoiceAndHapticsActivity" android:exported="true" />
+        <activity android:name=".HelpAndSupportActivity" android:exported="true" />
+
+        <!-- Optional / commented activities
+        <activity android:name=".RemoveContactActivity" android:exported="true" />
+        <activity android:name=".EditProfileActivity" android:exported="true" />
+        <activity android:name=".PrivacyAndDataActivity" android:exported="true" />
+        <activity android:name=".LogoutActivity" android:exported="true" />
+        <activity android:name=".ObstacleActivity" android:exported="true" />
+        -->
     </application>
-
 </manifest>

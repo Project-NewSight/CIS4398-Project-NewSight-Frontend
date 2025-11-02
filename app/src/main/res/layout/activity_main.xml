@@ -49,7 +49,17 @@
         android:visibility="gone"
         android:layout_marginBottom="16dp" />
 
-    <!-- Camera container for PreviewView -->
+    <!-- Haptic Feedback Pattern Test -->
+    <Button
+        android:id="@+id/btnTestHaptic"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Test Haptic Patterns"
+        android:backgroundTint="@android:color/holo_orange_light"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Camera container for live preview -->
     <FrameLayout
         android:id="@+id/cameraContainer"
         android:layout_width="match_parent"
