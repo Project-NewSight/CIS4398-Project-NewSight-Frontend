@@ -37,7 +37,8 @@ public class WebSocketManager {
 
     private volatile String currentFeature = null;
     private long lastSend = 0;
-
+    private final java.util.concurrent.atomic.AtomicInteger framesSent = new java.util.concurrent.atomic.AtomicInteger(0);
+    public int getFramesSent() { return framesSent.get(); }
     public interface WsListener {
         void onResultsReceived(String results);
         void onConnectionStatus(boolean isConnected);
@@ -114,7 +115,7 @@ public class WebSocketManager {
         }
     }
 
-    /** Optional fallback: single JSON with Base64 (uses android.util.Base64; OK for API 24) */
+
     public void sendFrameAsJsonBase64(@NonNull byte[] frameBytes, @NonNull String feature) {
         if (!connected || webSocket == null) {
             Log.d(TAG, "Skipping frame (JSON mode) — not connected.");
@@ -186,15 +187,32 @@ public class WebSocketManager {
             if (listener != null) listener.onConnectionStatus(true);
         }
 
-        @Override
+        /*@Override
         public void onMessage(@NonNull WebSocket ws, @NonNull String text) {
             Log.d(TAG, "recv(text): " + text);
             if (listener != null) listener.onResultsReceived(text);
         }
+        */
+
 
         @Override
-        public void onMessage(@NonNull WebSocket ws, @NonNull ByteString bytes) {
-            Log.d(TAG, "recv(binary): " + bytes.size() + " bytes");
+        public void onMessage(@NonNull WebSocket ws, @NonNull String text) {
+            try {
+                org.json.JSONObject obj = new org.json.JSONObject(text);
+
+                boolean match = obj.optBoolean("match", false);
+                String name = obj.optString("contactName",
+                        obj.optString("name", "Unknown"));
+
+
+                Log.d(TAG, "rec(text) match: " + match + ", contactName: " + name);
+
+
+                if (listener != null) listener.onResultsReceived(obj.toString());
+
+            } catch (Exception e) {
+                Log.d(TAG, "rec(text) (non-JSON)");
+            }
         }
 
         @Override

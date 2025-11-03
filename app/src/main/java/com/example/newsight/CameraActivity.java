@@ -32,9 +32,10 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     private WebSocketManager wsManager;
 
     private boolean backendEnabled = true;
-    private String activeFeature = null;
+    private String activeFeature = "familiar_face";
 
     private final String SERVER_WS_URL = "ws://10.0.2.2:8000/ws/verify";
+
 
     private Button btnNavigation, btnASL, btnObjectDetection, btnStopFeature;
 
@@ -91,10 +92,17 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     private void initCameraAndBackend() {
         if (backendEnabled) {
             wsManager = new WebSocketManager(SERVER_WS_URL, this);
+
+
+            if (activeFeature != null) {
+                wsManager.setFeature(activeFeature);
+            }
+
             wsManager.connect();
         }
         startCameraSafe();
     }
+
 
     private void startCameraSafe() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
@@ -131,33 +139,32 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
 
     @Override
     public void onResultsReceived(String results) {
-        Log.d("CameraActivity", "WS msg: " + results);
+        Log.d(TAG, "WS msg: " + results);
         try {
             org.json.JSONObject obj = new org.json.JSONObject(results);
-            boolean ok = obj.optBoolean("ok", false);
-            if (!ok) {
+
+            // If backend signaled an error, you can still surface it
+            if (!obj.optBoolean("ok", false)) {
+                final String err = obj.optString("error", "unknown");
                 runOnUiThread(() ->
-                        Toast.makeText(this, "Backend error: " + obj.optString("error"), Toast.LENGTH_SHORT).show());
+                        Toast.makeText(this, "Backend error: " + err, Toast.LENGTH_SHORT).show());
                 return;
             }
+
             boolean match = obj.optBoolean("match", false);
             if (match) {
-                String name = obj.optString("contactName", "Unknown");
-                double conf = obj.optDouble("confidence", 0.0);
-                String pct = String.format("%.1f%%", conf * 100.0);
+                final String name = obj.optString("contactName", "Unknown");
                 runOnUiThread(() ->
-                        Toast.makeText(this, "Match: " + name + " (" + pct + ")", Toast.LENGTH_SHORT).show());
+                        Toast.makeText(this, "Match: " + name, Toast.LENGTH_SHORT).show());
             } else {
-                // show the ack for now so you can SEE replies
-                String note = obj.optString("note", "no_match");
-                int len = obj.optInt("len", 0);
-                runOnUiThread(() ->
-                        Toast.makeText(this, "Ack: " + note + " (" + len + " bytes)", Toast.LENGTH_SHORT).show());
+                // Suppress noisy "Ack"/no-match toasts; just log
+                Log.d(TAG, "No match (toast suppressed)");
             }
         } catch (Exception e) {
-            Log.e("CameraActivity", "Bad JSON", e);
+            Log.e(TAG, "Bad JSON", e);
         }
     }
+
 
 
     @Override
@@ -188,4 +195,12 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
             finish();
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (cameraExecutor != null) cameraExecutor.shutdown();
+        if (wsManager != null) wsManager.disconnect();
+    }
+
 }
