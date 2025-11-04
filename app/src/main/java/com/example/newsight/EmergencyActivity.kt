@@ -126,7 +126,9 @@ class EmergencyActivity : ComponentActivity() {
             .build()
 
         val request = Request.Builder()
-            .url("http://127.0.0.1:8000/emergency_alert/7")
+            //.url("http://127.0.0.1:8000/emergency_alert/7")
+
+            .url("https://cis4398-project-newsight-backend.onrender.com/emergency_alert/7")
 
             //.url("http://192.168.1.105:8000/emergency_alert/7")
 
