@@ -1,107 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#000000">
+    android:padding="20dp"
+    android:gravity="center">
 
-    <!-- 🔵 Home Bar -->
-    <FrameLayout
-        android:id="@+id/btnHome"
+    <Button
+        android:id="@+id/btn_take_photo"
         android:layout_width="match_parent"
-        android:layout_height="90dp"
-        android:background="@drawable/rectangle_deep_blue"
-        android:clickable="true"
-        android:focusable="true"
-        android:contentDescription="Go to Home">
+        android:layout_height="wrap_content"
+        android:text="Take Photo" />
 
-        <TextView
-            style="@style/ShadowText"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="Home"
-            android:textColor="@color/white"
-            android:textSize="45sp"
-            android:textStyle="bold" />
-    </FrameLayout>
-
-    <!-- 🧱 Emergency Actions -->
-    <LinearLayout
+    <ImageView
+        android:id="@+id/img_preview"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:padding="0dp"
-        android:layout_margin="0dp"
-        android:gravity="top">
+        android:layout_height="220dp"
+        android:layout_marginTop="18dp"
+        android:scaleType="centerCrop"
+        android:contentDescription="Photo preview" />
 
-        <!-- 📡 Ping Location -->
-        <FrameLayout
-            android:id="@+id/btnPingLocation"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:background="@drawable/rectangle_light_blue"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Ping Current Location"
-            android:padding="0dp"
-            android:layout_margin="0dp">
-
-            <TextView
-                style="@style/ShadowText"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="Ping Location"
-                android:textColor="@color/white"
-                android:textSize="50sp"
-                android:textStyle="bold" />
-        </FrameLayout>
-
-        <!-- 🟥 Send Text Alert -->
-        <FrameLayout
-            android:id="@+id/btnSendAlert"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:background="@drawable/rectangle_red"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="Send Emergency Text Alert"
-            android:padding="0dp"
-            android:layout_margin="0dp">
-
-            <TextView
-                style="@style/ShadowText"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="Send Text Alert"
-                android:textColor="@color/white"
-                android:textSize="50sp"
-                android:textStyle="bold" />
-        </FrameLayout>
-    </LinearLayout>
-
-    <!-- 🎤 Mic Bar -->
-    <FrameLayout
-        android:id="@+id/btnMic"
+    <Button
+        android:id="@+id/btn_send_alert"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:background="@drawable/rectangle_deep_blue"
-        android:clickable="true"
-        android:focusable="true"
-        android:contentDescription="Activate Voice Command"
-        android:padding="0dp"
-        android:layout_margin="0dp">
-
-        <ImageView
-            style="@style/MicIconStyle"
-            android:layout_gravity="center"
-            android:src="@drawable/ic_mic"
-            android:contentDescription="Microphone Icon" />
-    </FrameLayout>
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:text="Send Emergency Alert to Trust Contact" />
 </LinearLayout>
+
