@@ -40,5 +40,13 @@ public class GetDirectionsActivity extends AppCompatActivity {
             Intent intent = new Intent(this, StopNavigationActivity.class);
             startActivity(intent);
         });
+
+        //start camera when clicking on get directions
+        FrameLayout btnDetectPeople = findViewById(R.id.btnStartNavigation);
+        btnDetectPeople.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra("feature", "start_navigation");
+            startActivity(intent);
+        });
     }
 }

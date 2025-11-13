@@ -16,16 +16,95 @@
     <ImageView
         android:id="@+id/img_preview"
         android:layout_width="match_parent"
-        android:layout_height="220dp"
-        android:layout_marginTop="18dp"
-        android:scaleType="centerCrop"
-        android:contentDescription="Photo preview" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="0dp"
+        android:layout_margin="0dp"
+        android:gravity="top">
 
-    <Button
-        android:id="@+id/btn_send_alert"
+        <!-- 📡 Ping Location -->
+        <FrameLayout
+            android:id="@+id/btnPingLocation"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_light_blue"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Ping Current Location">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Ping Location"
+                android:textColor="@color/white"
+                android:textSize="50sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!-- 🟥 Send Text Alert -->
+        <FrameLayout
+            android:id="@+id/btnSendAlert"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_red"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Send Emergency Text Alert">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Send Text Alert"
+                android:textColor="@color/white"
+                android:textSize="50sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!-- 📷 Open Camera Button -->
+        <FrameLayout
+            android:id="@+id/btnOpenCamera"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_green"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Open Camera">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Open Camera"
+                android:textColor="@color/white"
+                android:textSize="50sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- 🎤 Mic Bar -->
+    <FrameLayout
+        android:id="@+id/btnMic"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="18dp"
-        android:text="Send Emergency Alert to Trust Contact" />
+        android:layout_height="100dp"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Activate Voice Command">
+
+        <ImageView
+            style="@style/MicIconStyle"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_mic"
+            android:contentDescription="Microphone Icon" />
+    </FrameLayout>
 </LinearLayout>
 
