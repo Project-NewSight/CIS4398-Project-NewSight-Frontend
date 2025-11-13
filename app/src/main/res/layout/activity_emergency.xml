@@ -1,34 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#000000">
+    android:padding="20dp"
+    android:gravity="center">
 
-    <!-- 🔵 Home Bar -->
-    <FrameLayout
-        android:id="@+id/btnHome"
+    <Button
+        android:id="@+id/btn_take_photo"
         android:layout_width="match_parent"
-        android:layout_height="90dp"
-        android:background="@drawable/rectangle_deep_blue"
-        android:clickable="true"
-        android:focusable="true"
-        android:contentDescription="Go to Home">
+        android:layout_height="wrap_content"
+        android:text="Take Photo" />
 
-        <TextView
-            style="@style/ShadowText"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="Home"
-            android:textColor="@color/white"
-            android:textSize="45sp"
-            android:textStyle="bold" />
-    </FrameLayout>
-
-    <!-- 🧱 Emergency Actions -->
-    <LinearLayout
+    <ImageView
+        android:id="@+id/img_preview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -120,4 +106,16 @@
             android:src="@drawable/ic_mic"
             android:contentDescription="Microphone Icon" />
     </FrameLayout>
+        android:layout_height="220dp"
+        android:layout_marginTop="18dp"
+        android:scaleType="centerCrop"
+        android:contentDescription="Photo preview" />
+
+    <Button
+        android:id="@+id/btn_send_alert"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:text="Send Emergency Alert to Trust Contact" />
 </LinearLayout>
+
