@@ -77,12 +77,6 @@ public class EmergencyActivity extends AppCompatActivity {
         setContentView(R.layout.activity_emergency);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        //Home
-        FrameLayout btnHome = findViewById(R.id.btnHome);
-        btnHome.setOnClickListener(v -> {
-            Intent intent = new Intent(this, HomeActivity.class);
-            startActivity(intent);
-        });
 
         btnTakePhoto = findViewById(R.id.btn_take_photo);
         btnSendAlert = findViewById(R.id.btn_send_alert);
@@ -198,16 +192,5 @@ public class EmergencyActivity extends AppCompatActivity {
                 });
             }
         });
-
-        // Open Camera (new)
-        FrameLayout btnOpenCamera = findViewById(R.id.btnOpenCamera);
-        btnOpenCamera.setOnClickListener(v -> {
-            // Launch MainActivity and open camera directly
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra("feature", "emergency"); // signal MainActivity to open camera immediately
-            startActivity(intent);
-        });
     }
 }
-
-
