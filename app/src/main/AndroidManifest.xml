@@ -2,24 +2,27 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!-- Camera support -->
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="NewSight"
         android:supportsRtl="true"
         android:theme="@style/Theme.NewSight">
 
+        <!-- FileProvider for image capture -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
@@ -30,56 +33,47 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <!-- Launcher Activity -->
         <activity
             android:name=".splash"
-            android:exported="true"
-            >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- MainActivity normal -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="true" />
-
-        <!-- HomeActivity -->
+        <!-- REAL Main Screens -->
+        <activity android:name=".MainActivity" android:exported="true" />
         <activity android:name=".HomeActivity" android:exported="true" />
 
-        <!-- NavigateActivity Section  -->
+        <!-- Emergency Features -->
+        <activity android:name=".EmergencyActivity" android:exported="true" />
+        <activity android:name=".EmergencySetupActivity" android:exported="true" />
+
+        <!-- Navigation -->
         <activity android:name=".NavigateActivity" android:exported="true" />
         <activity android:name=".GetDirectionsActivity" android:exported="true" />
 
-        <!-- CommunicateActivity -->
-        <activity android:name=".CommunicateActivity" android:exported="true" />
-
-        <!-- ObserveActivity -->
-        <activity
-            android:name=".ObserveActivity" android:exported="true" />
+        <!-- Observe / Detection -->
+        <activity android:name=".ObserveActivity" android:exported="true" />
         <activity android:name=".DetectionActivity" android:exported="true" />
-        <!-- <activity android:name=".ObstacleActivity" android:exported="true" /> -->
 
-        <!-- ColorCueActivity -->
         <activity
-            android:name=".ColorCueActivity" android:exported="true" />
+            android:name=".ObstacleActivity"
+            android:screenOrientation="landscape"
+            android:exported="true"
+            tools:ignore="DiscouragedApi" />
 
-        <!-- EmergencyActivity -->
-        <activity
-            android:name=".EmergencyActivity" android:exported="true" />
-
-        <!-- SettingsActivity -->
+        <!-- Other Activities -->
+        <activity android:name=".CommunicateActivity" android:exported="true" />
+        <activity android:name=".ColorCueActivity" android:exported="true" />
         <activity android:name=".SettingsActivity" android:exported="true" />
         <activity android:name=".UserProfileActivity" android:exported="true" />
         <activity android:name=".TrustedContactsActivity" android:exported="true" />
         <activity android:name=".AddContactActivity" android:exported="true" />
-        <!-- <activity android:name=".RemoveContactActivity" android:exported="true" /> -->
-        <!--  <activity android:name=".EditProfileActivity" android:exported="true" /> -->
         <activity android:name=".VoiceAndHapticsActivity" android:exported="true" />
-        <!-- <activity android:name=".PrivacyAndDataActivity" android:exported="true" /> -->
         <activity android:name=".HelpAndSupportActivity" android:exported="true" />
-        <activity android:name=".EmergencySetupActivity" android:exported="true" />
-        <!-- <activity android:name=".LogoutActivity" android:exported="true" /> -->
+
     </application>
 </manifest>
