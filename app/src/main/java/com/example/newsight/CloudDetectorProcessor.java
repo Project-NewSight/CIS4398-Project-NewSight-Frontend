@@ -30,12 +30,17 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
 
     private static final String TAG = "CloudDetectorProcessor";
 
-    // ⚠️ 改成你电脑的 IP
+    // TODO: set this to your machine’s IP
     private static final String BASE_URL = "http://192.168.1.153:8000";
     private static final String DETECT_URL = BASE_URL + "/detect";
     private static final String HEALTH_URL = BASE_URL + "/health";
 
-    private static final long MIN_INTERVAL_MS = 200; // 5 FPS
+    // Target size we send to the backend (keeps bandwidth and YOLO cost low)
+    private static final int TARGET_WIDTH = 640;
+    private static final int TARGET_HEIGHT = 480;
+
+    private static final long MIN_INTERVAL_MS = 200; // ~5 FPS
+
     private long lastRequestTime = 0L;
     private int frameId = 0;
 
@@ -45,8 +50,23 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
     private final ExecutorService networkExecutor;
     private final Context appContext;
 
+    // Health check flags
     private volatile boolean healthChecked = false;
     private volatile boolean backendReachable = false;
+
+    // One-in-flight control
+    private volatile boolean requestInFlight = false;
+
+    // HUD metrics
+    private volatile long lastLatencyMs = 0L;
+    private volatile float approxFps = 0f;
+    private volatile long lastResponseTimeMs = 0L;
+
+    // Reusable buffers to reduce GC
+    private int[] rgbBuffer = null;
+    private ByteArrayOutputStream jpegStream = null;
+    private int lastFullWidth = -1;
+    private int lastFullHeight = -1;
 
     public CloudDetectorProcessor(Context context, OverlayView overlayView) {
         this.overlayView = overlayView;
@@ -112,27 +132,40 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
             int width = imageProxy.getWidth();
             int height = imageProxy.getHeight();
 
-            // ✅ 极简版：只拿 Y 通道当成灰度图，压成 JPEG
-            //    YOLO 收到的是灰度图，也照样能跑（只是没有颜色信息）
-            byte[] yBytes = getYPlaneBytes(image);
-            if (yBytes == null) {
-                imageProxy.close();
-                return;
+            // Allocate reusable buffers if needed
+            if (rgbBuffer == null || width != lastFullWidth || height != lastFullHeight) {
+                rgbBuffer = new int[width * height];
+                lastFullWidth = width;
+                lastFullHeight = height;
+            }
+            if (jpegStream == null) {
+                jpegStream = new ByteArrayOutputStream(1024 * 1024);
+            } else {
+                jpegStream.reset();
             }
 
-            // 把 Y 平铺成一个灰度 Bitmap
-            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-            int[] pixels = new int[width * height];
-            for (int i = 0; i < width * height; i++) {
-                int y = yBytes[i] & 0xFF;
-                pixels[i] = 0xFF000000 | (y << 16) | (y << 8) | y; // 灰度
-            }
-            bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
+            // Convert YUV_420_888 -> ARGB int[] (color)
+            yuv420ToArgb(image, rgbBuffer, width, height);
 
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos);
-            bitmap.recycle();
-            byte[] jpegBytes = baos.toByteArray();
+            // Create a full-size bitmap, then downscale to target size
+            Bitmap fullBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            fullBitmap.setPixels(rgbBuffer, 0, width, 0, 0, width, height);
+
+            // Keep aspect ratio while fitting into TARGET_WIDTH x TARGET_HEIGHT
+            float scale = Math.min(
+                    TARGET_WIDTH * 1f / width,
+                    TARGET_HEIGHT * 1f / height
+            );
+            int outW = Math.round(width * scale);
+            int outH = Math.round(height * scale);
+
+            Bitmap scaledBitmap = Bitmap.createScaledBitmap(fullBitmap, outW, outH, true);
+            fullBitmap.recycle();
+
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 75, jpegStream);
+            scaledBitmap.recycle();
+
+            byte[] jpegBytes = jpegStream.toByteArray();
 
             imageProxy.close();
 
@@ -140,19 +173,31 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
                 overlayView.post(() ->
                         overlayView.setBackendResults(
                                 null,
-                                width,
-                                height,
-                                "Backend not reachable"
+                                outW,
+                                outH,
+                                "Backend not reachable",
+                                lastLatencyMs,
+                                approxFps
                         )
                 );
                 return;
             }
 
-            // 发给后端
-            networkExecutor.submit(() -> sendToBackend(jpegBytes, width, height));
+            // Only send if no request is currently in flight
+            if (requestInFlight) {
+                return;
+            }
+            requestInFlight = true;
+
+            final int backendImageWidth = outW;
+            final int backendImageHeight = outH;
+            final byte[] payload = jpegBytes;
+
+            networkExecutor.submit(() ->
+                    sendToBackend(payload, backendImageWidth, backendImageHeight)
+            );
 
         } catch (Throwable t) {
-            // ✅ 兜底保护：不管什么异常，都不能让 app 崩
             Log.e(TAG, "analyze() crashed", t);
             try {
                 imageProxy.close();
@@ -161,20 +206,56 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
         }
     }
 
-    private byte[] getYPlaneBytes(Image image) {
-        try {
-            Image.Plane yPlane = image.getPlanes()[0];
-            ByteBuffer yBuffer = yPlane.getBuffer();
-            byte[] yBytes = new byte[yBuffer.remaining()];
-            yBuffer.get(yBytes);
-            return yBytes;
-        } catch (Exception e) {
-            Log.e(TAG, "getYPlaneBytes error", e);
-            return null;
+    /**
+     * Convert an android.media.Image in format YUV_420_888 to ARGB8888 pixels.
+     */
+    private void yuv420ToArgb(Image image, int[] out, int width, int height) {
+        Image.Plane[] planes = image.getPlanes();
+        ByteBuffer yBuffer = planes[0].getBuffer();
+        ByteBuffer uBuffer = planes[1].getBuffer();
+        ByteBuffer vBuffer = planes[2].getBuffer();
+
+        int yRowStride = planes[0].getRowStride();
+        int uRowStride = planes[1].getRowStride();
+        int vRowStride = planes[2].getRowStride();
+        int uPixelStride = planes[1].getPixelStride();
+        int vPixelStride = planes[2].getPixelStride();
+
+        // We assume U and V planes have the same layout
+        for (int y = 0; y < height; y++) {
+            int yRow = yRowStride * y;
+            int uvRow = uRowStride * (y / 2);
+            for (int x = 0; x < width; x++) {
+                int yIndex = yRow + x;
+                int uvIndex = uvRow + (x / 2) * uPixelStride;
+
+                int Y = yBuffer.get(yIndex) & 0xff;
+                int U = (uBuffer.get(uvIndex) & 0xff) - 128;
+                int V = (vBuffer.get(uvIndex) & 0xff) - 128;
+
+                // Standard YUV to RGB conversion
+                float fY = (float) Y;
+                int r = (int) (fY + 1.370705f * V);
+                int g = (int) (fY - 0.337633f * U - 0.698001f * V);
+                int b = (int) (fY + 1.732446f * U);
+
+                r = clamp(r, 0, 255);
+                g = clamp(g, 0, 255);
+                b = clamp(b, 0, 255);
+
+                out[y * width + x] = 0xFF000000 | (r << 16) | (g << 8) | b;
+            }
         }
     }
 
+    private int clamp(int v, int min, int max) {
+        if (v < min) return min;
+        if (v > max) return max;
+        return v;
+    }
+
     private void sendToBackend(byte[] jpegBytes, int imageWidth, int imageHeight) {
+        long start = System.currentTimeMillis();
         try {
             RequestBody fileBody = RequestBody.create(
                     jpegBytes,
@@ -193,6 +274,10 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
                     .build();
 
             try (Response response = client.newCall(request).execute()) {
+                long end = System.currentTimeMillis();
+                long latency = end - start;
+                lastLatencyMs = latency;
+
                 if (!response.isSuccessful() || response.body() == null) {
                     Log.w(TAG, "/detect not successful: " + response.code());
                     return;
@@ -206,6 +291,16 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
                     return;
                 }
 
+                // Update approximate FPS based on time between responses
+                long now = System.currentTimeMillis();
+                if (lastResponseTimeMs > 0) {
+                    long dt = now - lastResponseTimeMs;
+                    if (dt > 0) {
+                        approxFps = 1000f / (float) dt;
+                    }
+                }
+                lastResponseTimeMs = now;
+
                 overlayView.post(() ->
                         overlayView.setBackendResults(
                                 detectResponse.detections,
@@ -213,7 +308,9 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
                                 imageHeight,
                                 detectResponse.summary != null
                                         ? detectResponse.summary.message
-                                        : ""
+                                        : "",
+                                lastLatencyMs,
+                                approxFps
                         )
                 );
             }
@@ -223,6 +320,8 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
                 backendReachable = false;
                 showToastOnUi("Lost connection to backend");
             }
+        } finally {
+            requestInFlight = false;
         }
     }
 }

@@ -14,7 +14,7 @@ import java.util.List;
 public class OverlayView extends View {
 
     private static class Box {
-        RectF rect;     // 以“原始图像坐标”存储
+        RectF rect;     // in "backend image" coordinates
         String label;
         float score;
 
@@ -28,14 +28,17 @@ public class OverlayView extends View {
     private final Paint boxPaint = new Paint();
     private final Paint textPaint = new Paint();
     private final Paint bgPaint = new Paint();
+    private final Paint hudTextPaint = new Paint();
 
     private final List<Box> boxes = new ArrayList<>();
+    private final List<Box> lastBoxes = new ArrayList<>();
 
-    // 后端给的原始图像尺寸
-    private int imageWidth = 0;
-    private int imageHeight = 0;
+    private int imageWidth = 0;   // backend input width
+    private int imageHeight = 0;  // backend input height
 
     private String summaryMessage = "";
+    private long hudLatencyMs = 0L;
+    private float hudFps = 0f;
 
     public OverlayView(Context context) {
         super(context);
@@ -61,22 +64,35 @@ public class OverlayView extends View {
         textPaint.setTextSize(36f);
         textPaint.setAntiAlias(true);
 
-        bgPaint.setColor(Color.argb(160, 0, 0, 0)); // 半透明黑底
+        bgPaint.setColor(Color.argb(160, 0, 0, 0));
         bgPaint.setStyle(Paint.Style.FILL);
+
+        hudTextPaint.setColor(Color.WHITE);
+        hudTextPaint.setTextSize(30f);
+        hudTextPaint.setAntiAlias(true);
     }
 
     /**
-     * 后端检测结果：detections 中的 bbox 为 0~1 归一化坐标
+     * Called from the detector thread (via post()) when new results are available.
+     * All bbox coordinates are normalized [0,1] on backend input image; we convert
+     * them into absolute image coords here.
      */
     public synchronized void setBackendResults(
-            java.util.List<CloudDetectionModels.BackendDetection> detections,
+            List<CloudDetectionModels.BackendDetection> detections,
             int imageWidth,
             int imageHeight,
-            String summaryMessage
+            String summaryMessage,
+            long latencyMs,
+            float fps
     ) {
         this.imageWidth = imageWidth;
         this.imageHeight = imageHeight;
         this.summaryMessage = summaryMessage != null ? summaryMessage : "";
+        this.hudLatencyMs = latencyMs;
+        this.hudFps = fps;
+
+        lastBoxes.clear();
+        lastBoxes.addAll(boxes);
 
         boxes.clear();
         if (detections != null) {
@@ -84,7 +100,6 @@ public class OverlayView extends View {
                 CloudDetectionModels.BBox b = d.bbox;
                 if (b == null) continue;
 
-                // 存储为“原始图像坐标”
                 RectF rect = new RectF(
                         b.x_min * imageWidth,
                         b.y_min * imageHeight,
@@ -97,6 +112,21 @@ public class OverlayView extends View {
                 boxes.add(new Box(rect, label, score));
             }
         }
+
+        // Simple exponential smoothing to reduce jitter when box counts match
+        if (!lastBoxes.isEmpty() && lastBoxes.size() == boxes.size()) {
+            float alpha = 0.4f; // 0..1, lower = smoother
+            for (int i = 0; i < boxes.size(); i++) {
+                Box cur = boxes.get(i);
+                Box prev = lastBoxes.get(i);
+
+                cur.rect.left   = prev.rect.left   * (1 - alpha) + cur.rect.left   * alpha;
+                cur.rect.top    = prev.rect.top    * (1 - alpha) + cur.rect.top    * alpha;
+                cur.rect.right  = prev.rect.right  * (1 - alpha) + cur.rect.right  * alpha;
+                cur.rect.bottom = prev.rect.bottom * (1 - alpha) + cur.rect.bottom * alpha;
+            }
+        }
+
         invalidate();
     }
 
@@ -109,16 +139,14 @@ public class OverlayView extends View {
         float viewW = getWidth();
         float viewH = getHeight();
 
-        // 1. 按比例缩放，保证不拉伸：取同一个 scale，居中显示
+        // Fit backend image into the view without stretching.
         float scale = Math.min(viewW / imageWidth, viewH / imageHeight);
-
-        // 图像在 View 中的偏移（留出黑边）
         float drawnImgW = imageWidth * scale;
         float drawnImgH = imageHeight * scale;
         float offsetX = (viewW - drawnImgW) / 2f;
         float offsetY = (viewH - drawnImgH) / 2f;
 
-        // 2. summary bar 画在“图像区域的最上方”，避免太贴顶
+        // Summary bar at the top of the image region
         float barHeight = 60f;
         if (!summaryMessage.isEmpty()) {
             RectF bar = new RectF(offsetX, offsetY, offsetX + drawnImgW, offsetY + barHeight);
@@ -126,9 +154,8 @@ public class OverlayView extends View {
             canvas.drawText(summaryMessage, offsetX + 16f, offsetY + 40f, textPaint);
         }
 
-        // 3. 画 bbox 和 label，注意不要和 summary bar 重叠
+        // Draw boxes
         for (Box box : boxes) {
-            // 原始坐标 -> View 坐标：先缩放，再加偏移
             RectF scaled = new RectF(
                     offsetX + box.rect.left * scale,
                     offsetY + box.rect.top * scale,
@@ -145,16 +172,15 @@ public class OverlayView extends View {
             float th = labelTextSize + 12f;
             float tw = textPaint.measureText(text) + 16f;
 
-            // 默认打算画在框的上方
+            // Default: try to place label above the box
             float tx = scaled.left + textMargin;
             float ty = scaled.top - textMargin;
 
-            // 计算 label 背景框的位置
             float labelTop = ty - th;
-            float minTopAllowed = offsetY + barHeight + 8f; // 至少要在 summary bar 下面一点
+            float minTopAllowed = offsetY + barHeight + 8f; // avoid overlapping summary bar
 
             if (labelTop < minTopAllowed) {
-                // 如果会和 summary 冲突，就画在框的“内部顶端”
+                // If it would overlap the summary, move label inside the box at the top.
                 labelTop = scaled.top + textMargin;
                 ty = labelTop + th - 12f;
             }
@@ -169,5 +195,28 @@ public class OverlayView extends View {
             canvas.drawRoundRect(bg, 8f, 8f, bgPaint);
             canvas.drawText(text, tx, ty, textPaint);
         }
+
+        // HUD at the bottom-left: FPS + latency
+        String hudText = String.format("FPS: %.1f   Latency: %d ms", hudFps, hudLatencyMs);
+        float hudPadding = 10f;
+        float hudHeight = 40f;
+        float hudWidth = hudTextPaint.measureText(hudText) + 2 * hudPadding;
+
+        float hudLeft = offsetX;
+        float hudTop = offsetY + drawnImgH - hudHeight - hudPadding;
+
+        RectF hudBg = new RectF(
+                hudLeft,
+                hudTop,
+                hudLeft + hudWidth,
+                hudTop + hudHeight
+        );
+        canvas.drawRoundRect(hudBg, 10f, 10f, bgPaint);
+        canvas.drawText(
+                hudText,
+                hudLeft + hudPadding,
+                hudTop + hudHeight - 12f,
+                hudTextPaint
+        );
     }
 }
