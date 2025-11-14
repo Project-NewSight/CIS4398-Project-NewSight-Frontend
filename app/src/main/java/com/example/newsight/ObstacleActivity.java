@@ -75,7 +75,7 @@ public class ObstacleActivity extends AppCompatActivity {
                 .build();
 
         try {
-            DetectorProcessor detector = new DetectorProcessor(this, overlayView);
+            CloudDetectorProcessor detector = new CloudDetectorProcessor(this, overlayView);
             imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(), detector);
         } catch (Exception e) {
             Log.e(TAG, "Could not initialize detector.", e);

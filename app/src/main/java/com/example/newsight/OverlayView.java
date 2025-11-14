@@ -8,79 +8,136 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
 
-import org.tensorflow.lite.task.vision.detector.Detection;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class OverlayView extends View {
 
+    private static class Box {
+        RectF rect;
+        String label;
+        float score;
+
+        Box(RectF rect, String label, float score) {
+            this.rect = rect;
+            this.label = label;
+            this.score = score;
+        }
+    }
+
     private final Paint boxPaint = new Paint();
     private final Paint textPaint = new Paint();
     private final Paint bgPaint = new Paint();
 
-    private List<Detection> results = new ArrayList<>();
-    private int imageW = 1, imageH = 1; // 拍到的图片尺寸
+    private final List<Box> boxes = new ArrayList<>();
 
-    public OverlayView(Context c, AttributeSet a) {
-        super(c, a);
+    private int imageWidth = 0;
+    private int imageHeight = 0;
+    private String summaryMessage = "";
+
+    public OverlayView(Context context) {
+        super(context);
+        init();
+    }
+
+    public OverlayView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    public OverlayView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init();
+    }
+
+    private void init() {
+        boxPaint.setColor(Color.GREEN);
         boxPaint.setStyle(Paint.Style.STROKE);
-        boxPaint.setStrokeWidth(5f);
-        boxPaint.setColor(Color.parseColor("#22AAFF"));
+        boxPaint.setStrokeWidth(6f);
 
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(36f);
         textPaint.setAntiAlias(true);
 
-        bgPaint.setColor(Color.parseColor("#66000000"));
+        bgPaint.setColor(Color.argb(160, 0, 0, 0)); // 半透明黑
         bgPaint.setStyle(Paint.Style.FILL);
     }
 
-    /** 设置检测结果与原图尺寸，然后调用 invalidate() 重绘 */
-    public void setResults(List<Detection> detections, int imgW, int imgH) {
-        this.results = detections != null ? detections : new ArrayList<>();
-        this.imageW = Math.max(1, imgW);
-        this.imageH = Math.max(1, imgH);
-        postInvalidateOnAnimation();
+    /**
+     * 后端检测结果：传入归一化 bbox + 标签 + 分数。
+     */
+    public synchronized void setBackendResults(
+            List<CloudDetectionModels.BackendDetection> detections,
+            int imageWidth,
+            int imageHeight,
+            String summaryMessage
+    ) {
+        this.imageWidth = imageWidth;
+        this.imageHeight = imageHeight;
+        this.summaryMessage = summaryMessage != null ? summaryMessage : "";
+
+        boxes.clear();
+        if (detections != null) {
+            for (CloudDetectionModels.BackendDetection d : detections) {
+                CloudDetectionModels.BBox b = d.bbox;
+                if (b == null) continue;
+
+                // 先按照原始图像坐标构造，再在 onDraw 里按比例缩放
+                RectF rect = new RectF(
+                        b.x_min * imageWidth,
+                        b.y_min * imageHeight,
+                        b.x_max * imageWidth,
+                        b.y_max * imageHeight
+                );
+                String label = d.cls != null ? d.cls : "obj";
+                float score = d.confidence;
+
+                boxes.add(new Box(rect, label, score));
+            }
+        }
+        invalidate();
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected synchronized void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (results == null || results.isEmpty()) return;
 
-        // ImageView 使用 fitCenter：等比缩放并居中显示
-        float viewW = getWidth();
-        float viewH = getHeight();
-        float scale = Math.min(viewW / imageW, viewH / imageH);
-        float drawnW = imageW * scale;
-        float drawnH = imageH * scale;
-        float dx = (viewW - drawnW) / 2f;
-        float dy = (viewH - drawnH) / 2f;
+        if (imageWidth == 0 || imageHeight == 0) {
+            return;
+        }
 
-        for (Detection d : results) {
-            if (d.getCategories() == null || d.getCategories().isEmpty()) continue;
+        float scaleX = getWidth() / (float) imageWidth;
+        float scaleY = getHeight() / (float) imageHeight;
 
-            RectF b = new RectF(d.getBoundingBox());
-            // 映射到可见区域
-            b.left   = dx + b.left   * scale;
-            b.top    = dy + b.top    * scale;
-            b.right  = dx + b.right  * scale;
-            b.bottom = dy + b.bottom * scale;
+        // 画 bbox
+        for (Box box : boxes) {
+            RectF scaled = new RectF(
+                    box.rect.left * scaleX,
+                    box.rect.top * scaleY,
+                    box.rect.right * scaleX,
+                    box.rect.bottom * scaleY
+            );
 
-            canvas.drawRect(b, boxPaint);
+            canvas.drawRoundRect(scaled, 12f, 12f, boxPaint);
 
-            String label = d.getCategories().get(0).getLabel();
-            float score = d.getCategories().get(0).getScore();
-            String text = label + " " + Math.round(score * 100) + "%";
+            String text = box.label + " " + Math.round(box.score * 100) + "%";
 
-            float tx = b.left + 8f;
-            float ty = b.top - 10f;
+            float tx = scaled.left + 8f;
+            float ty = scaled.top - 10f;
             float tw = textPaint.measureText(text) + 16f;
             float th = 36f + 12f;
             RectF bg = new RectF(tx - 8f, ty - th, tx - 8f + tw, ty);
+
             canvas.drawRoundRect(bg, 8f, 8f, bgPaint);
             canvas.drawText(text, tx, ty - 12f, textPaint);
+        }
+
+        // 最上面画 summary（比如“Front 1.8m: person detected”）
+        if (!summaryMessage.isEmpty()) {
+            float w = getWidth();
+            RectF bar = new RectF(0, 0, w, 60);
+            canvas.drawRect(bar, bgPaint);
+            canvas.drawText(summaryMessage, 16f, 40f, textPaint);
         }
     }
 }
