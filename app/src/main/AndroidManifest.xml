@@ -17,6 +17,8 @@
     <!-- Vibrations Permissions -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- INTERNET Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
