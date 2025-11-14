@@ -14,7 +14,7 @@ import java.util.List;
 public class OverlayView extends View {
 
     private static class Box {
-        RectF rect;
+        RectF rect;     // 以“原始图像坐标”存储
         String label;
         float score;
 
@@ -31,8 +31,10 @@ public class OverlayView extends View {
 
     private final List<Box> boxes = new ArrayList<>();
 
+    // 后端给的原始图像尺寸
     private int imageWidth = 0;
     private int imageHeight = 0;
+
     private String summaryMessage = "";
 
     public OverlayView(Context context) {
@@ -59,15 +61,15 @@ public class OverlayView extends View {
         textPaint.setTextSize(36f);
         textPaint.setAntiAlias(true);
 
-        bgPaint.setColor(Color.argb(160, 0, 0, 0)); // 半透明黑
+        bgPaint.setColor(Color.argb(160, 0, 0, 0)); // 半透明黑底
         bgPaint.setStyle(Paint.Style.FILL);
     }
 
     /**
-     * 后端检测结果：传入归一化 bbox + 标签 + 分数。
+     * 后端检测结果：detections 中的 bbox 为 0~1 归一化坐标
      */
     public synchronized void setBackendResults(
-            List<CloudDetectionModels.BackendDetection> detections,
+            java.util.List<CloudDetectionModels.BackendDetection> detections,
             int imageWidth,
             int imageHeight,
             String summaryMessage
@@ -82,7 +84,7 @@ public class OverlayView extends View {
                 CloudDetectionModels.BBox b = d.bbox;
                 if (b == null) continue;
 
-                // 先按照原始图像坐标构造，再在 onDraw 里按比例缩放
+                // 存储为“原始图像坐标”
                 RectF rect = new RectF(
                         b.x_min * imageWidth,
                         b.y_min * imageHeight,
@@ -102,42 +104,70 @@ public class OverlayView extends View {
     protected synchronized void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (imageWidth == 0 || imageHeight == 0) {
-            return;
+        if (imageWidth == 0 || imageHeight == 0) return;
+
+        float viewW = getWidth();
+        float viewH = getHeight();
+
+        // 1. 按比例缩放，保证不拉伸：取同一个 scale，居中显示
+        float scale = Math.min(viewW / imageWidth, viewH / imageHeight);
+
+        // 图像在 View 中的偏移（留出黑边）
+        float drawnImgW = imageWidth * scale;
+        float drawnImgH = imageHeight * scale;
+        float offsetX = (viewW - drawnImgW) / 2f;
+        float offsetY = (viewH - drawnImgH) / 2f;
+
+        // 2. summary bar 画在“图像区域的最上方”，避免太贴顶
+        float barHeight = 60f;
+        if (!summaryMessage.isEmpty()) {
+            RectF bar = new RectF(offsetX, offsetY, offsetX + drawnImgW, offsetY + barHeight);
+            canvas.drawRect(bar, bgPaint);
+            canvas.drawText(summaryMessage, offsetX + 16f, offsetY + 40f, textPaint);
         }
 
-        float scaleX = getWidth() / (float) imageWidth;
-        float scaleY = getHeight() / (float) imageHeight;
-
-        // 画 bbox
+        // 3. 画 bbox 和 label，注意不要和 summary bar 重叠
         for (Box box : boxes) {
+            // 原始坐标 -> View 坐标：先缩放，再加偏移
             RectF scaled = new RectF(
-                    box.rect.left * scaleX,
-                    box.rect.top * scaleY,
-                    box.rect.right * scaleX,
-                    box.rect.bottom * scaleY
+                    offsetX + box.rect.left * scale,
+                    offsetY + box.rect.top * scale,
+                    offsetX + box.rect.right * scale,
+                    offsetY + box.rect.bottom * scale
             );
 
             canvas.drawRoundRect(scaled, 12f, 12f, boxPaint);
 
             String text = box.label + " " + Math.round(box.score * 100) + "%";
 
-            float tx = scaled.left + 8f;
-            float ty = scaled.top - 10f;
+            float textMargin = 8f;
+            float labelTextSize = textPaint.getTextSize();
+            float th = labelTextSize + 12f;
             float tw = textPaint.measureText(text) + 16f;
-            float th = 36f + 12f;
-            RectF bg = new RectF(tx - 8f, ty - th, tx - 8f + tw, ty);
+
+            // 默认打算画在框的上方
+            float tx = scaled.left + textMargin;
+            float ty = scaled.top - textMargin;
+
+            // 计算 label 背景框的位置
+            float labelTop = ty - th;
+            float minTopAllowed = offsetY + barHeight + 8f; // 至少要在 summary bar 下面一点
+
+            if (labelTop < minTopAllowed) {
+                // 如果会和 summary 冲突，就画在框的“内部顶端”
+                labelTop = scaled.top + textMargin;
+                ty = labelTop + th - 12f;
+            }
+
+            RectF bg = new RectF(
+                    tx - 8f,
+                    labelTop,
+                    tx - 8f + tw,
+                    labelTop + th
+            );
 
             canvas.drawRoundRect(bg, 8f, 8f, bgPaint);
-            canvas.drawText(text, tx, ty - 12f, textPaint);
-        }
-
-        // 最上面画 summary（比如“Front 1.8m: person detected”）
-        if (!summaryMessage.isEmpty()) {
-            float w = getWidth();
-            RectF bar = new RectF(0, 0, w, 60);
-            canvas.drawRect(bar, bgPaint);
-            canvas.drawText(summaryMessage, 16f, 40f, textPaint);
+            canvas.drawText(text, tx, ty, textPaint);
         }
     }
 }
