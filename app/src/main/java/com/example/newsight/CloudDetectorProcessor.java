@@ -15,6 +15,7 @@ import androidx.camera.core.ImageProxy;
 import com.google.gson.Gson;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,9 +30,7 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
 
     private static final String TAG = "CloudDetectorProcessor";
 
-    // ⚠️ 改成你运行 backend.py 的电脑 IP
-    // 例如电脑在局域网 IP 是 192.168.0.5:
-    // private static final String BASE_URL = "http://192.168.0.5:8000";
+    // ⚠️ 改成你电脑的 IP
     private static final String BASE_URL = "http://192.168.1.153:8000";
     private static final String DETECT_URL = BASE_URL + "/detect";
     private static final String HEALTH_URL = BASE_URL + "/health";
@@ -44,10 +43,8 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
     private final OkHttpClient client;
     private final Gson gson;
     private final ExecutorService networkExecutor;
-    private final YuvToRgbConverter yuvToRgbConverter;
     private final Context appContext;
 
-    // 用来控制只在第一次检测后端时弹 Toast
     private volatile boolean healthChecked = false;
     private volatile boolean backendReachable = false;
 
@@ -57,9 +54,7 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
         this.client = new OkHttpClient();
         this.gson = new Gson();
         this.networkExecutor = Executors.newSingleThreadExecutor();
-        this.yuvToRgbConverter = new YuvToRgbConverter(context);
 
-        // 启动时先异步 ping 一下 /health
         checkBackendHealthOnce();
     }
 
@@ -81,7 +76,7 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
                     backendReachable = response.isSuccessful();
                     String msg = backendReachable
                             ? "Backend connected"
-                            : "Backend health check failed: " + response.code();
+                            : "Backend health failed: " + response.code();
                     Log.i(TAG, msg);
                     showToastOnUi(msg);
                 }
@@ -99,110 +94,135 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
     @Override
     @OptIn(markerClass = ExperimentalGetImage.class)
     public void analyze(@NonNull ImageProxy imageProxy) {
-        long now = System.currentTimeMillis();
-        if (now - lastRequestTime < MIN_INTERVAL_MS) {
-            imageProxy.close();
-            return;
-        }
-        lastRequestTime = now;
-        frameId++;
-
-        Image image = imageProxy.getImage();
-        if (image == null) {
-            imageProxy.close();
-            return;
-        }
-
-        Bitmap bitmap = Bitmap.createBitmap(
-                imageProxy.getWidth(),
-                imageProxy.getHeight(),
-                Bitmap.Config.ARGB_8888
-        );
         try {
-            yuvToRgbConverter.yuvToRgb(image, bitmap);
-        } catch (Exception e) {
-            // 防止 RenderScript 等问题直接 crash
-            Log.e(TAG, "yuvToRgbConverter error", e);
-            imageProxy.close();
-            return;
-        }
-
-        final int imageWidth = bitmap.getWidth();
-        final int imageHeight = bitmap.getHeight();
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos);
-        bitmap.recycle();
-        final byte[] jpegBytes = baos.toByteArray();
-
-        imageProxy.close();
-
-        // 如果 health check 失败，就直接返回，不再持续狂打后端，避免异常
-        if (healthChecked && !backendReachable) {
-            // 你也可以在这里 overlayView 显示 “后端不可用”
-            overlayView.post(() ->
-                    overlayView.setBackendResults(
-                            null,
-                            imageWidth,
-                            imageHeight,
-                            "Backend not reachable"
-                    )
-            );
-            return;
-        }
-
-        networkExecutor.submit(() -> {
-            try {
-                RequestBody fileBody = RequestBody.create(
-                        jpegBytes,
-                        MediaType.get("image/jpeg")
-                );
-
-                RequestBody requestBody = new MultipartBody.Builder()
-                        .setType(MultipartBody.FORM)
-                        .addFormDataPart("file", "frame_" + frameId + ".jpg", fileBody)
-                        .addFormDataPart("frame_id", String.valueOf(frameId))
-                        .build();
-
-                Request request = new Request.Builder()
-                        .url(DETECT_URL)
-                        .post(requestBody)
-                        .build();
-
-                try (Response response = client.newCall(request).execute()) {
-                    if (!response.isSuccessful() || response.body() == null) {
-                        Log.w(TAG, "Backend /detect not successful: " + response.code());
-                        return;
-                    }
-                    String json = response.body().string();
-                    CloudDetectionModels.DetectResponse detectResponse =
-                            gson.fromJson(json, CloudDetectionModels.DetectResponse.class);
-
-                    if (detectResponse == null) {
-                        Log.w(TAG, "DetectResponse is null");
-                        return;
-                    }
-
-                    overlayView.post(() ->
-                            overlayView.setBackendResults(
-                                    detectResponse.detections,
-                                    imageWidth,
-                                    imageHeight,
-                                    detectResponse.summary != null
-                                            ? detectResponse.summary.message
-                                            : ""
-                            )
-                    );
-                }
-            } catch (Exception e) {
-                // 这里所有网络异常都 catch 掉，只打 log 和 Toast，不让它崩 App
-                Log.e(TAG, "Error calling backend /detect", e);
-                // 可选：只在第一次失败时提示
-                if (backendReachable) {
-                    backendReachable = false;
-                    showToastOnUi("Lost connection to backend");
-                }
+            long now = System.currentTimeMillis();
+            if (now - lastRequestTime < MIN_INTERVAL_MS) {
+                imageProxy.close();
+                return;
             }
-        });
+            lastRequestTime = now;
+            frameId++;
+
+            Image image = imageProxy.getImage();
+            if (image == null) {
+                imageProxy.close();
+                return;
+            }
+
+            int width = imageProxy.getWidth();
+            int height = imageProxy.getHeight();
+
+            // ✅ 极简版：只拿 Y 通道当成灰度图，压成 JPEG
+            //    YOLO 收到的是灰度图，也照样能跑（只是没有颜色信息）
+            byte[] yBytes = getYPlaneBytes(image);
+            if (yBytes == null) {
+                imageProxy.close();
+                return;
+            }
+
+            // 把 Y 平铺成一个灰度 Bitmap
+            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            int[] pixels = new int[width * height];
+            for (int i = 0; i < width * height; i++) {
+                int y = yBytes[i] & 0xFF;
+                pixels[i] = 0xFF000000 | (y << 16) | (y << 8) | y; // 灰度
+            }
+            bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos);
+            bitmap.recycle();
+            byte[] jpegBytes = baos.toByteArray();
+
+            imageProxy.close();
+
+            if (healthChecked && !backendReachable) {
+                overlayView.post(() ->
+                        overlayView.setBackendResults(
+                                null,
+                                width,
+                                height,
+                                "Backend not reachable"
+                        )
+                );
+                return;
+            }
+
+            // 发给后端
+            networkExecutor.submit(() -> sendToBackend(jpegBytes, width, height));
+
+        } catch (Throwable t) {
+            // ✅ 兜底保护：不管什么异常，都不能让 app 崩
+            Log.e(TAG, "analyze() crashed", t);
+            try {
+                imageProxy.close();
+            } catch (Exception ignore) {
+            }
+        }
+    }
+
+    private byte[] getYPlaneBytes(Image image) {
+        try {
+            Image.Plane yPlane = image.getPlanes()[0];
+            ByteBuffer yBuffer = yPlane.getBuffer();
+            byte[] yBytes = new byte[yBuffer.remaining()];
+            yBuffer.get(yBytes);
+            return yBytes;
+        } catch (Exception e) {
+            Log.e(TAG, "getYPlaneBytes error", e);
+            return null;
+        }
+    }
+
+    private void sendToBackend(byte[] jpegBytes, int imageWidth, int imageHeight) {
+        try {
+            RequestBody fileBody = RequestBody.create(
+                    jpegBytes,
+                    MediaType.get("image/jpeg")
+            );
+
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("file", "frame_" + frameId + ".jpg", fileBody)
+                    .addFormDataPart("frame_id", String.valueOf(frameId))
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(DETECT_URL)
+                    .post(requestBody)
+                    .build();
+
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful() || response.body() == null) {
+                    Log.w(TAG, "/detect not successful: " + response.code());
+                    return;
+                }
+                String json = response.body().string();
+                CloudDetectionModels.DetectResponse detectResponse =
+                        gson.fromJson(json, CloudDetectionModels.DetectResponse.class);
+
+                if (detectResponse == null) {
+                    Log.w(TAG, "DetectResponse is null");
+                    return;
+                }
+
+                overlayView.post(() ->
+                        overlayView.setBackendResults(
+                                detectResponse.detections,
+                                imageWidth,
+                                imageHeight,
+                                detectResponse.summary != null
+                                        ? detectResponse.summary.message
+                                        : ""
+                        )
+                );
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error calling backend /detect", e);
+            if (backendReachable) {
+                backendReachable = false;
+                showToastOnUi("Lost connection to backend");
+            }
+        }
     }
 }
