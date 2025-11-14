@@ -39,7 +39,10 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
     private static final int TARGET_WIDTH = 640;
     private static final int TARGET_HEIGHT = 480;
 
-    private static final long MIN_INTERVAL_MS = 200; // ~5 FPS
+    // Throttle how often we send frames to the backend
+    private static final long MIN_INTERVAL_MS = 200;       // ~5 FPS
+    // When the backend is unreachable, wait this long before trying again
+    private static final long RETRY_INTERVAL_MS = 5000;    // 5 seconds
 
     private long lastRequestTime = 0L;
     private int frameId = 0;
@@ -50,11 +53,11 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
     private final ExecutorService networkExecutor;
     private final Context appContext;
 
-    // Health check flags
-    private volatile boolean healthChecked = false;
-    private volatile boolean backendReachable = false;
+    // Connection / reconnection state
+    private volatile boolean backendReachable = true;
+    private volatile long lastConnectionFailMs = 0L;
 
-    // One-in-flight control
+    // One-in-flight control for /detect
     private volatile boolean requestInFlight = false;
 
     // HUD metrics
@@ -75,6 +78,7 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
         this.gson = new Gson();
         this.networkExecutor = Executors.newSingleThreadExecutor();
 
+        // Optional: initial health check and toast
         checkBackendHealthOnce();
     }
 
@@ -84,6 +88,10 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
         );
     }
 
+    /**
+     * One-time health check on startup, just to give a helpful toast.
+     * Reconnect logic is handled by /detect + RETRY_INTERVAL_MS.
+     */
     private void checkBackendHealthOnce() {
         networkExecutor.submit(() -> {
             try {
@@ -93,20 +101,24 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
                         .build();
 
                 try (Response response = client.newCall(request).execute()) {
-                    backendReachable = response.isSuccessful();
-                    String msg = backendReachable
-                            ? "Backend connected"
-                            : "Backend health failed: " + response.code();
-                    Log.i(TAG, msg);
-                    showToastOnUi(msg);
+                    boolean ok = response.isSuccessful();
+                    backendReachable = ok;
+                    if (ok) {
+                        Log.i(TAG, "Initial backend health OK");
+                        showToastOnUi("Backend connected");
+                    } else {
+                        Log.w(TAG, "Initial backend health failed: " + response.code());
+                        backendReachable = false;
+                        lastConnectionFailMs = System.currentTimeMillis();
+                        showToastOnUi("Backend health failed: " + response.code());
+                    }
                 }
             } catch (Exception e) {
                 backendReachable = false;
+                lastConnectionFailMs = System.currentTimeMillis();
                 String msg = "Backend unreachable: " + e.getClass().getSimpleName();
                 Log.e(TAG, msg, e);
                 showToastOnUi(msg);
-            } finally {
-                healthChecked = true;
             }
         });
     }
@@ -116,11 +128,26 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
     public void analyze(@NonNull ImageProxy imageProxy) {
         try {
             long now = System.currentTimeMillis();
+
+            // Global FPS throttle
             if (now - lastRequestTime < MIN_INTERVAL_MS) {
                 imageProxy.close();
                 return;
             }
             lastRequestTime = now;
+
+            // Reconnect logic: if backend is currently marked unreachable,
+            // only allow a retry every RETRY_INTERVAL_MS.
+            if (!backendReachable) {
+                if (now - lastConnectionFailMs < RETRY_INTERVAL_MS) {
+                    imageProxy.close();
+                    return;
+                } else {
+                    // Allow a new attempt; if it fails again, we will mark it unreachable again.
+                    backendReachable = true;
+                }
+            }
+
             frameId++;
 
             Image image = imageProxy.getImage();
@@ -169,21 +196,7 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
 
             imageProxy.close();
 
-            if (healthChecked && !backendReachable) {
-                overlayView.post(() ->
-                        overlayView.setBackendResults(
-                                null,
-                                outW,
-                                outH,
-                                "Backend not reachable",
-                                lastLatencyMs,
-                                approxFps
-                        )
-                );
-                return;
-            }
-
-            // Only send if no request is currently in flight
+            // Only send if no /detect request is currently in flight
             if (requestInFlight) {
                 return;
             }
@@ -221,7 +234,6 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
         int uPixelStride = planes[1].getPixelStride();
         int vPixelStride = planes[2].getPixelStride();
 
-        // We assume U and V planes have the same layout
         for (int y = 0; y < height; y++) {
             int yRow = yRowStride * y;
             int uvRow = uRowStride * (y / 2);
@@ -233,7 +245,6 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
                 int U = (uBuffer.get(uvIndex) & 0xff) - 128;
                 int V = (vBuffer.get(uvIndex) & 0xff) - 128;
 
-                // Standard YUV to RGB conversion
                 float fY = (float) Y;
                 int r = (int) (fY + 1.370705f * V);
                 int g = (int) (fY - 0.337633f * U - 0.698001f * V);
@@ -254,6 +265,10 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
         return v;
     }
 
+    /**
+     * Sends a JPEG frame to the backend /detect endpoint.
+     * Handles latency/FPS HUD, error logging, and auto-reconnect state.
+     */
     private void sendToBackend(byte[] jpegBytes, int imageWidth, int imageHeight) {
         long start = System.currentTimeMillis();
         try {
@@ -280,16 +295,45 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
 
                 if (!response.isSuccessful() || response.body() == null) {
                     Log.w(TAG, "/detect not successful: " + response.code());
+                    // Consider this a failure for reconnect logic
+                    backendReachable = false;
+                    lastConnectionFailMs = System.currentTimeMillis();
+                    overlayView.post(() ->
+                            overlayView.setBackendResults(
+                                    null,
+                                    imageWidth,
+                                    imageHeight,
+                                    "Backend not reachable",
+                                    lastLatencyMs,
+                                    approxFps
+                            )
+                    );
                     return;
                 }
+
                 String json = response.body().string();
                 CloudDetectionModels.DetectResponse detectResponse =
                         gson.fromJson(json, CloudDetectionModels.DetectResponse.class);
 
                 if (detectResponse == null) {
                     Log.w(TAG, "DetectResponse is null");
+                    backendReachable = false;
+                    lastConnectionFailMs = System.currentTimeMillis();
+                    overlayView.post(() ->
+                            overlayView.setBackendResults(
+                                    null,
+                                    imageWidth,
+                                    imageHeight,
+                                    "Backend not reachable",
+                                    lastLatencyMs,
+                                    approxFps
+                            )
+                    );
                     return;
                 }
+
+                // Success: backend is reachable again
+                backendReachable = true;
 
                 // Update approximate FPS based on time between responses
                 long now = System.currentTimeMillis();
@@ -315,11 +359,28 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
                 );
             }
         } catch (Exception e) {
+            long end = System.currentTimeMillis();
+            long latency = end - start;
+            lastLatencyMs = latency;
+
             Log.e(TAG, "Error calling backend /detect", e);
-            if (backendReachable) {
-                backendReachable = false;
-                showToastOnUi("Lost connection to backend");
-            }
+
+            // Mark backend unreachable and remember when it failed
+            backendReachable = false;
+            lastConnectionFailMs = System.currentTimeMillis();
+
+            overlayView.post(() ->
+                    overlayView.setBackendResults(
+                            null,
+                            imageWidth,
+                            imageHeight,
+                            "Backend not reachable",
+                            lastLatencyMs,
+                            approxFps
+                    )
+            );
+
+            showToastOnUi("Lost connection to backend");
         } finally {
             requestInFlight = false;
         }
