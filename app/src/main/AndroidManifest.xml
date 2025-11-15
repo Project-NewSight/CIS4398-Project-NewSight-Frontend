@@ -2,12 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Permissions -->
-    <uses-permission android:name="android.permission.CAMERA" />
     <!-- ===== Permissions ===== -->
     <!-- Camera & Media -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
     <!-- Audio (for voice commands or speech recognition) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -19,7 +16,6 @@
     <!-- Network & Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <!-- Camera support -->
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
@@ -37,10 +33,6 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="NewSight"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.NewSight">
-
-        <!-- FileProvider for image capture -->
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.NewSight">
@@ -71,39 +63,14 @@
         <activity android:name=".MainActivity" android:exported="true" />
         <activity android:name=".HomeActivity" android:exported="true" />
 
-        <!-- Emergency Features -->
-        <activity android:name=".EmergencyActivity" android:exported="true" />
-        <activity android:name=".EmergencySetupActivity" android:exported="true" />
-
         <!-- Navigation -->
-        <activity android:name=".NavigateActivity" android:exported="true" />
-        <activity android:name=".GetDirectionsActivity" android:exported="true" />
-
-        <!-- Observe / Detection -->
-        <activity android:name=".ObserveActivity" android:exported="true" />
-        <activity android:name=".DetectionActivity" android:exported="true" />
-
-        <activity
-            android:name=".ObstacleActivity"
-            android:screenOrientation="landscape"
-            android:exported="true"
-            tools:ignore="DiscouragedApi" />
-
-        <!-- Other Activities -->
-        <activity android:name=".CommunicateActivity" android:exported="true" />
-        <activity android:name=".ColorCueActivity" android:exported="true" />
-        <!-- ===== Main Activities ===== -->
-        <activity android:name=".MainActivity" android:exported="true" />
-        <activity android:name=".HomeActivity" android:exported="true" />
-
-        <!-- ===== Navigation ===== -->
         <activity android:name=".NavigateActivity" android:exported="true" />
         <activity android:name=".GetDirectionsActivity" android:exported="true" />
 
         <!-- ===== Communication ===== -->
         <activity android:name=".CommunicateActivity" android:exported="true" />
 
-        <!-- ===== Observation / Detection ===== -->
+        <!-- Observe / Detection -->
         <activity android:name=".ObserveActivity" android:exported="true" />
         <activity android:name=".DetectionActivity" android:exported="true" />
         <activity
