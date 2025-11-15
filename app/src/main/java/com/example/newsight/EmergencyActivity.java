@@ -1,7 +1,6 @@
 package com.example.newsight;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -9,23 +8,28 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.Preview;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -38,159 +42,183 @@ import okhttp3.Response;
 
 public class EmergencyActivity extends AppCompatActivity {
 
-    private FusedLocationProviderClient fusedLocationClient;
-    private File photoFile;
-    private Uri photoUri;
-    private Bitmap photoBitmap;
+    private PreviewView previewView;
+    private ImageCapture imageCapture;
 
-    private Button btnTakePhoto;
-    private Button btnSendAlert;
-    private ImageView imgPreview;
+    private FusedLocationProviderClient fusedLocationClient;
 
     private final ActivityResultLauncher<String> requestCameraPermission =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
-                if (granted) openCamera();
-                else Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
-            });
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+                    granted -> {
+                        if (granted) startCamera();
+                        else {
+                            Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
+                            finish();
+                        }
+                    });
 
     private final ActivityResultLauncher<String> requestLocationPermission =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
-                if (!granted)
-                    Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
-            });
-
-    private final ActivityResultLauncher<Uri> cameraLauncher =
-            registerForActivityResult(new ActivityResultContracts.TakePicture(), success -> {
-                if (success) {
-                    Bitmap bitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
-                    photoBitmap = bitmap;
-                    imgPreview.setImageBitmap(bitmap);
-                    Toast.makeText(this, "Photo captured!", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, "Failed to take photo", Toast.LENGTH_SHORT).show();
-                }
-            });
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+                    granted -> {
+                        if (!granted) {
+                            Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+                        }
+                        // Still continue capturing — location just won't be attached
+                    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emergency);
 
+        previewView = findViewById(R.id.cameraPreview);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        btnTakePhoto = findViewById(R.id.btn_take_photo);
-        btnSendAlert = findViewById(R.id.btn_send_alert);
-        imgPreview = findViewById(R.id.img_preview);
+        // Ask for camera immediately
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+            startCamera();
+        } else {
+            requestCameraPermission.launch(Manifest.permission.CAMERA);
+        }
 
-        // Request location permission upfront if not granted
+        // Request location permission in background
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             requestLocationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION);
         }
+    }
 
-        btnTakePhoto.setOnClickListener(v -> {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                    == PackageManager.PERMISSION_GRANTED) {
-                openCamera();
-            } else {
-                requestCameraPermission.launch(Manifest.permission.CAMERA);
+    private void startCamera() {
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
+                ProcessCameraProvider.getInstance(this);
+
+        cameraProviderFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+
+                Preview preview = new Preview.Builder().build();
+                imageCapture = new ImageCapture.Builder()
+                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                        .build();
+
+                preview.setSurfaceProvider(previewView.getSurfaceProvider());
+
+                CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
+
+                cameraProvider.unbindAll();
+                cameraProvider.bindToLifecycle(
+                        this,
+                        cameraSelector,
+                        preview,
+                        imageCapture
+                );
+
+                // 📸 Capture automatically after preview starts
+                previewView.postDelayed(this::takePhoto, 500);
+
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Camera error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                finish();
             }
-        });
-
-        btnSendAlert.setOnClickListener(v -> sendEmergencyAlert(photoBitmap));
+        }, ContextCompat.getMainExecutor(this));
     }
 
-    private void openCamera() {
-        File imagesDir = new File(getExternalFilesDir(null), "Pictures");
-        if (!imagesDir.exists()) imagesDir.mkdirs();
+    private void takePhoto() {
+        if (imageCapture == null) return;
 
-        photoFile = new File(imagesDir, "photo_" + System.currentTimeMillis() + ".jpg");
-        photoUri = FileProvider.getUriForFile(this, getPackageName() + ".provider", photoFile);
+        File photoFile = new File(
+                getExternalFilesDir(null),
+                "photo_" + System.currentTimeMillis() + ".jpg"
+        );
 
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        ImageCapture.OutputFileOptions options =
+                new ImageCapture.OutputFileOptions.Builder(photoFile).build();
 
-        for (android.content.pm.ResolveInfo resolvedInfo :
-                getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)) {
-            String packageName = resolvedInfo.activityInfo.packageName;
-            grantUriPermission(packageName, photoUri,
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        }
+        imageCapture.takePicture(
+                options,
+                ContextCompat.getMainExecutor(this),
+                new ImageCapture.OnImageSavedCallback() {
+                    @Override
+                    public void onError(@NonNull ImageCaptureException exc) {
+                        Toast.makeText(EmergencyActivity.this,
+                                "Capture failed: " + exc.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
 
-        cameraLauncher.launch(photoUri);
+                    @Override
+                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults output) {
+                        Bitmap bitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
+                        getLocationAndSend(bitmap);
+                    }
+                }
+        );
     }
 
-
-    private void sendEmergencyAlert(Bitmap bitmap) {
-        Toast.makeText(this, "Sending emergency alert...", Toast.LENGTH_SHORT).show();
-
+    private void getLocationAndSend(Bitmap bitmap) {
         if (bitmap == null) {
-            Toast.makeText(this, "No photo attached", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Photo missing", Toast.LENGTH_SHORT).show();
+            finish();
             return;
         }
 
-        // ✅ Check and get location dynamically
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "Location permission not granted", Toast.LENGTH_SHORT).show();
-            requestLocationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+            sendAlert(bitmap, null);
             return;
         }
 
         fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(location -> {
-                    if (location != null) {
-                        double latitude = location.getLatitude();
-                        double longitude = location.getLongitude();
-                        sendAlertRequest(bitmap, latitude, longitude);
-                    } else {
-                        Toast.makeText(this, "Unable to retrieve location", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Location error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                .addOnSuccessListener(location -> sendAlert(bitmap, location))
+                .addOnFailureListener(e -> sendAlert(bitmap, null));
     }
 
-    private void sendAlertRequest(Bitmap bitmap, double latitude, double longitude) {
+    private void sendAlert(Bitmap bitmap, Location location) {
+        Toast.makeText(this, "Sending emergency alert...", Toast.LENGTH_SHORT).show();
+
         OkHttpClient client = new OkHttpClient();
+
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream);
         byte[] imageBytes = stream.toByteArray();
 
-        RequestBody requestBody = new MultipartBody.Builder()
+        MultipartBody.Builder form = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("latitude", String.valueOf(latitude))
-                .addFormDataPart("longitude", String.valueOf(longitude))
                 .addFormDataPart("photo", "photo.jpg",
-                        RequestBody.create(MediaType.parse("image/jpeg"), imageBytes))
-                .build();
+                        RequestBody.create(MediaType.parse("image/jpeg"), imageBytes));
+
+        if (location != null) {
+            form.addFormDataPart("latitude", String.valueOf(location.getLatitude()));
+            form.addFormDataPart("longitude", String.valueOf(location.getLongitude()));
+        }
 
         Request request = new Request.Builder()
                 .url("https://cis4398-project-newsight-backend.onrender.com/emergency_alert/7")
-                .post(requestBody)
+                .post(form.build())
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                runOnUiThread(() ->
-                        Toast.makeText(EmergencyActivity.this,
-                                "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+            @Override public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                runOnUiThread(() -> {
+                    Toast.makeText(EmergencyActivity.this, "Send failed", Toast.LENGTH_SHORT).show();
+                    finish();
+                });
             }
 
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) {
+            @Override public void onResponse(@NonNull Call call, @NonNull Response response) {
                 runOnUiThread(() -> {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(EmergencyActivity.this,
-                                "Alert sent successfully!", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(EmergencyActivity.this,
-                                "Error: " + response.code(), Toast.LENGTH_SHORT).show();
-                    }
+                    Toast.makeText(EmergencyActivity.this,
+                            response.isSuccessful() ? "Alert sent!" : "Error sending alert",
+                            Toast.LENGTH_SHORT).show();
+                    finish();
                 });
             }
         });
     }
+}
+
+
+
 }
