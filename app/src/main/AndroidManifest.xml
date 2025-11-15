@@ -35,7 +35,8 @@
         android:label="NewSight"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.NewSight">
+        android:theme="@style/Theme.NewSight"
+        android:usesCleartextTraffic="true">
 
         <!-- Secure File Provider -->
         <provider
