@@ -39,6 +39,7 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
 
+    // Google location services
     // CameraX
     implementation(libs.camera.core)
     implementation(libs.camera.camera2)
@@ -54,16 +55,17 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    // OkHttp
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-
-    // CameraX dependencies for camera stream
-    val cameraxVersion = "1.3.1"
-    implementation("androidx.camera:camera-core:" + cameraxVersion)
-    implementation("androidx.camera:camera-camera2:" + cameraxVersion)
-    implementation("androidx.camera:camera-lifecycle:" + cameraxVersion)
-    implementation("androidx.camera:camera-view:" + cameraxVersion)
+    // CameraX (REQUIRED)
+    val cameraXVersion = "1.3.1"
+    implementation("androidx.camera:camera-core:$cameraXVersion")
+    implementation("androidx.camera:camera-camera2:$cameraXVersion")
+    implementation("androidx.camera:camera-lifecycle:$cameraXVersion")
+    implementation("androidx.camera:camera-view:$cameraXVersion")
 
     // TensorFlow Lite dependencies for object detection
     implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.4")
