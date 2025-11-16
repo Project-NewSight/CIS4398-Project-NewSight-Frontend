@@ -30,45 +30,33 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onWakeWordDetected() {
                 Log.d(TAG, "Wake word detected");
-                // Optional: Visual feedback when wake word detected
             }
 
             @Override
             public void onCommandStarted() {
                 Log.d(TAG, "Command recording started");
-                // Optional: Show recording indicator
             }
 
             @Override
             public void onCommandProcessing() {
                 Log.d(TAG, "Processing command");
-                // Optional: Show processing state
             }
 
             @Override
             public void onResponseReceived(String jsonResponse) {
                 Log.d(TAG, "Response received: " + jsonResponse);
-
                 // TODO: Pass jsonResponse to TTS helper class when ready
                 // ttsHelper.handleResponse(jsonResponse);
-
-                // For now, just log it
-                // The JSON contains:
-                // - confidence
-                // - extracted_params (feature, query, destination, sub_features)
-                // - TTS_Output (message)
             }
 
             @Override
             public void onError(String error) {
                 Log.e(TAG, "Error: " + error);
-                // Optional: Handle error UI
             }
 
             @Override
             public void onComplete() {
                 Log.d(TAG, "Voice command completed");
-                // Optional: Reset UI state
             }
         });
 
@@ -107,19 +95,28 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Read and Ask
+        // Read and Ask - Mic button
         FrameLayout btnMic = findViewById(R.id.btnMic);
         btnMic.setOnClickListener(v -> {
             if (checkMicrophonePermission()) {
-                // Start voice recording directly in this activity
                 voiceCommandHelper.startDirectRecording();
             } else {
-                requestMicrophonePermission();
+                Toast.makeText(this, "Microphone permission required", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Auto-start wake word detection when activity starts
-        if (checkMicrophonePermission()) {
+        // Request microphone permission on startup
+        requestMicrophonePermissionOnStartup();
+    }
+
+    private void requestMicrophonePermissionOnStartup() {
+        if (!checkMicrophonePermission()) {
+            // Request permission immediately when app starts
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    PERMISSION_REQUEST_CODE);
+        } else {
+            // Permission already granted, start wake word detection
             voiceCommandHelper.startWakeWordDetection();
         }
     }
@@ -127,12 +124,6 @@ public class HomeActivity extends AppCompatActivity {
     private boolean checkMicrophonePermission() {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private void requestMicrophonePermission() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.RECORD_AUDIO},
-                PERMISSION_REQUEST_CODE);
     }
 
     @Override
@@ -154,7 +145,6 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // Stop listening when user leaves this screen
         if (voiceCommandHelper != null) {
             voiceCommandHelper.stopListening();
         }
@@ -163,7 +153,6 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Restart wake word detection when returning to this screen
         if (voiceCommandHelper != null && checkMicrophonePermission()) {
             voiceCommandHelper.startWakeWordDetection();
         }
@@ -172,7 +161,6 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Clean up resources
         if (voiceCommandHelper != null) {
             voiceCommandHelper.cleanup();
         }

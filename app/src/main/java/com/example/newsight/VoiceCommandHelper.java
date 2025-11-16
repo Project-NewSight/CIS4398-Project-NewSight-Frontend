@@ -63,6 +63,7 @@ public class VoiceCommandHelper {
     private NoiseSuppressor noiseSuppressor;
     private AcousticEchoCanceler echoCanceler;
     private Handler mainHandler;
+    private TtsHelper ttsHelper;
 
     private static final String BACKEND_URL = "http://192.168.1.254:8000/voice/transcribe";
     private static final String WAKE_WORD_URL = "http://192.168.1.254:8000/voice/wake-word";
@@ -87,6 +88,7 @@ public class VoiceCommandHelper {
                 .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
                 .build();
         this.mainHandler = new Handler(Looper.getMainLooper());
+        this.ttsHelper = new TtsHelper(context);
     }
 
     public void setCallback(VoiceCommandCallback callback) {
@@ -123,6 +125,7 @@ public class VoiceCommandHelper {
 
         executorService.execute(() -> {
             try {
+                showToast("Recording...");
                 recordCommandWithVAD();
             } catch (Exception e) {
                 Log.e(TAG, "Error in recording: " + e.getMessage(), e);
@@ -250,9 +253,13 @@ public class VoiceCommandHelper {
                             if (callback != null) {
                                 mainHandler.post(() -> callback.onWakeWordDetected());
                             }
-                            showToast("Listening for command...");
 
-                            Thread.sleep(300);
+                            String wakeMessage = "Hey, How can I help you";
+                            showToast(wakeMessage);
+                            ttsHelper.speak(wakeMessage);
+
+                            // Wait for TTS to finish + give user time to start speaking
+                            Thread.sleep(2500);
                             recordCommandWithVAD();
                         }
                     } catch (JSONException e) {
@@ -297,7 +304,6 @@ public class VoiceCommandHelper {
         if (callback != null) {
             mainHandler.post(() -> callback.onCommandStarted());
         }
-        showToast("Speak now");
 
         ByteArrayOutputStream recordingStream = new ByteArrayOutputStream();
         byte[] buffer = new byte[bufferSize / 4];
@@ -347,7 +353,10 @@ public class VoiceCommandHelper {
         if (callback != null) {
             mainHandler.post(() -> callback.onCommandProcessing());
         }
-        showToast("Processing...");
+
+        String processingMessage = "Processing...";
+        showToast(processingMessage);
+        ttsHelper.speak(processingMessage);
 
         File wavFile = createWavFile(audioData, RECORDING_SAMPLE_RATE);
         sendAudioToBackend(wavFile);
@@ -369,7 +378,9 @@ public class VoiceCommandHelper {
             @Override
             public void onFailure(Call call, IOException e) {
                 Log.e(TAG, "❌ Network error: " + e.getMessage());
-                notifyError("Connection error: " + e.getMessage());
+                String errorMsg = "Connection error: " + e.getMessage();
+                notifyError(errorMsg);
+                ttsHelper.speak("Connection error. Please try again.");
 
                 // Restart wake word detection after error
                 mainHandler.postDelayed(() -> {
@@ -389,6 +400,9 @@ public class VoiceCommandHelper {
                     String responseBody = response.body().string();
                     Log.d(TAG, "📦 Response received: " + responseBody);
 
+                    // Speak the TTS output from JSON
+                    ttsHelper.speakFromJson(responseBody);
+
                     if (callback != null) {
                         mainHandler.post(() -> {
                             callback.onResponseReceived(responseBody);
@@ -406,7 +420,9 @@ public class VoiceCommandHelper {
                     }, 1000);
 
                 } else {
-                    notifyError("Server error: " + response.code());
+                    String errorMsg = "Server error: " + response.code();
+                    notifyError(errorMsg);
+                    ttsHelper.speak("Server error. Please try again.");
 
                     // Restart wake word detection after error
                     mainHandler.postDelayed(() -> {
@@ -532,10 +548,17 @@ public class VoiceCommandHelper {
         });
     }
 
+    public TtsHelper getTtsHelper() {
+        return ttsHelper;
+    }
+
     public void cleanup() {
         stopListening();
         if (executorService != null) {
             executorService.shutdownNow();
+        }
+        if (ttsHelper != null) {
+            ttsHelper.shutdown();
         }
     }
 }
