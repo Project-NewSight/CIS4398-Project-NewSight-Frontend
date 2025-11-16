@@ -1,15 +1,76 @@
 package com.example.newsight;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.FrameLayout;
 import android.content.Intent;
+import android.widget.Toast;
 
 public class HomeActivity extends AppCompatActivity {
+    private static final String TAG = "HomeActivity";
+    private static final int PERMISSION_REQUEST_CODE = 200;
+    private VoiceCommandHelper voiceCommandHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        // Initialize voice command helper
+        voiceCommandHelper = new VoiceCommandHelper(this);
+
+        // Set up voice command callbacks
+        voiceCommandHelper.setCallback(new VoiceCommandHelper.VoiceCommandCallback() {
+            @Override
+            public void onWakeWordDetected() {
+                Log.d(TAG, "Wake word detected");
+                // Optional: Visual feedback when wake word detected
+            }
+
+            @Override
+            public void onCommandStarted() {
+                Log.d(TAG, "Command recording started");
+                // Optional: Show recording indicator
+            }
+
+            @Override
+            public void onCommandProcessing() {
+                Log.d(TAG, "Processing command");
+                // Optional: Show processing state
+            }
+
+            @Override
+            public void onResponseReceived(String jsonResponse) {
+                Log.d(TAG, "Response received: " + jsonResponse);
+
+                // TODO: Pass jsonResponse to TTS helper class when ready
+                // ttsHelper.handleResponse(jsonResponse);
+
+                // For now, just log it
+                // The JSON contains:
+                // - confidence
+                // - extracted_params (feature, query, destination, sub_features)
+                // - TTS_Output (message)
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error: " + error);
+                // Optional: Handle error UI
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "Voice command completed");
+                // Optional: Reset UI state
+            }
+        });
 
         // Navigate
         FrameLayout btnNavigate = findViewById(R.id.btnNavigate);
@@ -49,6 +110,71 @@ public class HomeActivity extends AppCompatActivity {
         // Read and Ask
         FrameLayout btnMic = findViewById(R.id.btnMic);
         btnMic.setOnClickListener(v -> {
+            if (checkMicrophonePermission()) {
+                // Start voice recording directly in this activity
+                voiceCommandHelper.startDirectRecording();
+            } else {
+                requestMicrophonePermission();
+            }
         });
+
+        // Auto-start wake word detection when activity starts
+        if (checkMicrophonePermission()) {
+            voiceCommandHelper.startWakeWordDetection();
+        }
+    }
+
+    private boolean checkMicrophonePermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestMicrophonePermission() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.RECORD_AUDIO},
+                PERMISSION_REQUEST_CODE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Voice commands ready", Toast.LENGTH_SHORT).show();
+                // Start wake word detection after permission granted
+                voiceCommandHelper.startWakeWordDetection();
+            } else {
+                Toast.makeText(this, "Microphone permission is required for voice commands",
+                        Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Stop listening when user leaves this screen
+        if (voiceCommandHelper != null) {
+            voiceCommandHelper.stopListening();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Restart wake word detection when returning to this screen
+        if (voiceCommandHelper != null && checkMicrophonePermission()) {
+            voiceCommandHelper.startWakeWordDetection();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Clean up resources
+        if (voiceCommandHelper != null) {
+            voiceCommandHelper.cleanup();
+        }
     }
 }
