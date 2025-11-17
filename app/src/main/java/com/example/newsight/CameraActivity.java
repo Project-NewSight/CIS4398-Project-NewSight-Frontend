@@ -96,7 +96,13 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
                 ImageAnalysis imageAnalyzer = new ImageAnalysis.Builder()
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build();
-                imageAnalyzer.setAnalyzer(cameraExecutor, new FrameAnalyzer(wsManager, () -> activeFeature));
+                imageAnalyzer.setAnalyzer(cameraExecutor,
+                        new TextRecognitionAnalyzer(text -> runOnUiThread(() -> {
+                            Log.i(TAG, "Detected text: " + text);
+
+                            Toast.makeText(CameraActivity.this, text, Toast.LENGTH_SHORT).show();
+                        }))
+                );
 
                 CameraSelector cameraSelector = new CameraSelector.Builder()
                         .requireLensFacing(CameraSelector.LENS_FACING_BACK)

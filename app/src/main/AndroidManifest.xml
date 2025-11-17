@@ -87,6 +87,8 @@
         <activity android:name=".EmergencyActivity" android:exported="true" />
         <activity android:name=".EmergencySetupActivity" android:exported="true" />
 
+        <activity android:name=".ReadTextActivity" android:exported="true" />
+
         <!-- ===== Settings & Profile ===== -->
         <activity android:name=".SettingsActivity" android:exported="true" />
         <activity android:name=".UserProfileActivity" android:exported="true" />
