@@ -90,10 +90,22 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
         int ySize = yBuffer.remaining();
         yBuffer.get(out, 0, ySize);
 
+        // Calculate the expected UV size for NV21
+        int width = image.getWidth();
+        int height = image.getHeight();
+        int uvSize = width * height / 4; // Each UV plane is 1/4 the size of Y
+        
         int uvPos = ySize;
-        while (vBuffer.hasRemaining() && uBuffer.hasRemaining()) {
-            out[uvPos++] = vBuffer.get();
-            out[uvPos++] = uBuffer.get();
+        int maxUvPos = out.length; // Don't exceed buffer bounds
+        
+        // Interleave V and U into NV21 format (VU VU VU...)
+        for (int i = 0; i < uvSize && uvPos + 1 < maxUvPos; i++) {
+            if (vBuffer.hasRemaining() && uBuffer.hasRemaining()) {
+                out[uvPos++] = vBuffer.get();
+                out[uvPos++] = uBuffer.get();
+            } else {
+                break;
+            }
         }
     }
 }
