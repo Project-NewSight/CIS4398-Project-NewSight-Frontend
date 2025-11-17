@@ -55,7 +55,8 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
             jpegStream.reset(); // reuse ByteArrayOutputStream
             YuvImage yuvImage = new YuvImage(nv21Buffer, ImageFormat.NV21, width, height, null);
-            yuvImage.compressToJpeg(new Rect(0, 0, width, height), 40, jpegStream);
+            // Increase quality from 40 to 85 for better OCR accuracy (quality range: 0-100)
+            yuvImage.compressToJpeg(new Rect(0, 0, width, height), 85, jpegStream);
 
             byte[] jpegBytes = jpegStream.toByteArray();
 
