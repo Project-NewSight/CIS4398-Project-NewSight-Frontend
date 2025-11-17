@@ -49,14 +49,10 @@ public class WebSocketManager {
         this.listener = listener;
 
         this.client = new OkHttpClient.Builder()
-                .connectTimeout(0, TimeUnit.MILLISECONDS)
-                .readTimeout(0, TimeUnit.MILLISECONDS)
-                .writeTimeout(0, TimeUnit.MILLISECONDS)
-                .pingInterval(0, TimeUnit.MILLISECONDS)
-                .retryOnConnectionFailure(false)
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .readTimeout(0, TimeUnit.MILLISECONDS) // infinite for WS
+                .retryOnConnectionFailure(true)
                 .build();
-
-
     }
 
     // ---------- Public API ----------
