@@ -63,10 +63,13 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
             if (wsManager != null && wsManager.isConnected() && activeFeature != null) {
                 wsManager.sendFrame(jpegBytes, activeFeature);
+                Log.d(TAG, "Frame sent for feature: " + activeFeature);
             } else {
                 long now = System.currentTimeMillis();
                 if (now - lastLogTime > 2000) {
-                    Log.d(TAG, "Skipping frame, no feature active or WS not connected");
+                    Log.d(TAG, "Skipping frame - wsManager: " + (wsManager != null) + 
+                          ", connected: " + (wsManager != null && wsManager.isConnected()) + 
+                          ", feature: " + activeFeature);
                     lastLogTime = now;
                 }
             }
