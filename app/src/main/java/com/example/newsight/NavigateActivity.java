@@ -19,12 +19,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.newsight.helpers.LocationHelper;
+import com.example.newsight.helpers.LocationWebSocketHelper;
 import com.example.newsight.helpers.NavigationHelper;
 import com.example.newsight.models.DirectionsResponse;
 import com.example.newsight.models.NavigationUpdate;
@@ -73,6 +75,7 @@ public class NavigateActivity extends AppCompatActivity {
     private TtsHelper ttsHelper;
     private VoiceCommandHelper voiceCommandHelper;
     private LocationHelper locationHelper;
+    private LocationWebSocketHelper locationWebSocketHelper;
     private NavigationHelper navigationHelper;
     private Gson gson;
     private Handler mainHandler;
@@ -263,46 +266,93 @@ public class NavigateActivity extends AppCompatActivity {
     }
 
     private void startLocationWebSocket() {
-        // This would be a WebSocket connection to send location in background
-        // For now, we're using direct location updates through locationHelper
-        locationWsConnected = true;
-        Log.d(TAG, "✅ Location tracking ready");
+        locationWebSocketHelper = new LocationWebSocketHelper(LOCATION_WS_URL, sessionId);
+        locationWebSocketHelper.setConnectionCallback(new LocationWebSocketHelper.ConnectionCallback() {
+            @Override
+            public void onConnected() {
+                locationWsConnected = true;
+                Log.d(TAG, "✅ Location WebSocket connected");
+                updateConnectionStatus("Location WS Connected", "#00FF00");
+            }
+
+            @Override
+            public void onDisconnected() {
+                locationWsConnected = false;
+                Log.w(TAG, "⚠️ Location WebSocket disconnected");
+                updateConnectionStatus("Location WS Disconnected", "#FFAA00");
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "❌ Location WebSocket error: " + error);
+            }
+        });
+        
+        locationWebSocketHelper.connect();
+        Log.d(TAG, "🔌 Starting location WebSocket...");
     }
 
     private void sendLocationToBackend(double latitude, double longitude) {
-        // In a real implementation, this would send to /location/ws WebSocket
-        // For now, location is already being tracked by locationHelper
-        // and will be sent via navigationHelper when navigation starts
-        Log.d(TAG, String.format("📤 Location ready: (%.6f, %.6f)", latitude, longitude));
+        // Send to location WebSocket for backend tracking
+        if (locationWebSocketHelper != null && locationWebSocketHelper.isConnected()) {
+            locationWebSocketHelper.sendLocation(latitude, longitude);
+        } else {
+            Log.w(TAG, "⚠️ Location WS not connected, cannot send location");
+        }
     }
 
     // ==================== Voice Response Handler ====================
 
     private void handleVoiceResponse(String jsonResponse) {
         try {
+            Log.d(TAG, "📦 RAW Response: " + jsonResponse);
+            
             VoiceResponse response = gson.fromJson(jsonResponse, VoiceResponse.class);
             
-            if (response == null || response.getExtractedParams() == null) {
+            if (response == null) {
+                Log.e(TAG, "❌ Response is NULL");
+                hideLoading();
+                return;
+            }
+            
+            if (response.getExtractedParams() == null) {
+                Log.e(TAG, "❌ ExtractedParams is NULL");
                 hideLoading();
                 return;
             }
 
             String feature = response.getExtractedParams().getFeature();
+            Log.d(TAG, "🎯 Feature: " + feature);
             
             if ("NAVIGATION".equals(feature)) {
+                Log.d(TAG, "✅ NAVIGATION feature detected!");
+                
                 DirectionsResponse directions = response.getExtractedParams().getDirections();
                 
-                if (directions != null && directions.getSteps() != null && !directions.getSteps().isEmpty()) {
-                    Log.d(TAG, "✅ Got directions: " + directions.toString());
-                    currentDirections = directions;
-                    startNavigation(directions);
-                } else {
+                if (directions == null) {
+                    Log.e(TAG, "❌ Directions is NULL - backend didn't return directions");
                     hideLoading();
-                    String errorMsg = "Could not get directions";
+                    String errorMsg = "Backend didn't return directions";
                     ttsHelper.speak(errorMsg);
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                    return;
                 }
+                
+                if (directions.getSteps() == null || directions.getSteps().isEmpty()) {
+                    Log.e(TAG, "❌ No steps in directions - status: " + directions.getStatus());
+                    hideLoading();
+                    String errorMsg = "No route found: " + directions.getMessage();
+                    ttsHelper.speak(errorMsg);
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
+                    return;
+                }
+                
+                Log.d(TAG, "✅ Got " + directions.getSteps().size() + " steps to " + directions.getDestination());
+                currentDirections = directions;
+                startNavigation(directions);
+                
             } else {
+                Log.d(TAG, "ℹ️ Non-navigation feature: " + feature);
                 // Non-navigation feature
                 hideLoading();
                 navigateToOtherFeature(feature, response.getExtractedParams());
@@ -310,8 +360,9 @@ public class NavigateActivity extends AppCompatActivity {
             
         } catch (Exception e) {
             Log.e(TAG, "❌ Error parsing voice response: " + e.getMessage(), e);
+            e.printStackTrace();
             hideLoading();
-            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -590,6 +641,9 @@ public class NavigateActivity extends AppCompatActivity {
         }
         if (locationHelper != null) {
             locationHelper.cleanup();
+        }
+        if (locationWebSocketHelper != null) {
+            locationWebSocketHelper.cleanup();
         }
         if (navigationHelper != null) {
             navigationHelper.cleanup();
