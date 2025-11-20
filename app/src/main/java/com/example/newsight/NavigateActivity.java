@@ -108,8 +108,72 @@ public class NavigateActivity extends AppCompatActivity {
         // Request permissions
         if (checkAllPermissions()) {
             startServices();
+            
+            // Check if we were launched with navigation data from another activity
+            checkForAutoStartNavigation();
         } else {
             requestAllPermissions();
+        }
+    }
+    
+    /**
+     * Check if this activity was launched with navigation data from voice command in another activity
+     */
+    private void checkForAutoStartNavigation() {
+        Intent intent = getIntent();
+        boolean autoStart = intent.getBooleanExtra("auto_start_navigation", false);
+        
+        if (!autoStart) {
+            return; // Not launched from navigation voice command
+        }
+        
+        Log.d(TAG, "🚀 Auto-starting navigation from another activity");
+        
+        String directionsJson = intent.getStringExtra("directions_json");
+        String destination = intent.getStringExtra("destination");
+        String passedSessionId = intent.getStringExtra("session_id");
+        
+        if (directionsJson != null && !directionsJson.isEmpty()) {
+            // We have full directions! Parse and start navigation immediately
+            Log.d(TAG, "✅ Got full directions from previous activity");
+            
+            mainHandler.postDelayed(() -> {
+                try {
+                    DirectionsResponse directions = gson.fromJson(directionsJson, DirectionsResponse.class);
+                    
+                    if (directions != null && directions.getSteps() != null && !directions.getSteps().isEmpty()) {
+                        Log.d(TAG, "📍 Starting navigation with " + directions.getSteps().size() + " steps");
+                        startNavigation(directions);
+                    } else {
+                        Log.e(TAG, "❌ Invalid directions data");
+                        Toast.makeText(this, "Error: Invalid directions", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "❌ Error parsing directions: " + e.getMessage(), e);
+                    Toast.makeText(this, "Error loading directions", Toast.LENGTH_SHORT).show();
+                }
+            }, 1500); // Wait for camera and services to initialize
+            
+        } else if (destination != null && !destination.isEmpty()) {
+            // We only have destination, need to get directions
+            Log.d(TAG, "⚠️ Only have destination, need to get directions");
+            Log.d(TAG, "Destination: " + destination);
+            
+            mainHandler.postDelayed(() -> {
+                showLoading("Getting directions to " + destination + "...");
+                
+                // Auto-trigger voice command to get directions
+                // Wait a bit more for location WS to connect
+                mainHandler.postDelayed(() -> {
+                    if (checkMicrophonePermission() && voiceCommandHelper != null) {
+                        Log.d(TAG, "🎤 Auto-triggering voice command for directions");
+                        voiceCommandHelper.startDirectRecording();
+                    } else {
+                        hideLoading();
+                        Toast.makeText(this, "Microphone permission needed", Toast.LENGTH_SHORT).show();
+                    }
+                }, 2000);
+            }, 500);
         }
     }
 
@@ -327,12 +391,16 @@ public class NavigateActivity extends AppCompatActivity {
             if ("NAVIGATION".equals(feature)) {
                 Log.d(TAG, "✅ NAVIGATION feature detected!");
                 
+                // Backend should return directions object
                 DirectionsResponse directions = response.getExtractedParams().getDirections();
                 
                 if (directions == null) {
-                    Log.e(TAG, "❌ Directions is NULL - backend didn't return directions");
+                    Log.e(TAG, "❌ Directions is NULL - checking if we got destination at least");
+                    String destination = response.getExtractedParams().getDestination();
+                    Log.e(TAG, "Destination from response: " + destination);
+                    
                     hideLoading();
-                    String errorMsg = "Backend didn't return directions";
+                    String errorMsg = "Backend didn't return directions. Check session ID.";
                     ttsHelper.speak(errorMsg);
                     Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
                     return;

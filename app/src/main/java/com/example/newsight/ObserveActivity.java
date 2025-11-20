@@ -23,14 +23,19 @@ public class ObserveActivity extends AppCompatActivity {
 
     private TtsHelper ttsHelper;
     private VoiceCommandHelper voiceCommandHelper;
+    private String sessionId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_observe);
 
+        // Generate session ID for this session
+        sessionId = java.util.UUID.randomUUID().toString();
+
         // Initialize voice command helper
         voiceCommandHelper = new VoiceCommandHelper(this);
+        voiceCommandHelper.setSessionId(sessionId); // Set session ID for navigation
         ttsHelper = new TtsHelper(this);
 
         // Set up voice command callbacks
@@ -124,8 +129,24 @@ public class ObserveActivity extends AppCompatActivity {
         // Map feature names to activities
         switch (feature.toUpperCase()) {
             case "NAVIGATION":
+                // Check if we got full directions from backend
+                String directionsJson = extractedParams.optString("directions", null);
+                
                 intent = new Intent(ObserveActivity.this, NavigateActivity.class);
-                ttsMessage = "Activating navigation";
+                if (directionsJson != null && !directionsJson.isEmpty()) {
+                    // We have full directions! Pass them to NavigateActivity
+                    intent.putExtra("auto_start_navigation", true);
+                    intent.putExtra("directions_json", directionsJson);
+                    intent.putExtra("session_id", sessionId);
+                    ttsMessage = "Starting navigation";
+                } else {
+                    // No directions yet, just pass the destination
+                    String destination = extractedParams.optString("destination", null);
+                    intent.putExtra("auto_start_navigation", true);
+                    intent.putExtra("destination", destination);
+                    intent.putExtra("session_id", sessionId);
+                    ttsMessage = "Activating navigation";
+                }
                 Toast.makeText(this, "Opening Navigation", Toast.LENGTH_SHORT).show();
                 break;
 
