@@ -57,6 +57,8 @@ public class EmergencyActivity extends AppCompatActivity {
     private Handler mainHandler;
     private boolean isCapturing = false;
 
+    private TtsHelper ttsHelper;
+
     private final ActivityResultLauncher<String> requestCameraPermission =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(),
                     granted -> {
@@ -86,6 +88,9 @@ public class EmergencyActivity extends AppCompatActivity {
 
         mainHandler = new Handler(Looper.getMainLooper());
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        // Initialize TTS
+        ttsHelper = new TtsHelper(this);
 
         Toast.makeText(this, "Initializing emergency...", Toast.LENGTH_SHORT).show();
 
@@ -314,18 +319,13 @@ public class EmergencyActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Log.e(TAG, "Network request failed", e);
                 runOnUiThread(() -> {
-                    Toast.makeText(EmergencyActivity.this,
-                            "Send failed: " + e.getMessage(),
-                            Toast.LENGTH_LONG).show();
+                    String errorMessage = "Send failed: " + e.getMessage();
+                    Toast.makeText(EmergencyActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+
+                    // Speak error message and wait for TTS to complete
+                    speakAndFinish("Emergency alert failed to send. " + e.getMessage(), photoFile);
+
                     isCapturing = false;
-
-                    // Clean up photo file
-                    if (photoFile != null && photoFile.exists()) {
-                        photoFile.delete();
-                    }
-
-                    // Delay finish to show error message
-                    mainHandler.postDelayed(() -> finish(), 2000);
                 });
             }
 
@@ -339,22 +339,19 @@ public class EmergencyActivity extends AppCompatActivity {
                                 "Emergency alert sent!",
                                 Toast.LENGTH_SHORT).show();
                         Log.d(TAG, "Alert sent successfully");
+
+                        // Speak success message and wait for TTS to complete
+                        speakAndFinish("Emergency alert sent successfully", photoFile);
                     } else {
-                        Toast.makeText(EmergencyActivity.this,
-                                "Error sending alert: " + response.code(),
-                                Toast.LENGTH_SHORT).show();
+                        String errorMessage = "Error sending alert: " + response.code();
+                        Toast.makeText(EmergencyActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
                         Log.e(TAG, "Server returned error: " + response.code());
+
+                        // Speak error message and wait for TTS to complete
+                        speakAndFinish("Error sending emergency alert. Server error " + response.code(), photoFile);
                     }
 
                     isCapturing = false;
-
-                    // Clean up photo file
-                    if (photoFile != null && photoFile.exists()) {
-                        photoFile.delete();
-                    }
-
-                    // Delay finish to show success message
-                    mainHandler.postDelayed(() -> finish(), 1500);
                 });
 
                 response.close();
@@ -362,11 +359,51 @@ public class EmergencyActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Speaks the given message and finishes the activity after TTS completes
+     */
+    private void speakAndFinish(String message, File photoFile) {
+        if (ttsHelper != null) {
+            ttsHelper.speak(message);
+
+            // Wait for TTS to complete (estimate based on message length)
+            // Average speaking rate is ~150 words per minute, or ~2.5 words per second
+            // Add buffer time for safety
+            String[] words = message.split("\\s+");
+            int wordCount = words.length;
+            long estimatedDuration = (long) ((wordCount / 2.5) * 1000) + 1000; // +1 second buffer
+
+            Log.d(TAG, "TTS speaking, estimated duration: " + estimatedDuration + "ms");
+
+            mainHandler.postDelayed(() -> {
+                cleanupAndFinish(photoFile);
+            }, estimatedDuration);
+        } else {
+            // If TTS is not available, just finish immediately
+            cleanupAndFinish(photoFile);
+        }
+    }
+
+    /**
+     * Cleans up photo file and finishes the activity
+     */
+    private void cleanupAndFinish(File photoFile) {
+        // Clean up photo file
+        if (photoFile != null && photoFile.exists()) {
+            photoFile.delete();
+        }
+
+        finish();
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         if (mainHandler != null) {
             mainHandler.removeCallbacksAndMessages(null);
+        }
+        if (ttsHelper != null) {
+            ttsHelper.shutdown();
         }
     }
 }
