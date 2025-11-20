@@ -1,0 +1,10 @@
+<!-- ar_overlay_background.xml - Glass-morphism background for AR elements -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#50000000" />
+    <corners android:radius="16dp" />
+    <stroke
+        android:width="1dp"
+        android:color="#4000D4FF" />
+</shape>
+

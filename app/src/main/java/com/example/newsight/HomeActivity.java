@@ -20,14 +20,21 @@ public class HomeActivity extends AppCompatActivity {
     private TtsHelper ttsHelper;
     private static final int PERMISSION_REQUEST_CODE = 200;
     private VoiceCommandHelper voiceCommandHelper;
+    private String sessionId;
+    private com.example.newsight.helpers.LocationHelper locationHelper;
+    private com.example.newsight.helpers.LocationWebSocketHelper locationWebSocketHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        // Generate session ID for this session
+        sessionId = java.util.UUID.randomUUID().toString();
+
         // Initialize voice command helper
         voiceCommandHelper = new VoiceCommandHelper(this);
+        voiceCommandHelper.setSessionId(sessionId); // Set session ID for navigation
         ttsHelper = new TtsHelper(this);
 
         // Set up voice command callbacks
@@ -129,10 +136,47 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
+        // Start location tracking for navigation requests
+        startBackgroundLocation();
+
         // Auto-start wake word detection when activity starts
         if (checkMicrophonePermission()) {
             voiceCommandHelper.startWakeWordDetection();
         }
+    }
+    
+    private void startBackgroundLocation() {
+        if (!checkLocationPermission()) {
+            return; // Will request permissions when needed
+        }
+        
+        // Start GPS tracking
+        locationHelper = new com.example.newsight.helpers.LocationHelper(this);
+        locationHelper.setLocationCallback(new com.example.newsight.helpers.LocationHelper.LocationUpdateCallback() {
+            @Override
+            public void onLocationUpdate(double latitude, double longitude, float accuracy) {
+                // Send to backend location WebSocket
+                if (locationWebSocketHelper != null && locationWebSocketHelper.isConnected()) {
+                    locationWebSocketHelper.sendLocation(latitude, longitude);
+                }
+            }
+
+            @Override
+            public void onLocationError(String error) {
+                Log.e(TAG, "Location error: " + error);
+            }
+        });
+        locationHelper.startLocationUpdates();
+        
+        // Connect location WebSocket
+        locationWebSocketHelper = new com.example.newsight.helpers.LocationWebSocketHelper(
+            "ws://192.168.1.254:8000/location/ws", sessionId);
+        locationWebSocketHelper.connect();
+    }
+    
+    private boolean checkLocationPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     /**
@@ -150,8 +194,26 @@ public class HomeActivity extends AppCompatActivity {
         // Map feature names to activities
         switch (feature.toUpperCase()) {
             case "NAVIGATION":
+                // Check if we got full directions from backend
+                JSONObject directionsObj = extractedParams.optJSONObject("directions");
+                
                 intent = new Intent(HomeActivity.this, NavigateActivity.class);
-                ttsMessage = "Activating navigation";
+                if (directionsObj != null) {
+                    // We have full directions! Pass them to NavigateActivity
+                    intent.putExtra("auto_start_navigation", true);
+                    intent.putExtra("directions_json", directionsObj.toString());
+                    intent.putExtra("session_id", sessionId);
+                    ttsMessage = "Starting navigation";
+                    Log.d(TAG, "✅ Passing full directions to NavigateActivity");
+                } else {
+                    // No directions yet, just pass the destination
+                    String destination = extractedParams.optString("destination", null);
+                    intent.putExtra("auto_start_navigation", true);
+                    intent.putExtra("destination", destination);
+                    intent.putExtra("session_id", sessionId);
+                    ttsMessage = "Activating navigation";
+                    Log.d(TAG, "⚠️ Only passing destination to NavigateActivity");
+                }
                 Toast.makeText(this, "Opening Navigation", Toast.LENGTH_SHORT).show();
                 break;
 
@@ -280,6 +342,12 @@ public class HomeActivity extends AppCompatActivity {
         // Clean up resources
         if (voiceCommandHelper != null) {
             voiceCommandHelper.cleanup();
+        }
+        if (locationHelper != null) {
+            locationHelper.cleanup();
+        }
+        if (locationWebSocketHelper != null) {
+            locationWebSocketHelper.cleanup();
         }
     }
 }
