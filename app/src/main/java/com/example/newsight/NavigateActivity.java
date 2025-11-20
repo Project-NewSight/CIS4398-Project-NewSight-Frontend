@@ -489,16 +489,30 @@ public class NavigateActivity extends AppCompatActivity {
         var firstStep = directions.getSteps().get(0);
         
         tvStreetName.setText("Starting Navigation");
-        tvInstruction.setText(firstStep.getInstruction());
+        
+        // Safely display instruction
+        String instruction = firstStep.getInstruction();
+        tvInstruction.setText(instruction != null ? instruction : "Continue...");
+        
+        // Display distance
         tvDistance.setText(formatDistance(firstStep.getDistanceMeters()));
-        updateArrowForInstruction(firstStep.getInstruction());
+        
+        // Update arrow
+        updateArrowForInstruction(instruction);
     }
 
     private void updateAROverlay(NavigationUpdate update) {
         mainHandler.post(() -> {
-            tvInstruction.setText(update.getInstruction());
-            tvDistance.setText(update.getFormattedDistance());
-            updateArrowForInstruction(update.getInstruction());
+            // Safely set instruction with null check
+            String instruction = update.getInstruction();
+            tvInstruction.setText(instruction != null ? instruction : "Continue...");
+            
+            // Format distance from distance_to_next (in meters)
+            String distance = formatDistance((int) update.getDistanceToNext());
+            tvDistance.setText(distance);
+            
+            // Update arrow
+            updateArrowForInstruction(instruction);
 
             // Voice announcement
             if (update.isShouldAnnounce() && update.getAnnouncement() != null) {
@@ -510,6 +524,12 @@ public class NavigateActivity extends AppCompatActivity {
     }
 
     private void updateArrowForInstruction(String instruction) {
+        // Default to straight arrow if instruction is null or empty
+        if (instruction == null || instruction.isEmpty()) {
+            ivArrow.setImageResource(R.drawable.ic_arrow_straight);
+            return;
+        }
+        
         String lower = instruction.toLowerCase();
         
         int arrowResource;

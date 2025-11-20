@@ -130,15 +130,16 @@ public class ObserveActivity extends AppCompatActivity {
         switch (feature.toUpperCase()) {
             case "NAVIGATION":
                 // Check if we got full directions from backend
-                String directionsJson = extractedParams.optString("directions", null);
+                JSONObject directionsObj = extractedParams.optJSONObject("directions");
                 
                 intent = new Intent(ObserveActivity.this, NavigateActivity.class);
-                if (directionsJson != null && !directionsJson.isEmpty()) {
+                if (directionsObj != null) {
                     // We have full directions! Pass them to NavigateActivity
                     intent.putExtra("auto_start_navigation", true);
-                    intent.putExtra("directions_json", directionsJson);
+                    intent.putExtra("directions_json", directionsObj.toString());
                     intent.putExtra("session_id", sessionId);
                     ttsMessage = "Starting navigation";
+                    Log.d(TAG, "✅ Passing full directions to NavigateActivity");
                 } else {
                     // No directions yet, just pass the destination
                     String destination = extractedParams.optString("destination", null);
@@ -146,6 +147,7 @@ public class ObserveActivity extends AppCompatActivity {
                     intent.putExtra("destination", destination);
                     intent.putExtra("session_id", sessionId);
                     ttsMessage = "Activating navigation";
+                    Log.d(TAG, "⚠️ Only passing destination to NavigateActivity");
                 }
                 Toast.makeText(this, "Opening Navigation", Toast.LENGTH_SHORT).show();
                 break;
