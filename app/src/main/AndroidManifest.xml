@@ -26,7 +26,6 @@
 
     <!-- ===== Application Section ===== -->
     <application
-        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -76,7 +75,6 @@
         <activity android:name=".DetectPeopleActivity" android:exported="true"/>
 
 
-        <activity android:name=".ObstacleActivity" 
         <activity
             android:name=".ObstacleActivity"
             android:exported="true"
