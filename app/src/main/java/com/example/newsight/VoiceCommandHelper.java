@@ -385,7 +385,10 @@ public class VoiceCommandHelper {
 
         // Add session ID header if available (for navigation)
         if (sessionId != null && !sessionId.isEmpty()) {
+            Log.d(TAG, "📤 Adding session ID header: " + sessionId);
             requestBuilder.addHeader("X-Session-Id", sessionId);
+        } else {
+            Log.w(TAG, "⚠️ Session ID is NULL - navigation won't work!");
         }
 
         Request request = requestBuilder.build();

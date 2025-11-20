@@ -85,12 +85,14 @@ public class LocationWebSocketHelper {
             locationData.addProperty("latitude", latitude);
             locationData.addProperty("longitude", longitude);
             locationData.addProperty("session_id", sessionId);
+            locationData.addProperty("timestamp", System.currentTimeMillis() / 1000); // Unix timestamp in seconds
 
             String json = gson.toJson(locationData);
             boolean sent = webSocket.send(json);
 
             if (sent) {
-                Log.d(TAG, String.format("📤 Sent location to WS: (%.6f, %.6f)", latitude, longitude));
+                Log.d(TAG, String.format("📤 Sent location to WS [%s]: (%.6f, %.6f)", 
+                    sessionId.substring(0, 8), latitude, longitude));
             } else {
                 Log.w(TAG, "Failed to send location");
             }
