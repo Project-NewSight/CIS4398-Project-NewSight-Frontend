@@ -69,6 +69,8 @@ public class VoiceCommandHelper {
     private static final String BACKEND_URL = "http://192.168.1.254:8000/voice/transcribe";
     private static final String WAKE_WORD_URL = "http://192.168.1.254:8000/voice/wake-word";
 
+    private String sessionId; // Session ID for navigation tracking
+
     public interface VoiceCommandCallback {
         void onWakeWordDetected();
         void onCommandStarted();
@@ -92,6 +94,13 @@ public class VoiceCommandHelper {
         this.mainHandler = new Handler(Looper.getMainLooper());
 
         this.ttsHelper = new TtsHelper(context);
+    }
+
+    /**
+     * Set session ID for navigation tracking
+     */
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 
     public void setCallback(VoiceCommandCallback callback) {
@@ -370,10 +379,16 @@ public class VoiceCommandHelper {
                         RequestBody.create(audioFile, MediaType.parse("audio/wav")))
                 .build();
 
-        Request request = new Request.Builder()
+        Request.Builder requestBuilder = new Request.Builder()
                 .url(BACKEND_URL)
-                .post(requestBody)
-                .build();
+                .post(requestBody);
+
+        // Add session ID header if available (for navigation)
+        if (sessionId != null && !sessionId.isEmpty()) {
+            requestBuilder.addHeader("X-Session-Id", sessionId);
+        }
+
+        Request request = requestBuilder.build();
 
         httpClient.newCall(request).enqueue(new Callback() {
             @Override
