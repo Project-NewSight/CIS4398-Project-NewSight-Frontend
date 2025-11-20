@@ -5,9 +5,10 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -42,16 +43,26 @@ import okhttp3.Response;
 
 public class EmergencyActivity extends AppCompatActivity {
 
+    private static final String TAG = "EmergencyActivity";
+    private static final String BACKEND_URL = "http://192.168.1.254:8000/emergency_alert/7";
+
+    // Increased delays for camera stabilization
+    private static final long CAMERA_STABILIZATION_DELAY_MS = 2000; // 2 seconds for camera to focus
+    private static final long LOCATION_TIMEOUT_MS = 3000; // 3 seconds max wait for location
+
     private PreviewView previewView;
     private ImageCapture imageCapture;
 
     private FusedLocationProviderClient fusedLocationClient;
+    private Handler mainHandler;
+    private boolean isCapturing = false;
 
     private final ActivityResultLauncher<String> requestCameraPermission =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(),
                     granted -> {
-                        if (granted) startCamera();
-                        else {
+                        if (granted) {
+                            startCamera();
+                        } else {
                             Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
                             finish();
                         }
@@ -61,7 +72,7 @@ public class EmergencyActivity extends AppCompatActivity {
             registerForActivityResult(new ActivityResultContracts.RequestPermission(),
                     granted -> {
                         if (!granted) {
-                            Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+                            Log.w(TAG, "Location permission denied");
                         }
                         // Still continue capturing — location just won't be attached
                     });
@@ -72,7 +83,11 @@ public class EmergencyActivity extends AppCompatActivity {
         setContentView(R.layout.activity_emergency);
 
         previewView = findViewById(R.id.cameraPreview);
+
+        mainHandler = new Handler(Looper.getMainLooper());
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        Toast.makeText(this, "Initializing emergency...", Toast.LENGTH_SHORT).show();
 
         // Ask for camera immediately
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
@@ -90,6 +105,8 @@ public class EmergencyActivity extends AppCompatActivity {
     }
 
     private void startCamera() {
+        Toast.makeText(this, "Starting camera...", Toast.LENGTH_SHORT).show();
+
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
                 ProcessCameraProvider.getInstance(this);
 
@@ -114,11 +131,20 @@ public class EmergencyActivity extends AppCompatActivity {
                         imageCapture
                 );
 
-                // 📸 Capture automatically after preview starts
-                previewView.postDelayed(this::takePhoto, 500);
+                Log.d(TAG, "Camera bound successfully");
+                Toast.makeText(this, "Camera ready, stabilizing...", Toast.LENGTH_SHORT).show();
+
+                // 📸 Wait for camera to stabilize before capturing
+                // This gives the camera time to focus and adjust exposure
+                mainHandler.postDelayed(() -> {
+                    if (!isCapturing && !isFinishing()) {
+                        Toast.makeText(this, "Capturing photo...", Toast.LENGTH_SHORT).show();
+                        takePhoto();
+                    }
+                }, CAMERA_STABILIZATION_DELAY_MS);
 
             } catch (ExecutionException | InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG, "Camera initialization error", e);
                 Toast.makeText(this, "Camera error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 finish();
             }
@@ -126,15 +152,29 @@ public class EmergencyActivity extends AppCompatActivity {
     }
 
     private void takePhoto() {
-        if (imageCapture == null) return;
+        if (imageCapture == null) {
+            Log.e(TAG, "ImageCapture is null");
+            Toast.makeText(this, "Camera not ready", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        if (isCapturing) {
+            Log.w(TAG, "Already capturing, ignoring duplicate call");
+            return;
+        }
+
+        isCapturing = true;
 
         File photoFile = new File(
                 getExternalFilesDir(null),
-                "photo_" + System.currentTimeMillis() + ".jpg"
+                "emergency_" + System.currentTimeMillis() + ".jpg"
         );
 
         ImageCapture.OutputFileOptions options =
                 new ImageCapture.OutputFileOptions.Builder(photoFile).build();
+
+        Log.d(TAG, "Taking photo...");
 
         imageCapture.takePicture(
                 options,
@@ -142,81 +182,191 @@ public class EmergencyActivity extends AppCompatActivity {
                 new ImageCapture.OnImageSavedCallback() {
                     @Override
                     public void onError(@NonNull ImageCaptureException exc) {
+                        Log.e(TAG, "Photo capture failed", exc);
                         Toast.makeText(EmergencyActivity.this,
                                 "Capture failed: " + exc.getMessage(),
                                 Toast.LENGTH_SHORT).show();
+                        isCapturing = false;
                         finish();
                     }
 
                     @Override
                     public void onImageSaved(@NonNull ImageCapture.OutputFileResults output) {
+                        Log.d(TAG, "Photo saved successfully: " + photoFile.getAbsolutePath());
+                        Toast.makeText(EmergencyActivity.this,
+                                "Photo captured, getting location...",
+                                Toast.LENGTH_SHORT).show();
+
+                        // Verify file exists and is readable
+                        if (!photoFile.exists() || photoFile.length() == 0) {
+                            Log.e(TAG, "Photo file is empty or doesn't exist");
+                            Toast.makeText(EmergencyActivity.this,
+                                    "Photo file error", Toast.LENGTH_SHORT).show();
+                            isCapturing = false;
+                            finish();
+                            return;
+                        }
+
                         Bitmap bitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
-                        getLocationAndSend(bitmap);
+                        if (bitmap == null) {
+                            Log.e(TAG, "Failed to decode bitmap from file");
+                            Toast.makeText(EmergencyActivity.this,
+                                    "Failed to process photo", Toast.LENGTH_SHORT).show();
+                            isCapturing = false;
+                            finish();
+                            return;
+                        }
+
+                        Log.d(TAG, "Bitmap decoded successfully: " + bitmap.getWidth() + "x" + bitmap.getHeight());
+                        getLocationAndSend(bitmap, photoFile);
                     }
                 }
         );
     }
 
-    private void getLocationAndSend(Bitmap bitmap) {
+    private void getLocationAndSend(Bitmap bitmap, File photoFile) {
         if (bitmap == null) {
+            Log.e(TAG, "Bitmap is null");
             Toast.makeText(this, "Photo missing", Toast.LENGTH_SHORT).show();
+            isCapturing = false;
             finish();
             return;
         }
 
+        // Set a timeout for location fetching
+        final boolean[] locationFetched = {false};
+
+        mainHandler.postDelayed(() -> {
+            if (!locationFetched[0]) {
+                Log.w(TAG, "Location timeout, sending without location");
+                sendAlert(bitmap, null, photoFile);
+            }
+        }, LOCATION_TIMEOUT_MS);
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            sendAlert(bitmap, null);
+            Log.w(TAG, "No location permission");
+            locationFetched[0] = true;
+            sendAlert(bitmap, null, photoFile);
             return;
         }
 
+        Log.d(TAG, "Fetching location...");
         fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(location -> sendAlert(bitmap, location))
-                .addOnFailureListener(e -> sendAlert(bitmap, null));
+                .addOnSuccessListener(location -> {
+                    if (!locationFetched[0]) {
+                        locationFetched[0] = true;
+                        if (location != null) {
+                            Log.d(TAG, "Location obtained: " + location.getLatitude() + ", " + location.getLongitude());
+                        } else {
+                            Log.w(TAG, "Location is null");
+                        }
+                        sendAlert(bitmap, location, photoFile);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (!locationFetched[0]) {
+                        locationFetched[0] = true;
+                        Log.e(TAG, "Failed to get location", e);
+                        sendAlert(bitmap, null, photoFile);
+                    }
+                });
     }
 
-    private void sendAlert(Bitmap bitmap, Location location) {
+    private void sendAlert(Bitmap bitmap, Location location, File photoFile) {
         Toast.makeText(this, "Sending emergency alert...", Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Preparing to send alert...");
 
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .build();
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream);
         byte[] imageBytes = stream.toByteArray();
 
+        Log.d(TAG, "Image size: " + imageBytes.length + " bytes");
+
         MultipartBody.Builder form = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("photo", "photo.jpg",
-                        RequestBody.create(MediaType.parse("image/jpeg"), imageBytes));
+                .addFormDataPart("photo", "emergency.jpg",
+                        RequestBody.create(imageBytes, MediaType.parse("image/jpeg")));
 
         if (location != null) {
             form.addFormDataPart("latitude", String.valueOf(location.getLatitude()));
             form.addFormDataPart("longitude", String.valueOf(location.getLongitude()));
+            Log.d(TAG, "Including location: " + location.getLatitude() + ", " + location.getLongitude());
+        } else {
+            Log.d(TAG, "No location data available");
         }
 
         Request request = new Request.Builder()
-                .url("https://cis4398-project-newsight-backend.onrender.com/emergency_alert/7")
+                .url(BACKEND_URL)
                 .post(form.build())
                 .build();
 
+        Log.d(TAG, "Sending request to: " + BACKEND_URL);
+
         client.newCall(request).enqueue(new Callback() {
-            @Override public void onFailure(@NonNull Call call, @NonNull IOException e) {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e(TAG, "Network request failed", e);
                 runOnUiThread(() -> {
-                    Toast.makeText(EmergencyActivity.this, "Send failed", Toast.LENGTH_SHORT).show();
-                    finish();
+                    Toast.makeText(EmergencyActivity.this,
+                            "Send failed: " + e.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                    isCapturing = false;
+
+                    // Clean up photo file
+                    if (photoFile != null && photoFile.exists()) {
+                        photoFile.delete();
+                    }
+
+                    // Delay finish to show error message
+                    mainHandler.postDelayed(() -> finish(), 2000);
                 });
             }
 
-            @Override public void onResponse(@NonNull Call call, @NonNull Response response) {
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) {
+                Log.d(TAG, "Response received: " + response.code());
+
                 runOnUiThread(() -> {
-                    Toast.makeText(EmergencyActivity.this,
-                            response.isSuccessful() ? "Alert sent!" : "Error sending alert",
-                            Toast.LENGTH_SHORT).show();
-                    finish();
+                    if (response.isSuccessful()) {
+                        Toast.makeText(EmergencyActivity.this,
+                                "Emergency alert sent!",
+                                Toast.LENGTH_SHORT).show();
+                        Log.d(TAG, "Alert sent successfully");
+                    } else {
+                        Toast.makeText(EmergencyActivity.this,
+                                "Error sending alert: " + response.code(),
+                                Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Server returned error: " + response.code());
+                    }
+
+                    isCapturing = false;
+
+                    // Clean up photo file
+                    if (photoFile != null && photoFile.exists()) {
+                        photoFile.delete();
+                    }
+
+                    // Delay finish to show success message
+                    mainHandler.postDelayed(() -> finish(), 1500);
                 });
+
+                response.close();
             }
         });
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mainHandler != null) {
+            mainHandler.removeCallbacksAndMessages(null);
+        }
+    }
 }
-
-

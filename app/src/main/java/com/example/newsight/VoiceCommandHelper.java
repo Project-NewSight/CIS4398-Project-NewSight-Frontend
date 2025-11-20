@@ -44,6 +44,8 @@ public class VoiceCommandHelper {
     private static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
     private static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
 
+    private TtsHelper ttsHelper;
+
     // Voice Activity Detection parameters
     private static final double SILENCE_THRESHOLD = 1500.0;
     private static final long SILENCE_DURATION_MS = 2000;
@@ -72,6 +74,7 @@ public class VoiceCommandHelper {
         void onCommandStarted();
         void onCommandProcessing();
         void onResponseReceived(String jsonResponse);
+        void onNavigateToFeature(String feature, JSONObject extractedParams);
         void onError(String error);
         void onComplete();
     }
@@ -87,6 +90,8 @@ public class VoiceCommandHelper {
                 .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
                 .build();
         this.mainHandler = new Handler(Looper.getMainLooper());
+
+        this.ttsHelper = new TtsHelper(context);
     }
 
     public void setCallback(VoiceCommandCallback callback) {
@@ -123,6 +128,7 @@ public class VoiceCommandHelper {
 
         executorService.execute(() -> {
             try {
+                mainHandler.post(()-> ttsHelper.speak("Hello, How Can I help you?"));
                 recordCommandWithVAD();
             } catch (Exception e) {
                 Log.e(TAG, "Error in recording: " + e.getMessage(), e);
@@ -248,7 +254,10 @@ public class VoiceCommandHelper {
                             cleanupAudioRecord();
 
                             if (callback != null) {
-                                mainHandler.post(() -> callback.onWakeWordDetected());
+                                mainHandler.post(() -> {
+                                    callback.onWakeWordDetected();
+                                    ttsHelper.speak("Hello, How Can I help you?");
+                                });
                             }
                             showToast("Listening for command...");
 
@@ -346,6 +355,7 @@ public class VoiceCommandHelper {
 
         if (callback != null) {
             mainHandler.post(() -> callback.onCommandProcessing());
+            mainHandler.post(() -> ttsHelper.speak("Processing you request"));
         }
         showToast("Processing...");
 
@@ -389,21 +399,58 @@ public class VoiceCommandHelper {
                     String responseBody = response.body().string();
                     Log.d(TAG, "📦 Response received: " + responseBody);
 
-                    if (callback != null) {
-                        mainHandler.post(() -> {
-                            callback.onResponseReceived(responseBody);
-                            callback.onComplete();
-                        });
-                    }
+                    try {
+                        JSONObject jsonResponse = new JSONObject(responseBody);
 
-                    // Restart wake word detection after processing
-                    mainHandler.postDelayed(() -> {
-                        try {
-                            startWakeWordDetection();
-                        } catch (Exception e) {
-                            Log.e(TAG, "Error restarting wake word detection: " + e.getMessage());
+                        // Extract feature from extracted_params
+                        JSONObject extractedParams = jsonResponse.optJSONObject("extracted_params");
+                        String feature = null;
+
+                        if (extractedParams != null) {
+                            feature = extractedParams.optString("feature", null);
                         }
-                    }, 1000);
+
+                        // First notify with full response
+                        if (callback != null) {
+                            final String finalFeature = feature;
+                            final JSONObject finalExtractedParams = extractedParams;
+
+                            mainHandler.post(() -> {
+                                callback.onResponseReceived(responseBody);
+
+                                // If feature is present and not null, trigger navigation
+                                if (finalFeature != null && !finalFeature.isEmpty() &&
+                                        !finalFeature.equals("null") && !finalFeature.equals("None")) {
+                                    Log.d(TAG, "🧭 Navigating to feature: " + finalFeature);
+                                    callback.onNavigateToFeature(finalFeature, finalExtractedParams);
+                                }
+
+                                callback.onComplete();
+                            });
+                        }
+
+                        // Restart wake word detection after processing
+                        mainHandler.postDelayed(() -> {
+                            try {
+                                startWakeWordDetection();
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error restarting wake word detection: " + e.getMessage());
+                            }
+                        }, 1000);
+
+                    } catch (JSONException e) {
+                        Log.e(TAG, "JSON parsing error: " + e.getMessage());
+                        notifyError("Error parsing response");
+
+                        // Still restart wake word detection
+                        mainHandler.postDelayed(() -> {
+                            try {
+                                startWakeWordDetection();
+                            } catch (Exception ex) {
+                                Log.e(TAG, "Error restarting wake word detection: " + ex.getMessage());
+                            }
+                        }, 1000);
+                    }
 
                 } else {
                     notifyError("Server error: " + response.code());
