@@ -26,6 +26,7 @@
             FrameLayout btnReadText = findViewById(R.id.btnReadText);
             btnReadText.setOnClickListener(v -> {
                 Intent intent = new Intent(this, ReadTextActivity.class);
+                intent.putExtra("feature", "read_text");
                 startActivity(intent);
             });
 

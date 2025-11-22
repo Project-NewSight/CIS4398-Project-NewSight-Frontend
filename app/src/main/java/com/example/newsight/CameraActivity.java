@@ -16,7 +16,6 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.concurrent.ExecutorService;
@@ -34,24 +33,45 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     private boolean backendEnabled = true;
     private String activeFeature = null;
 
-    private final String SERVER_WS_URL = "wss://your-backend-url";
+    private final String SERVER_WS_URL = "ws://10.0.0.23:8000/ws";
+    //ws://10.109.98.242:8000/ws
 
-    private Button btnNavigation, btnASL, btnObjectDetection, btnStopFeature;
-
+    private Button btnNavigation, btnASL, btnObjectDetection, btnStopFeature, btnReadText;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
         previewView = findViewById(R.id.previewView);
         cameraExecutor = Executors.newSingleThreadExecutor();
 
+        btnNavigation = findViewById(R.id.btnNavigation);
+        btnASL = findViewById(R.id.btnASL);
+        btnObjectDetection = findViewById(R.id.btnObjectDetection);
+        btnStopFeature = findViewById(R.id.btnStopFeature);
+        btnReadText = findViewById(R.id.btnReadText);
 
+        // ---------- BUTTON LISTENERS ----------
+        btnReadText.setOnClickListener(v -> setActiveFeature("read_text"));
         btnNavigation.setOnClickListener(v -> setActiveFeature("navigation"));
         btnASL.setOnClickListener(v -> setActiveFeature("asl_detection"));
         btnObjectDetection.setOnClickListener(v -> setActiveFeature("object_detection"));
         btnStopFeature.setOnClickListener(v -> setActiveFeature(null));
 
+
+        // ---------- APPLY FEATURE *BEFORE* CAMERA STARTS ----------
+        String featureFromIntent = getIntent().getStringExtra("feature");
+        if (featureFromIntent != null) {
+            setActiveFeature(featureFromIntent);
+            Log.d("FEATURE", "Activated feature: " + featureFromIntent);
+        } else {
+            // Default mode if nothing was selected
+            setActiveFeature("read_text");
+        }
+
+
+        // ---------- NOW check camera permission and start camera ----------
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
@@ -60,13 +80,8 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
         } else {
             initCameraAndBackend();
         }
-        // Check if an initial feature was passed
-        String featureFromIntent = getIntent().getStringExtra("feature");
-        if (featureFromIntent != null) {
-            setActiveFeature(featureFromIntent); // starts people detection automatically
-        }
-
     }
+
 
     private void setActiveFeature(String feature) {
         activeFeature = feature;
@@ -75,6 +90,8 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     }
 
     private void initCameraAndBackend() {
+        Log.d(TAG, "initCameraAndBackend called. backendEnabled is: " + backendEnabled);
+
         if (backendEnabled) {
             wsManager = new WebSocketManager(SERVER_WS_URL, this);
             wsManager.connect();
@@ -121,6 +138,7 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
                 "AI result: " + results.substring(0, Math.min(results.length(), 20)) + "...",
                 Toast.LENGTH_SHORT).show());
     }
+   
 
     @Override
     public void onConnectionStatus(boolean isConnected) {
@@ -128,6 +146,8 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
                 isConnected ? "Connected to backend" : "Backend not available",
                 Toast.LENGTH_SHORT).show());
     }
+   
+
 
     @Override
     protected void onDestroy() {

@@ -2,55 +2,25 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ===== Permissions ===== -->
-    <!-- Camera & Media -->
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.CAMERA" />
-
-    <!-- Audio (for voice commands or speech recognition) -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-    <!-- Location -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-    <!-- Network & Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Camera support -->
+    <!-- Optional: declare camera feature -->
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
-    <!-- Vibration -->
-    <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Optional Bluetooth permissions (future features) -->
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" tools:ignore="BluetoothPermission" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" tools:ignore="BluetoothPermission" />
-
-    <!-- ===== Application Section ===== -->
     <application
+        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:label="NewSight"
+        android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.NewSight"
-        android:usesCleartextTraffic="true">
-
-        <!-- Secure File Provider -->
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.provider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
-        </provider>
+        android:theme="@style/Theme.NewSight">
 
         <!-- Launcher Activity -->
-        <!-- ===== Launcher Activity ===== -->
         <activity
             android:name=".splash"
             android:exported="true">
@@ -60,34 +30,30 @@
             </intent-filter>
         </activity>
 
-        <!-- REAL Main Screens -->
+        <!-- Main Activities -->
         <activity android:name=".MainActivity" android:exported="true" />
         <activity android:name=".HomeActivity" android:exported="true" />
+        <activity android:name=".ReadTextActivity" android:exported="false" />
 
-        <!-- Navigation -->
+        <!-- Navigation Activities -->
         <activity android:name=".NavigateActivity" android:exported="true" />
         <activity android:name=".GetDirectionsActivity" android:exported="true" />
 
-        <!-- ===== Communication ===== -->
+        <!-- Communication Activities -->
         <activity android:name=".CommunicateActivity" android:exported="true" />
 
-        <!-- Observe / Detection -->
+        <!-- Observation / Detection -->
         <activity android:name=".ObserveActivity" android:exported="true" />
         <activity android:name=".DetectionActivity" android:exported="true" />
-        <activity
-            android:name=".ObstacleActivity"
-            android:exported="true"
-            android:screenOrientation="landscape"
-            tools:ignore="DiscouragedApi" />
 
-        <!-- ===== Color Cue ===== -->
+        <!-- Color Cue -->
         <activity android:name=".ColorCueActivity" android:exported="true" />
 
-        <!-- ===== Emergency Features ===== -->
+        <!-- Emergency -->
         <activity android:name=".EmergencyActivity" android:exported="true" />
         <activity android:name=".EmergencySetupActivity" android:exported="true" />
 
-        <!-- ===== Settings & Profile ===== -->
+        <!-- Settings & Profile -->
         <activity android:name=".SettingsActivity" android:exported="true" />
         <activity android:name=".UserProfileActivity" android:exported="true" />
         <activity android:name=".TrustedContactsActivity" android:exported="true" />
@@ -95,11 +61,12 @@
         <activity android:name=".VoiceAndHapticsActivity" android:exported="true" />
         <activity android:name=".HelpAndSupportActivity" android:exported="true" />
 
-        <!-- Optional future activities
+        <!-- Optional / commented activities
         <activity android:name=".RemoveContactActivity" android:exported="true" />
         <activity android:name=".EditProfileActivity" android:exported="true" />
         <activity android:name=".PrivacyAndDataActivity" android:exported="true" />
         <activity android:name=".LogoutActivity" android:exported="true" />
+        <activity android:name=".ObstacleActivity" android:exported="true" />
         -->
     </application>
 </manifest>

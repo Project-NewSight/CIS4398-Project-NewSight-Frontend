@@ -1,10 +1,8 @@
 package com.example.newsight;
 
 import android.annotation.SuppressLint;
-import android.graphics.ImageFormat;
-import android.graphics.Rect;
-import android.graphics.YuvImage;
-import android.media.Image;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -12,7 +10,6 @@ import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
 
 import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
 
 public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
@@ -20,7 +17,6 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
     private final WebSocketManager wsManager;
     private final FeatureProvider featureProvider;
     private final ByteArrayOutputStream jpegStream = new ByteArrayOutputStream();
-    private byte[] nv21Buffer = null; // reuse buffer
     private long lastLogTime = 0;
 
     public interface FeatureProvider {
@@ -35,65 +31,61 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
     @Override
     @SuppressLint("UnsafeOptInUsageError")
     public void analyze(@NonNull ImageProxy imageProxy) {
-        Image image = imageProxy.getImage();
-        if (image == null) {
-            imageProxy.close();
-            return;
-        }
-
         try {
-            int width = image.getWidth();
-            int height = image.getHeight();
-
-            // Reuse buffer
-            int requiredLength = width * height * 3 / 2; // NV21 size
-            if (nv21Buffer == null || nv21Buffer.length < requiredLength) {
-                nv21Buffer = new byte[requiredLength];
-            }
-
-            yuv420ToNv21(image, nv21Buffer);
-
-            jpegStream.reset(); // reuse ByteArrayOutputStream
-            YuvImage yuvImage = new YuvImage(nv21Buffer, ImageFormat.NV21, width, height, null);
-            yuvImage.compressToJpeg(new Rect(0, 0, width, height), 40, jpegStream);
-
-            byte[] jpegBytes = jpegStream.toByteArray();
-
             String activeFeature = featureProvider.getActiveFeature();
 
+            // Only process frames if a feature is active and the socket is connected
             if (wsManager != null && wsManager.isConnected() && activeFeature != null) {
+
+                // 1. Convert ImageProxy to a Bitmap (handles YUV conversion)
+                Bitmap bitmap = imageProxy.toBitmap();
+
+                // 2. Get the rotation degrees
+                int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
+
+                // 3. Rotate the Bitmap if necessary
+                Bitmap rotatedBitmap = bitmap;
+                if (rotationDegrees != 0) {
+                    Matrix matrix = new Matrix();
+                    matrix.postRotate(rotationDegrees);
+                    rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                }
+
+                // 4. Compress the final, corrected Bitmap to JPEG
+                jpegStream.reset();
+                rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, jpegStream);
+                byte[] jpegBytes = jpegStream.toByteArray();
+
+                // 5. Send the frame
                 wsManager.sendFrame(jpegBytes, activeFeature);
+
             } else {
                 long now = System.currentTimeMillis();
                 if (now - lastLogTime > 2000) {
-                    Log.d(TAG, "Skipping frame, no feature active or WS not connected");
+                    // (Your existing detailed logging remains here)
+                    boolean featureOk = activeFeature != null;
+                    if (wsManager == null) {
+                        if (!featureOk) {
+                            Log.d(TAG, "Skipping frame: ALL systems down (wsManager is null AND no feature selected)");
+                        } else {
+                            Log.d(TAG, "Skipping frame: wsManager is null");
+                        }
+                    } else if (!wsManager.isConnected()) {
+                        if (!featureOk) {
+                            Log.d(TAG, "Skipping frame: ALL systems down (wsManager not connected AND no feature selected)");
+                        } else {
+                            Log.d(TAG, "Skipping frame: wsManager is not connected");
+                        }
+                    } else if (!featureOk) {
+                        Log.d(TAG, "Skipping frame: No feature selected");
+                    }
                     lastLogTime = now;
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "Frame conversion failed", e);
+            Log.e(TAG, "Frame processing failed", e);
         } finally {
             imageProxy.close();
-        }
-    }
-
-    private void yuv420ToNv21(Image image, byte[] out) {
-        Image.Plane[] planes = image.getPlanes();
-        ByteBuffer yBuffer = planes[0].getBuffer();
-        ByteBuffer uBuffer = planes[1].getBuffer();
-        ByteBuffer vBuffer = planes[2].getBuffer();
-
-        yBuffer.rewind();
-        uBuffer.rewind();
-        vBuffer.rewind();
-
-        int ySize = yBuffer.remaining();
-        yBuffer.get(out, 0, ySize);
-
-        int uvPos = ySize;
-        while (vBuffer.hasRemaining() && uBuffer.hasRemaining()) {
-            out[uvPos++] = vBuffer.get();
-            out[uvPos++] = uBuffer.get();
         }
     }
 }

@@ -26,7 +26,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
-
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,32 +42,27 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     private PreviewView previewView;
     private ExecutorService cameraExecutor;
     private WebSocketManager wsManager;
-
     //Haptic Feedback Components
     private VibrationMotor vibrationMotor;
     private PatternGenerator patternGenerator;
     private Handler hapticHandler;
 
     private boolean isLoggedIn = false;
-    private String currentFeature = "none"; // dynamic feature name (e.g., "emergency", "detect_people", etc.)
+    private String currentFeature = "none";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         EdgeToEdge.enable(this);
+
         setContentView(R.layout.activity_main);
 
-        Toast.makeText(this, "MainActivity started", Toast.LENGTH_SHORT).show();
-
-        // Apply window insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        // Initialize views
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnLogin = findViewById(R.id.btnLogin);
@@ -87,19 +82,15 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         btnOpenCamera.setOnClickListener(v -> checkCameraPermission());
         btnTestHaptic.setOnClickListener(v -> testAllHapticPatterns());
 
-        // ✅ Dynamic feature handling
         String featureFromIntent = getIntent().getStringExtra("feature");
         if (featureFromIntent != null && !featureFromIntent.isEmpty()) {
             currentFeature = featureFromIntent;
             isLoggedIn = true;
-
-            // Hide login UI since user came from a feature activity
             etEmail.setVisibility(android.view.View.GONE);
             etPassword.setVisibility(android.view.View.GONE);
             btnLogin.setVisibility(android.view.View.GONE);
-            btnOpenCamera.setVisibility(android.view.View.VISIBLE);
-
-            Log.i(TAG, "Launching feature: " + currentFeature);
+            btnOpenCamera.setVisibility(android.view.View.GONE);
+            Log.i(TAG, "Launching feature from Intent: " + currentFeature);
             checkCameraPermission();
         }
     }
@@ -116,20 +107,21 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         isLoggedIn = true;
         Toast.makeText(this, "Logged in as " + email, Toast.LENGTH_SHORT).show();
 
-        // Hide login UI
         etEmail.setVisibility(android.view.View.GONE);
         etPassword.setVisibility(android.view.View.GONE);
         btnLogin.setVisibility(android.view.View.GONE);
-        btnOpenCamera.setVisibility(android.view.View.VISIBLE);
-
-        // Start HomeActivity
+        
         Intent intent = new Intent(MainActivity.this, HomeActivity.class);
         startActivity(intent);
+    }
 
-        // Initialize WebSocket connection
-        String wsUrl = "wss://your-backend-url/ws"; // TODO: replace with your actual backend URL
-        wsManager = new WebSocketManager(wsUrl, this);
-        wsManager.connect();
+    private void initializeWebSocket() {
+        if (wsManager == null) {
+            Log.d(TAG, "Initializing WebSocketManager...");
+            String wsUrl = "ws://10.0.0.23:8000/ws";
+            wsManager = new WebSocketManager(wsUrl, this);
+            wsManager.connect();
+        }
     }
 
     private void checkCameraPermission() {
@@ -137,6 +129,8 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             Toast.makeText(this, "Please login first", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        initializeWebSocket();
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -192,9 +186,24 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         }, ContextCompat.getMainExecutor(this));
     }
 
-    /**
-     * Initialize the haptic feedback system
-     */
+    @Override
+    public void onResultsReceived(String results) {
+        runOnUiThread(() -> {
+            Log.d(TAG, "Backend results: " + results);
+            Toast.makeText(this, results, Toast.LENGTH_SHORT).show();
+
+        });
+    }
+
+    @Override
+    public void onConnectionStatus(boolean isConnected) {
+        runOnUiThread(() -> {
+            String status = isConnected ? "Connected to backend" : "Disconnected";
+            Log.i(TAG, status);
+            Toast.makeText(this, status, Toast.LENGTH_SHORT).show();
+        });
+    }
+
     private void initializeHapticSystem() {
         Log.d(TAG, "Initializing haptic system...");
 
@@ -220,9 +229,6 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         }
     }
 
-    /**
-     * Test all 8 haptic patterns in sequence
-     */
     private void testAllHapticPatterns() {
         if (vibrationMotor == null || !vibrationMotor.isInitialized()) {
             Toast.makeText(this, "Haptic system not ready", Toast.LENGTH_SHORT).show();
@@ -233,16 +239,11 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         Toast.makeText(this, "Testing 8 haptic patterns - feel the difference!",
                 Toast.LENGTH_LONG).show();
 
-        // Disable button during test
         btnTestHaptic.setEnabled(false);
 
-        // Start pattern sequence
         testPatternSequence(0);
     }
 
-    /**
-     * Execute haptic pattern test sequence
-     */
     private void testPatternSequence(int step) {
         if (vibrationMotor == null || patternGenerator == null) {
             return;
@@ -326,14 +327,11 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
                 return;
         }
 
-        // Schedule next pattern
         hapticHandler.postDelayed(() -> testPatternSequence(step + 1), delay);
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -344,30 +342,14 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         }
     }
 
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
         cameraExecutor.shutdown();
         if (wsManager != null) wsManager.disconnect();
         if (vibrationMotor != null) vibrationMotor.close();
         if (hapticHandler != null) hapticHandler.removeCallbacksAndMessages(null);
-    }
-
-    // WebSocket callbacks
-    @Override
-    public void onResultsReceived(String results) {
-        runOnUiThread(() -> {
-            Log.d(TAG, "Backend results: " + results);
-            Toast.makeText(this, "Backend: " + results, Toast.LENGTH_SHORT).show();
-        });
-    }
-
-    @Override
-    public void onConnectionStatus(boolean isConnected) {
-        runOnUiThread(() -> {
-            String status = isConnected ? "Connected to backend" : "Disconnected";
-            Log.i(TAG, status);
-            Toast.makeText(this, status, Toast.LENGTH_SHORT).show();
-        });
     }
 }
