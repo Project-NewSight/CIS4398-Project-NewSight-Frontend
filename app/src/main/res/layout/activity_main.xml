@@ -108,7 +108,7 @@
         style="@style/Widget.AppCompat.Button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="ACCESS SYSTEM"
+        android:text="LOG IN"
         android:textColor="@color/white"
         android:textStyle="bold"
         android:background="@drawable/bg_gradient_primary"
