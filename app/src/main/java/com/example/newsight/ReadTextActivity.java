@@ -3,6 +3,7 @@ package com.example.newsight;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,10 +20,14 @@ import androidx.core.content.ContextCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ReadTextActivity extends AppCompatActivity implements WebSocketManager.WsListener {
+public class ReadTextActivity extends AppCompatActivity implements WebSocketManager.WsListener, TextToSpeech.OnInitListener {
 
     private static final String TAG = "ReadTextActivity";
     private static final int REQUEST_CAMERA_PERMISSION = 102;
@@ -32,6 +37,9 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     private TextView tvAiStatus;
     private ExecutorService cameraExecutor;
     private WebSocketManager wsManager;
+    private TextToSpeech tts;
+
+    private String lastDisplayedText = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +49,9 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
         previewView = findViewById(R.id.previewView);
         tvAiStatus = findViewById(R.id.tv_ai_status);
         cameraExecutor = Executors.newSingleThreadExecutor();
+        
+        // Initialize TextToSpeech engine
+        tts = new TextToSpeech(this, this);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -96,8 +107,37 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     @Override
     public void onResultsReceived(String results) {
         runOnUiThread(() -> {
-            // For now, just show the results in a Toast
-            Toast.makeText(this, results, Toast.LENGTH_SHORT).show();
+            // Always log the raw result
+            Log.d(TAG, "Raw backend result: " + results);
+
+            try {
+                JSONObject jsonObject = new JSONObject(results);
+                String detectedText = null;
+
+                if (jsonObject.has("stable_text") && !jsonObject.isNull("stable_text")) {
+                    detectedText = jsonObject.getString("stable_text").trim();
+                }
+
+                // If new, valid text is found and it's different from the last one shown
+                if (detectedText != null && !detectedText.isEmpty() && !detectedText.equals(lastDisplayedText)) {
+                    lastDisplayedText = detectedText; // Update the state
+                    String speech = "Text detected: " + lastDisplayedText;
+                    speak(speech);
+                    Toast.makeText(this, lastDisplayedText, Toast.LENGTH_SHORT).show();
+                } 
+                // If no valid text is found, AND we have never shown any text before
+                else if ((detectedText == null || detectedText.isEmpty()) && lastDisplayedText == null) {
+                    speak("Reading...");
+                    Toast.makeText(this, "Reading...", Toast.LENGTH_SHORT).show();
+                }
+
+            } catch (JSONException e) {
+                Log.e(TAG, "Failed to parse backend JSON: " + results, e);
+                if (lastDisplayedText == null) {
+                    speak("Reading...");
+                    Toast.makeText(this, "Reading...", Toast.LENGTH_SHORT).show();
+                }
+            }
         });
     }
 
@@ -111,8 +151,32 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     }
 
     @Override
+    public void onInit(int status) {
+        if (status == TextToSpeech.SUCCESS) {
+            int result = tts.setLanguage(Locale.US);
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.e(TAG, "TTS language is not supported.");
+            } else {
+                Log.i(TAG, "TTS engine initialized successfully.");
+            }
+        } else {
+            Log.e(TAG, "TTS initialization failed.");
+        }
+    }
+
+    private void speak(String text) {
+        if (tts != null) {
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null);
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+        }
         cameraExecutor.shutdown();
         if (wsManager != null) {
             wsManager.disconnect();

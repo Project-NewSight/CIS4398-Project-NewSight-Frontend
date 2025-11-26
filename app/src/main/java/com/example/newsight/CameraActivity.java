@@ -138,7 +138,7 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
                 "AI result: " + results.substring(0, Math.min(results.length(), 20)) + "...",
                 Toast.LENGTH_SHORT).show());
     }
-   
+
 
     @Override
     public void onConnectionStatus(boolean isConnected) {
@@ -146,7 +146,7 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
                 isConnected ? "Connected to backend" : "Backend not available",
                 Toast.LENGTH_SHORT).show());
     }
-   
+
 
 
     @Override
