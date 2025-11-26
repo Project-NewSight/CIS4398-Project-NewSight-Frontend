@@ -62,6 +62,8 @@
 
         <!-- REAL Main Screens -->
         <activity android:name=".MainActivity" android:exported="true" />
+        <activity android:name=".SignupActivity" android:exported="false" />
+        <activity android:name=".ForgotPasswordActivity" android:exported="false" />
         <activity android:name=".LoadingActivity" android:exported="false" />
         <activity android:name=".HomeActivity" android:exported="true" />
 

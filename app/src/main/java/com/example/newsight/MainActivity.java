@@ -75,6 +75,10 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         btnTestHaptic = findViewById(R.id.btnTestHaptic);
         cameraContainer = findViewById(R.id.cameraContainer);
 
+        // Initialize link TextViews
+        TextView tvForgotPassword = findViewById(R.id.tvForgotPassword);
+        TextView tvCreateAccount = findViewById(R.id.tvCreateAccount);
+
         btnOpenCamera.setVisibility(android.view.View.GONE);
         cameraContainer.setVisibility(android.view.View.GONE);
 
@@ -83,9 +87,21 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
         initializeHapticSystem();
 
+        // Set click listeners
         btnLogin.setOnClickListener(v -> handleLogin());
         btnOpenCamera.setOnClickListener(v -> checkCameraPermission());
         btnTestHaptic.setOnClickListener(v -> testAllHapticPatterns());
+
+        // Navigation links
+        tvForgotPassword.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, ForgotPasswordActivity.class);
+            startActivity(intent);
+        });
+
+        tvCreateAccount.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, SignupActivity.class);
+            startActivity(intent);
+        });
 
         // ✅ Dynamic feature handling
         String featureFromIntent = getIntent().getStringExtra("feature");
