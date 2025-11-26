@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="Cyan">#00CFFF</color>
+
+    <color name="Grey">#546168</color>
+    <color name="Red">#ef4042</color>
+    <color name="Green">#3bd8ad</color>
+    <color name="Yellow">#e8dd72</color>
+    <color name="DeepBlue">#4042b3</color>
+    <color name="LightBlue">#4497c4</color>
+    <color name="Orange">#ffac75</color>
+    <color name="Pink">#e098e0</color>
+    <color name="PaleGreen">#c7f5ac</color>
+    <color name="Taupe">#a47b56</color>
+
     <!-- Dark Mode Theme Colors -->
     <color name="background">#111317</color>
     <color name="foreground">#f0f1f3</color>
