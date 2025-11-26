@@ -62,6 +62,7 @@
 
         <!-- REAL Main Screens -->
         <activity android:name=".MainActivity" android:exported="true" />
+        <activity android:name=".LoadingActivity" android:exported="false" />
         <activity android:name=".HomeActivity" android:exported="true" />
 
         <!-- Navigation -->

@@ -122,8 +122,8 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         btnLogin.setVisibility(android.view.View.GONE);
         btnOpenCamera.setVisibility(android.view.View.VISIBLE);
 
-        // Start HomeActivity
-        Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+        // Start LoadingActivity (which will then navigate to HomeActivity)
+        Intent intent = new Intent(MainActivity.this, LoadingActivity.class);
         startActivity(intent);
 
         // Initialize WebSocket connection
