@@ -4,8 +4,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="Cyan">#00CFFF</color>
 
-
-
     <color name="Grey">#546168</color>
     <color name="Red">#ef4042</color>
     <color name="Green">#3bd8ad</color>
@@ -17,10 +15,6 @@
     <color name="PaleGreen">#c7f5ac</color>
     <color name="Taupe">#a47b56</color>
 
-
-
-</resources>
-
     <!-- NewSight Modern Theme Colors -->
     <color name="background">#111317</color>
     <color name="foreground">#f0f1f3</color>
@@ -28,10 +22,11 @@
     <color name="surface_1">#1e2129</color>
     <color name="surface_2">#272b34</color>
     <color name="primary">#5598f6</color>
-    <color name="primary_variant">#3b82f6</color> <!-- Slightly darker blue for gradients -->
+    <color name="primary_variant">#2563eb</color> <!-- Tailwind blue-600 for gradient end -->
     <color name="secondary">#2b303a</color>
     <color name="accent">#19e5c3</color>
     <color name="muted">#22262e</color>
+    <color name="muted_foreground">#94a3b8</color>
     <color name="border">#2b303a</color>
     <color name="input_bg">#0DFFFFFF</color> <!-- 5% white for glass effect -->
     <color name="input_border">#1AFFFFFF</color> <!-- 10% white -->
