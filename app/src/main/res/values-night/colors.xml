@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Mode Theme Colors -->
+    <color name="background">#111317</color>
+    <color name="foreground">#f0f1f3</color>
+    <color name="card">#1a1d23</color>
+    <color name="surface_1">#1e2129</color>
+    <color name="surface_2">#272b34</color>
+    <color name="primary">#5598f6</color>
+    <color name="primary_variant">#2563eb</color>
+    <color name="secondary">#2b303a</color>
+    <color name="accent">#19e5c3</color>
+    <color name="muted">#22262e</color>
+    <color name="muted_foreground">#94a3b8</color>
+    <color name="border">#2b303a</color>
+    <color name="input_bg">#0DFFFFFF</color> <!-- 5% white for dark mode -->
+    <color name="input_border">#1AFFFFFF</color> <!-- 10% white for dark mode -->
+</resources>
