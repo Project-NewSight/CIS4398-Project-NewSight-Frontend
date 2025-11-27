@@ -92,6 +92,16 @@ public class HomeActivity extends AppCompatActivity {
         animateView(btnCommunicate, 350);
         animateView(btnColors, 400);
 
+        // Apply touch animations to all tiles
+        addTouchAnimation(btnMic);
+        addTouchAnimation(btnEmergency);
+        addTouchAnimation(btnNavigate);
+        addTouchAnimation(btnReadText);
+        addTouchAnimation(btnObserve);
+        addTouchAnimation(btnFaces);
+        addTouchAnimation(btnCommunicate);
+        addTouchAnimation(btnColors);
+
         // Set Click Listeners
         btnNavigate.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, NavigateActivity.class);
@@ -187,6 +197,36 @@ public class HomeActivity extends AppCompatActivity {
                 .setInterpolator(new android.view.animation.DecelerateInterpolator())
                 .start();
     }
+
+    @android.annotation.SuppressLint("ClickableViewAccessibility")
+    private void addTouchAnimation(android.view.View view) {
+        if (view == null) return;
+        view.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case android.view.MotionEvent.ACTION_DOWN:
+                    // Scale up slightly on press (like React's whileTap)
+                    v.animate()
+                            .scaleX(0.98f)
+                            .scaleY(0.98f)
+                            .setDuration(100)
+                            .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                            .start();
+                    break;
+                case android.view.MotionEvent.ACTION_UP:
+                case android.view.MotionEvent.ACTION_CANCEL:
+                    // Return to normal size
+                    v.animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .setDuration(100)
+                            .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                            .start();
+                    break;
+            }
+            return false; // Allow click events to propagate
+        });
+    }
+
 
     private boolean checkMicrophonePermission() {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
