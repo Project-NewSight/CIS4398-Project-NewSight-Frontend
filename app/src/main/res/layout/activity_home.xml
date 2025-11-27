@@ -154,7 +154,9 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent">
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/iconContainerEmergency"
+                        app:layout_constraintVertical_bias="1.0">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -211,7 +213,9 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent">
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/iconContainerNav"
+                        app:layout_constraintVertical_bias="1.0">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -250,6 +254,7 @@
                     android:layout_height="match_parent">
 
                     <FrameLayout
+                        android:id="@+id/iconContainerText"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:background="@drawable/bg_circle_surface_2"
@@ -269,7 +274,9 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent">
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/iconContainerText"
+                        app:layout_constraintVertical_bias="1.0">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -308,6 +315,7 @@
                     android:layout_height="match_parent">
 
                     <FrameLayout
+                        android:id="@+id/iconContainerIdentify"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:background="@drawable/bg_circle_surface_2"
@@ -327,7 +335,9 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent">
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/iconContainerIdentify"
+                        app:layout_constraintVertical_bias="1.0">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -366,6 +376,7 @@
                     android:layout_height="match_parent">
 
                     <FrameLayout
+                        android:id="@+id/iconContainerFaces"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:background="@drawable/bg_circle_surface_2"
@@ -385,7 +396,9 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent">
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/iconContainerFaces"
+                        app:layout_constraintVertical_bias="1.0">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -424,6 +437,7 @@
                     android:layout_height="match_parent">
 
                     <FrameLayout
+                        android:id="@+id/iconContainerASL"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:background="@drawable/bg_circle_surface_2"
@@ -443,7 +457,9 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent">
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/iconContainerASL"
+                        app:layout_constraintVertical_bias="1.0">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -482,6 +498,7 @@
                     android:layout_height="match_parent">
 
                     <FrameLayout
+                        android:id="@+id/iconContainerColors"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:background="@drawable/bg_circle_surface_2"
@@ -501,7 +518,9 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintStart_toStartOf="parent">
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/iconContainerColors"
+                        app:layout_constraintVertical_bias="1.0">
 
                         <TextView
                             android:layout_width="wrap_content"
