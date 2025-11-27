@@ -100,13 +100,6 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Settings
-        FrameLayout btnSettings = findViewById(R.id.btnSettings);
-        btnSettings.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
-            startActivity(intent);
-        });
-
         // Read and Ask
         FrameLayout btnMic = findViewById(R.id.btnMic);
         btnMic.setOnClickListener(v -> {
