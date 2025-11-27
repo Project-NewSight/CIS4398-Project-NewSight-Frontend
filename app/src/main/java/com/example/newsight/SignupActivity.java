@@ -27,6 +27,27 @@ public class SignupActivity extends AppCompatActivity {
         btnSignup = findViewById(R.id.btnSignup);
         tvAlreadyHaveAccount = findViewById(R.id.tvAlreadyHaveAccount);
 
+        // Initialize labels for highlighting
+        TextView tvNameLabel = findViewById(R.id.tvNameLabel);
+        TextView tvEmailLabel = findViewById(R.id.tvEmailLabel);
+        TextView tvPasswordLabel = findViewById(R.id.tvPasswordLabel);
+
+        // Focus listeners for label highlighting
+        etName.setOnFocusChangeListener((v, hasFocus) -> {
+            tvNameLabel.setTextColor(androidx.core.content.ContextCompat.getColor(this, 
+                hasFocus ? R.color.primary : R.color.muted_foreground));
+        });
+
+        etEmail.setOnFocusChangeListener((v, hasFocus) -> {
+            tvEmailLabel.setTextColor(androidx.core.content.ContextCompat.getColor(this, 
+                hasFocus ? R.color.primary : R.color.muted_foreground));
+        });
+
+        etPassword.setOnFocusChangeListener((v, hasFocus) -> {
+            tvPasswordLabel.setTextColor(androidx.core.content.ContextCompat.getColor(this, 
+                hasFocus ? R.color.primary : R.color.muted_foreground));
+        });
+
         // Signup button click
         btnSignup.setOnClickListener(v -> handleSignup());
 

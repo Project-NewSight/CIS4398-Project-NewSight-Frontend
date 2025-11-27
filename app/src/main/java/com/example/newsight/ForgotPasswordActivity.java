@@ -25,6 +25,15 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         btnReset = findViewById(R.id.btnReset);
         tvBackToLogin = findViewById(R.id.tvBackToLogin);
 
+        // Initialize label for highlighting
+        TextView tvEmailLabel = findViewById(R.id.tvEmailLabel);
+
+        // Focus listener for label highlighting
+        etEmail.setOnFocusChangeListener((v, hasFocus) -> {
+            tvEmailLabel.setTextColor(androidx.core.content.ContextCompat.getColor(this, 
+                hasFocus ? R.color.primary : R.color.muted_foreground));
+        });
+
         // Reset button click
         btnReset.setOnClickListener(v -> handleReset());
 

@@ -79,6 +79,21 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         // Initialize link TextViews
         TextView tvForgotPassword = findViewById(R.id.tvForgotPassword);
         TextView tvCreateAccount = findViewById(R.id.tvCreateAccount);
+        
+        // Initialize labels for highlighting
+        TextView tvEmailLabel = findViewById(R.id.tvEmailLabel);
+        TextView tvPasswordLabel = findViewById(R.id.tvPasswordLabel);
+
+        // Focus listeners for label highlighting
+        etEmail.setOnFocusChangeListener((v, hasFocus) -> {
+            tvEmailLabel.setTextColor(ContextCompat.getColor(this, 
+                hasFocus ? R.color.primary : R.color.muted_foreground));
+        });
+
+        etPassword.setOnFocusChangeListener((v, hasFocus) -> {
+            tvPasswordLabel.setTextColor(ContextCompat.getColor(this, 
+                hasFocus ? R.color.primary : R.color.muted_foreground));
+        });
 
         btnOpenCamera.setVisibility(android.view.View.GONE);
         cameraContainer.setVisibility(android.view.View.GONE);
