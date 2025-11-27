@@ -116,46 +116,60 @@
             android:columnOrderPreserved="false"
             android:useDefaultMargins="true">
 
-            <!-- Navigation -->
+            <!-- Navigation (Full Width) -->
             <FrameLayout
                 android:id="@+id/btnNavigate"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
+                android:layout_columnSpan="2"
                 android:layout_margin="4dp"
-                android:background="@drawable/bg_surface_card"
+                android:background="@drawable/bg_gradient_primary"
                 android:clickable="true"
                 android:focusable="true"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                    <ImageView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:src="@drawable/ic_map"
-                        app:tint="@color/primary" />
+                    <FrameLayout
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/bg_circle_primary"
+                        android:backgroundTint="#33FFFFFF">
 
-                    <TextView
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_map"
+                            app:tint="@color/white" />
+                    </FrameLayout>
+
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:text="Navigation"
-                        android:textColor="@color/foreground"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:layout_marginStart="16dp"
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="Maps &amp; Directions"
-                        android:textColor="@color/muted_foreground"
-                        android:textSize="12sp" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Navigation"
+                            android:textColor="@color/white"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Maps &amp; Directions"
+                            android:textColor="#CCFFFFFF"
+                            android:textSize="14sp" />
+                    </LinearLayout>
                 </LinearLayout>
             </FrameLayout>
 
