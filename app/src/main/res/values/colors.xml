@@ -30,4 +30,6 @@
     <color name="border">#e2e4e8</color>
     <color name="input_bg">#0D000000</color> <!-- 5% black for light mode -->
     <color name="input_border">#1A000000</color> <!-- 10% black for light mode -->
+    <color name="glass_background">#CCFFFFFF</color>
+    <color name="glass_border">#1A000000</color>
 </resources>
