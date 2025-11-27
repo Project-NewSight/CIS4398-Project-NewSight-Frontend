@@ -72,36 +72,59 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
-        // Navigate
+        // Initialize views for animation
+        FrameLayout btnMic = findViewById(R.id.btnMic);
+        FrameLayout btnEmergency = findViewById(R.id.btnEmergency);
         FrameLayout btnNavigate = findViewById(R.id.btnNavigate);
+        FrameLayout btnReadText = findViewById(R.id.btnReadText);
+        FrameLayout btnObserve = findViewById(R.id.btnObserve); // Identify
+        FrameLayout btnFaces = findViewById(R.id.btnFaces);
+        FrameLayout btnCommunicate = findViewById(R.id.btnCommunicate); // ASL
+        FrameLayout btnColors = findViewById(R.id.btnColors);
+
+        // Apply staggered animations
+        animateView(btnMic, 0);
+        animateView(btnEmergency, 100);
+        animateView(btnNavigate, 150);
+        animateView(btnReadText, 200);
+        animateView(btnObserve, 250);
+        animateView(btnFaces, 300);
+        animateView(btnCommunicate, 350);
+        animateView(btnColors, 400);
+
+        // Set Click Listeners
         btnNavigate.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, NavigateActivity.class);
             startActivity(intent);
         });
 
-        // Observe
-        FrameLayout btnObserve = findViewById(R.id.btnObserve);
         btnObserve.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, ObserveActivity.class);
             startActivity(intent);
         });
 
-        // Communicate
-        FrameLayout btnCommunicate = findViewById(R.id.btnCommunicate);
         btnCommunicate.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, CommunicateActivity.class);
             startActivity(intent);
         });
 
-        // Emergency
-        FrameLayout btnEmergency = findViewById(R.id.btnEmergency);
         btnEmergency.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, EmergencyActivity.class);
             startActivity(intent);
         });
 
-        // Read and Ask
-        FrameLayout btnMic = findViewById(R.id.btnMic);
+        // Placeholder listeners for new buttons
+        if (btnReadText != null) {
+            btnReadText.setOnClickListener(v -> Toast.makeText(this, "Read Text clicked", Toast.LENGTH_SHORT).show());
+        }
+        if (btnFaces != null) {
+            btnFaces.setOnClickListener(v -> Toast.makeText(this, "Faces clicked", Toast.LENGTH_SHORT).show());
+        }
+        if (btnColors != null) {
+            btnColors.setOnClickListener(v -> Toast.makeText(this, "Colors clicked", Toast.LENGTH_SHORT).show());
+        }
+
+        // Read and Ask (Voice Search)
         btnMic.setOnClickListener(v -> {
             if (checkMicrophonePermission()) {
                 // Start voice recording directly in this activity
@@ -150,6 +173,19 @@ public class HomeActivity extends AppCompatActivity {
             Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
             startActivity(intent);
         });
+    }
+
+    private void animateView(android.view.View view, long delay) {
+        if (view == null) return;
+        view.setAlpha(0f);
+        view.setTranslationY(50f);
+        view.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setStartDelay(delay)
+                .setDuration(500)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .start();
     }
 
     private boolean checkMicrophonePermission() {
