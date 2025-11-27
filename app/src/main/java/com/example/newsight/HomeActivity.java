@@ -122,6 +122,30 @@ public class HomeActivity extends AppCompatActivity {
         if (checkMicrophonePermission()) {
             voiceCommandHelper.startWakeWordDetection();
         }
+
+        // Bottom Navigation
+        android.widget.LinearLayout navHome = findViewById(R.id.navHome);
+        android.widget.LinearLayout navVoice = findViewById(R.id.navVoice);
+        android.widget.LinearLayout navSettings = findViewById(R.id.navSettings);
+        android.widget.ScrollView scrollView = findViewById(R.id.scrollView);
+
+        navHome.setOnClickListener(v -> {
+            // Scroll to top
+            scrollView.fullScroll(android.widget.ScrollView.FOCUS_UP);
+        });
+
+        navVoice.setOnClickListener(v -> {
+            if (checkMicrophonePermission()) {
+                voiceCommandHelper.startDirectRecording();
+            } else {
+                requestMicrophonePermission();
+            }
+        });
+
+        navSettings.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
+            startActivity(intent);
+        });
     }
 
     private boolean checkMicrophonePermission() {
