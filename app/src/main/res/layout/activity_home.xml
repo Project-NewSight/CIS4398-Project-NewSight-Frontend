@@ -122,7 +122,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
-                android:layout_margin="8dp"
+                android:layout_margin="4dp"
                 android:background="@drawable/bg_surface_card"
                 android:clickable="true"
                 android:focusable="true"
@@ -165,7 +165,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
-                android:layout_margin="8dp"
+                android:layout_margin="4dp"
                 android:background="@drawable/bg_surface_card"
                 android:clickable="true"
                 android:focusable="true"
@@ -208,7 +208,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
-                android:layout_margin="8dp"
+                android:layout_margin="4dp"
                 android:background="@drawable/bg_surface_card"
                 android:clickable="true"
                 android:focusable="true"
@@ -251,7 +251,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
-                android:layout_margin="8dp"
+                android:layout_margin="4dp"
                 android:background="@drawable/bg_surface_card"
                 android:clickable="true"
                 android:focusable="true"
@@ -294,7 +294,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
-                android:layout_margin="8dp"
+                android:layout_margin="4dp"
                 android:background="@drawable/bg_surface_card"
                 android:clickable="true"
                 android:focusable="true"
@@ -337,7 +337,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
-                android:layout_margin="8dp"
+                android:layout_margin="4dp"
                 android:background="@drawable/bg_surface_card"
                 android:clickable="true"
                 android:focusable="true"
@@ -380,7 +380,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_columnSpan="2"
-                android:layout_margin="8dp"
+                android:layout_margin="4dp"
                 android:background="@drawable/bg_surface_card"
                 android:clickable="true"
                 android:focusable="true"
@@ -392,11 +392,17 @@
                     android:gravity="center"
                     android:orientation="horizontal">
 
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_emergency"
+                        android:layout_marginEnd="8dp" />
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Emergency"
-                        android:textColor="@color/accent"
+                        android:textColor="@color/Red"
                         android:textSize="18sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -438,14 +444,14 @@
                 android:background="?attr/selectableItemBackgroundBorderless">
 
                 <FrameLayout
-                    android:layout_width="56dp"
-                    android:layout_height="32dp"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:background="@drawable/bg_circle_primary"
                     android:backgroundTint="@color/primary">
 
                     <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_home"
                         app:tint="@color/white" />
