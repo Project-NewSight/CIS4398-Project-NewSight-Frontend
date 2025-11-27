@@ -123,6 +123,17 @@ public class HomeActivity extends AppCompatActivity {
             voiceCommandHelper.startWakeWordDetection();
         }
 
+        // Logout button
+        FrameLayout btnLogout = findViewById(R.id.btnLogout);
+        btnLogout.setOnClickListener(v -> {
+            // TODO: Implement actual logout functionality (clear session, tokens, etc.)
+            // For now, just navigate to login screen
+            Intent intent = new Intent(HomeActivity.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        });
+
         // Bottom Navigation
         android.widget.LinearLayout navHome = findViewById(R.id.navHome);
         android.widget.LinearLayout navVoice = findViewById(R.id.navVoice);

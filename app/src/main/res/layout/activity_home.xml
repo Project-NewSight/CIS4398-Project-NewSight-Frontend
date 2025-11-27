@@ -39,7 +39,7 @@
         </LinearLayout>
 
         <FrameLayout
-            android:id="@+id/btnSettings"
+            android:id="@+id/btnLogout"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="@drawable/bg_surface_card"
@@ -50,7 +50,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_bell"
+                android:src="@drawable/ic_logout"
                 app:tint="@color/foreground" />
         </FrameLayout>
     </LinearLayout>
