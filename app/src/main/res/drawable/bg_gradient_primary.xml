@@ -5,7 +5,4 @@
         android:endColor="@color/primary_variant"
         android:angle="0" />
     <corners android:radius="32dp" />
-    <stroke
-        android:width="2dp"
-        android:color="#66FFFFFF" />
 </shape>
