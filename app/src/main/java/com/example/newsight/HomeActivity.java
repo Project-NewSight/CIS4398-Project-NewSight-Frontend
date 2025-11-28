@@ -73,6 +73,7 @@ public class HomeActivity extends AppCompatActivity {
         });
 
         // Initialize views for animation
+        FrameLayout cardRewards = findViewById(R.id.cardRewards);
         FrameLayout btnMic = findViewById(R.id.btnMic);
         FrameLayout btnEmergency = findViewById(R.id.btnEmergency);
         FrameLayout btnNavigate = findViewById(R.id.btnNavigate);
@@ -82,15 +83,44 @@ public class HomeActivity extends AppCompatActivity {
         FrameLayout btnCommunicate = findViewById(R.id.btnCommunicate); // ASL
         FrameLayout btnColors = findViewById(R.id.btnColors);
 
+        // Populate Rewards Data (Mock)
+        android.widget.TextView textPoints = findViewById(R.id.textPoints);
+        android.widget.TextView textLevel = findViewById(R.id.textLevel);
+        android.widget.TextView textStreak = findViewById(R.id.textStreak);
+        android.view.View progressLevel = findViewById(R.id.progressLevel);
+
+        if (textPoints != null) textPoints.setText("1250");
+        if (textLevel != null) textLevel.setText("5");
+        if (textStreak != null) textStreak.setText("12 day streak!");
+        
+        // Animate progress bar width (mock 60%)
+        if (progressLevel != null) {
+            progressLevel.post(() -> {
+                android.widget.FrameLayout.LayoutParams params = (android.widget.FrameLayout.LayoutParams) progressLevel.getLayoutParams();
+                params.width = 0;
+                progressLevel.setLayoutParams(params);
+                
+                android.animation.ValueAnimator animator = android.animation.ValueAnimator.ofInt(0, (int)(cardRewards.getWidth() * 0.6));
+                animator.setDuration(1000);
+                animator.addUpdateListener(animation -> {
+                    params.width = (int) animation.getAnimatedValue();
+                    progressLevel.setLayoutParams(params);
+                });
+                animator.setStartDelay(500);
+                animator.start();
+            });
+        }
+
         // Apply staggered animations
-        animateView(btnMic, 0);
-        animateView(btnEmergency, 100);
-        animateView(btnNavigate, 150);
-        animateView(btnReadText, 200);
-        animateView(btnObserve, 250);
-        animateView(btnFaces, 300);
-        animateView(btnCommunicate, 350);
-        animateView(btnColors, 400);
+        animateView(cardRewards, 100);
+        animateView(btnMic, 150);
+        animateView(btnEmergency, 200);
+        animateView(btnNavigate, 250);
+        animateView(btnReadText, 300);
+        animateView(btnObserve, 350);
+        animateView(btnFaces, 400);
+        animateView(btnCommunicate, 450);
+        animateView(btnColors, 500);
 
         // Apply touch animations to all tiles
         addTouchAnimation(btnMic);
