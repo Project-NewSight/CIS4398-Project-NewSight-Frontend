@@ -83,32 +83,21 @@ public class HomeActivity extends AppCompatActivity {
         FrameLayout btnCommunicate = findViewById(R.id.btnCommunicate); // ASL
         FrameLayout btnColors = findViewById(R.id.btnColors);
 
-        // Populate Rewards Data (Mock)
+        // Populate Rewards Data (Default 0)
         android.widget.TextView textPoints = findViewById(R.id.textPoints);
         android.widget.TextView textLevel = findViewById(R.id.textLevel);
         android.widget.TextView textStreak = findViewById(R.id.textStreak);
         android.view.View progressLevel = findViewById(R.id.progressLevel);
 
-        if (textPoints != null) textPoints.setText("1250");
-        if (textLevel != null) textLevel.setText("5");
-        if (textStreak != null) textStreak.setText("12 day streak!");
+        if (textPoints != null) textPoints.setText("0");
+        if (textLevel != null) textLevel.setText("0");
+        if (textStreak != null) textStreak.setText("0 day streak!");
         
-        // Animate progress bar width (mock 60%)
+        // Initialize progress bar to 0 width
         if (progressLevel != null) {
-            progressLevel.post(() -> {
-                android.widget.FrameLayout.LayoutParams params = (android.widget.FrameLayout.LayoutParams) progressLevel.getLayoutParams();
-                params.width = 0;
-                progressLevel.setLayoutParams(params);
-                
-                android.animation.ValueAnimator animator = android.animation.ValueAnimator.ofInt(0, (int)(cardRewards.getWidth() * 0.6));
-                animator.setDuration(1000);
-                animator.addUpdateListener(animation -> {
-                    params.width = (int) animation.getAnimatedValue();
-                    progressLevel.setLayoutParams(params);
-                });
-                animator.setStartDelay(500);
-                animator.start();
-            });
+            android.widget.FrameLayout.LayoutParams params = (android.widget.FrameLayout.LayoutParams) progressLevel.getLayoutParams();
+            params.width = 0;
+            progressLevel.setLayoutParams(params);
         }
 
         // Apply staggered animations
