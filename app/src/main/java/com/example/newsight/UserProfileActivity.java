@@ -43,12 +43,32 @@ public class UserProfileActivity extends AppCompatActivity {
 
         btnSaveProfile.setOnClickListener(v -> {
             // Save changes
-            textName.setText(inputName.getText().toString());
-            textEmail.setText(inputEmail.getText().toString());
+            String newName = inputName.getText().toString();
+            String newEmail = inputEmail.getText().toString();
+            
+            textName.setText(newName);
+            textEmail.setText(newEmail);
+            
+            // Persist changes
+            getSharedPreferences("UserPrefs", MODE_PRIVATE)
+                .edit()
+                .putString("user_name", newName)
+                .putString("user_email", newEmail)
+                .apply();
             
             // Hide form
             isEditing = false;
             formEditProfile.setVisibility(View.GONE);
         });
+
+        // Load User Data
+        android.content.SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String email = prefs.getString("user_email", "No Email");
+        String name = prefs.getString("user_name", "Guest User");
+        
+        textName.setText(name);
+        textEmail.setText(email);
+        inputName.setText(name);
+        inputEmail.setText(email);
     }
 }

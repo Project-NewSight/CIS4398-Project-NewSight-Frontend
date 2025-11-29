@@ -138,7 +138,7 @@
                                 android:id="@+id/textName"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="John Doe"
+                                android:text="Loading..."
                                 android:textColor="@color/foreground"
                                 android:textSize="24sp"
                                 android:textStyle="bold" />
@@ -147,7 +147,7 @@
                                 android:id="@+id/textEmail"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="john.doe@example.com"
+                                android:text="Loading..."
                                 android:textColor="@color/muted_foreground"
                                 android:textSize="14sp" />
                         </LinearLayout>
@@ -198,7 +198,6 @@
                     android:layout_marginBottom="16dp"
                     android:background="@drawable/bg_input_field"
                     android:padding="12dp"
-                    android:text="John Doe"
                     android:textColor="@color/foreground" />
 
                 <TextView
@@ -218,7 +217,6 @@
                     android:background="@drawable/bg_input_field"
                     android:inputType="textEmailAddress"
                     android:padding="12dp"
-                    android:text="john.doe@example.com"
                     android:textColor="@color/foreground" />
 
                 <Button
@@ -293,7 +291,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Jan 15, 2024"
+                            android:text="Recently"
                             android:textColor="@color/foreground"
                             android:textSize="20sp"
                             android:textStyle="bold" />
