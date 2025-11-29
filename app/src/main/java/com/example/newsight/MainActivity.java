@@ -146,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         });
 
         // ✅ Dynamic feature handling
+
         String featureFromIntent = getIntent().getStringExtra("feature");
         if (featureFromIntent != null && !featureFromIntent.isEmpty()) {
             currentFeature = featureFromIntent;
@@ -156,6 +157,11 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             etPassword.setVisibility(android.view.View.GONE);
             btnLogin.setVisibility(android.view.View.GONE);
             btnOpenCamera.setVisibility(android.view.View.VISIBLE);
+
+            String wsUrl = "ws://10.0.2.2:8000/ws/verify";
+            wsManager = new WebSocketManager(wsUrl, this);
+            wsManager.setFeature(currentFeature);
+            wsManager.connect();
 
             Log.i(TAG, "Launching feature: " + currentFeature);
             checkCameraPermission();
@@ -195,8 +201,12 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         etPassword.setText("");
 
         // Initialize WebSocket connection
-        String wsUrl = "wss://your-backend-url/ws"; // TODO: replace with your actual backend URL
+        String wsUrl = "ws://10.0.2.2:8000/ws/verify"; // TODO: replace with your actual backend URL
         wsManager = new WebSocketManager(wsUrl, this);
+
+        currentFeature = "familiar_face";
+        wsManager.setFeature(currentFeature);
+
         wsManager.connect();
     }
 
@@ -217,6 +227,10 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
     private void openCamera() {
         cameraContainer.setVisibility(android.view.View.VISIBLE);
+        if (currentFeature == null || "none".equals(currentFeature)) {
+            currentFeature = "familiar_face";          // ✅ ensure a real feature
+            if (wsManager != null) wsManager.setFeature(currentFeature); // ✅ tell backend
+        }
 
         if (previewView == null) {
             previewView = new PreviewView(this);

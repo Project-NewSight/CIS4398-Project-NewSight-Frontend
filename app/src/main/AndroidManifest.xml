@@ -2,8 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ===== Permissions ===== -->
-    <!-- Camera & Media -->
     <uses-permission android:name="android.permission.CAMERA" />
 
     <!-- Audio (for voice commands or speech recognition) -->
@@ -77,6 +75,9 @@
         <!-- Observe / Detection -->
         <activity android:name=".ObserveActivity" android:exported="true" />
         <activity android:name=".DetectionActivity" android:exported="true" />
+        <activity android:name=".DetectPeopleActivity" android:exported="true"/>
+
+
         <activity
             android:name=".ObstacleActivity"
             android:exported="true"

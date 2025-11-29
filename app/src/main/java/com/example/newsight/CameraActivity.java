@@ -32,9 +32,10 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     private WebSocketManager wsManager;
 
     private boolean backendEnabled = true;
-    private String activeFeature = null;
+    private String activeFeature = "familiar_face";
 
-    private final String SERVER_WS_URL = "wss://your-backend-url";
+    private final String SERVER_WS_URL = "ws://10.0.2.2:8000/ws/verify";
+
 
     private Button btnNavigation, btnASL, btnObjectDetection, btnStopFeature;
 
@@ -43,14 +44,14 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
+
+
         previewView = findViewById(R.id.previewView);
         cameraExecutor = Executors.newSingleThreadExecutor();
 
 
-        btnNavigation.setOnClickListener(v -> setActiveFeature("navigation"));
-        btnASL.setOnClickListener(v -> setActiveFeature("asl_detection"));
-        btnObjectDetection.setOnClickListener(v -> setActiveFeature("object_detection"));
-        btnStopFeature.setOnClickListener(v -> setActiveFeature(null));
+
+        setActiveFeature("familiar_face");
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -69,18 +70,39 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     }
 
     private void setActiveFeature(String feature) {
-        activeFeature = feature;
-        String message = (feature != null) ? feature + " feature active" : "Feature streaming stopped";
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        // write to the FIELD, not a shadowed local
+        this.activeFeature = feature;
+
+        Toast.makeText(this,
+                (feature != null) ? feature + " feature active" : "Feature streaming stopped",
+                Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Active feature set to: " + this.activeFeature);
+
+        // If WS is already connected, notify backend immediately
+        if (wsManager != null && wsManager.isConnected() && feature != null) {
+            // pick ONE name and use it consistently. If your WS manager method is setFeature(...), use that:
+            wsManager.setFeature(feature);
+            // If your method is actually named setActiveFeature(...), then call that instead:
+            // wsManager.setActiveFeature(feature);
+        }
     }
+
+
 
     private void initCameraAndBackend() {
         if (backendEnabled) {
             wsManager = new WebSocketManager(SERVER_WS_URL, this);
+
+
+            if (activeFeature != null) {
+                wsManager.setFeature(activeFeature);
+            }
+
             wsManager.connect();
         }
         startCameraSafe();
     }
+
 
     private void startCameraSafe() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
@@ -117,23 +139,46 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
 
     @Override
     public void onResultsReceived(String results) {
-        runOnUiThread(() -> Toast.makeText(this,
-                "AI result: " + results.substring(0, Math.min(results.length(), 20)) + "...",
-                Toast.LENGTH_SHORT).show());
+        Log.d(TAG, "WS msg: " + results);
+        try {
+            org.json.JSONObject obj = new org.json.JSONObject(results);
+
+            // If backend signaled an error, you can still surface it
+            if (!obj.optBoolean("ok", false)) {
+                final String err = obj.optString("error", "unknown");
+                runOnUiThread(() ->
+                        Toast.makeText(this, "Backend error: " + err, Toast.LENGTH_SHORT).show());
+                return;
+            }
+
+            boolean match = obj.optBoolean("match", false);
+            if (match) {
+                final String name = obj.optString("contactName", "Unknown");
+                runOnUiThread(() ->
+                        Toast.makeText(this, "Match: " + name, Toast.LENGTH_SHORT).show());
+            } else {
+                // Suppress noisy "Ack"/no-match toasts; just log
+                Log.d(TAG, "No match (toast suppressed)");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Bad JSON", e);
+        }
     }
+
+
 
     @Override
     public void onConnectionStatus(boolean isConnected) {
         runOnUiThread(() -> Toast.makeText(this,
                 isConnected ? "Connected to backend" : "Backend not available",
                 Toast.LENGTH_SHORT).show());
-    }
+        Log.d(TAG, "WebSocket connected=" + isConnected);
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        cameraExecutor.shutdown();
-        if (wsManager != null) wsManager.disconnect();
+        if (isConnected && wsManager != null && activeFeature != null) {
+            // keep method name consistent with what you implement in WebSocketManager
+            wsManager.setFeature(activeFeature);
+            // or: wsManager.setActiveFeature(activeFeature);
+        }
     }
 
     @Override
@@ -150,4 +195,12 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
             finish();
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (cameraExecutor != null) cameraExecutor.shutdown();
+        if (wsManager != null) wsManager.disconnect();
+    }
+
 }
