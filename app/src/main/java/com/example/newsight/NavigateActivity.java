@@ -68,8 +68,9 @@ public class NavigateActivity extends AppCompatActivity {
     private TextView tvInstruction;
     private TextView tvLoadingMessage;
     private TextView tvConnectionStatus;
-    private FrameLayout btnHome;
-    private FrameLayout btnMic;
+    private LinearLayout navHome;
+    private LinearLayout navVoice;
+    private LinearLayout navSettings;
 
     // Helpers
     private TtsHelper ttsHelper;
@@ -187,8 +188,9 @@ public class NavigateActivity extends AppCompatActivity {
         tvInstruction = findViewById(R.id.tvInstruction);
         tvLoadingMessage = findViewById(R.id.tvLoadingMessage);
         tvConnectionStatus = findViewById(R.id.tvConnectionStatus);
-        btnHome = findViewById(R.id.btnHome);
-        btnMic = findViewById(R.id.btnMic);
+        navHome = findViewById(R.id.navHome);
+        navVoice = findViewById(R.id.navVoice);
+        navSettings = findViewById(R.id.navSettings);
     }
 
     private void initializeHelpers() {
@@ -266,20 +268,26 @@ public class NavigateActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        // Home Button
-        btnHome.setOnClickListener(v -> {
+        // Home Navigation
+        navHome.setOnClickListener(v -> {
             Intent intent = new Intent(NavigateActivity.this, HomeActivity.class);
             startActivity(intent);
             finish();
         });
 
-        // Mic Button
-        btnMic.setOnClickListener(v -> {
+        // Voice Navigation
+        navVoice.setOnClickListener(v -> {
             if (checkMicrophonePermission()) {
                 voiceCommandHelper.startDirectRecording();
             } else {
                 requestAllPermissions();
             }
+        });
+
+        // Settings Navigation
+        navSettings.setOnClickListener(v -> {
+            Intent intent = new Intent(NavigateActivity.this, SettingsActivity.class);
+            startActivity(intent);
         });
     }
 
