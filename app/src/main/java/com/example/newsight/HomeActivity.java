@@ -342,10 +342,15 @@ public class HomeActivity extends AppCompatActivity {
                 Toast.makeText(this, "Opening Emergency", Toast.LENGTH_SHORT).show();
                 break;
 
-            default:
-                Log.w(TAG, "Unknown feature: " + feature);
+            case "NONE":
                 ttsMessage = "I am sorry, I am not able to detect your feature";
-                Toast.makeText(this, "Unknown feature: " + feature, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "I am sorry, I am not able to detect your feature", Toast.LENGTH_SHORT).show();
+                break;
+
+            default:
+                Log.w(TAG, "Unknown feature: ");
+                ttsMessage = "I am sorry, I am not able to detect your feature";
+                Toast.makeText(this, "I am sorry, I am not able to detect your feature", Toast.LENGTH_SHORT).show();
                 return;
         }
 
