@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -153,10 +154,10 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             isLoggedIn = true;
 
             // Hide login UI since user came from a feature activity
-            etEmail.setVisibility(android.view.View.GONE);
-            etPassword.setVisibility(android.view.View.GONE);
-            btnLogin.setVisibility(android.view.View.GONE);
-            btnOpenCamera.setVisibility(android.view.View.VISIBLE);
+            etEmail.setVisibility(android.view.View.VISIBLE);
+            etPassword.setVisibility(android.view.View.VISIBLE);
+            btnLogin.setVisibility(android.view.View.VISIBLE);
+            btnOpenCamera.setVisibility(View.GONE);
 
             String wsUrl = "ws://10.0.2.2:8000/ws/verify";
             wsManager = new WebSocketManager(wsUrl, this);

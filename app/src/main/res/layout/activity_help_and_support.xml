@@ -24,10 +24,10 @@
             android:focusable="true">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="14dp"
+                android:layout_height="15dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_arrow_left"
+                android:src="@drawable/ic_arrow_left_s"
                 app:tint="@color/foreground" />
         </FrameLayout>
 
