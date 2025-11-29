@@ -11,16 +11,9 @@ public class SettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        FrameLayout btnHome = findViewById(R.id.btnHome);
-        btnHome.setOnClickListener(v -> {
-            Intent intent = new Intent(this, HomeActivity.class);
-            startActivity(intent);
-        });
-
-        FrameLayout btnMic = findViewById(R.id.btnMic);
-        btnMic.setOnClickListener(v -> {
-            Intent intent = new Intent(this, VoiceCommandActivity.class);
-            startActivity(intent);
+        FrameLayout btnBack = findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> {
+            finish(); // Go back to previous screen (Home)
         });
 
         FrameLayout btnUserProfile = findViewById(R.id.btnUserProfile);
@@ -35,21 +28,9 @@ public class SettingsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        FrameLayout btnVoiceHaptics = findViewById(R.id.btnVoiceHaptics);
-        btnVoiceHaptics.setOnClickListener(v -> {
-            Intent intent = new Intent(this, VoiceAndHapticsActivity.class);
-            startActivity(intent);
-        });
-
         FrameLayout btnPrivacyData = findViewById(R.id.btnPrivacyData);
         btnPrivacyData.setOnClickListener(v -> {
             Intent intent = new Intent(this, PrivacyAndDataActivity.class);
-            startActivity(intent);
-        });
-
-        FrameLayout btnEmergencySetup = findViewById(R.id.btnEmergencySetup);
-        btnEmergencySetup.setOnClickListener(v -> {
-            Intent intent = new Intent(this, EmergencySetupActivity.class);
             startActivity(intent);
         });
 
