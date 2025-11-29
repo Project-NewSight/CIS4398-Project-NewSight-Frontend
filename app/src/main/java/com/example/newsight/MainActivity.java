@@ -103,6 +103,32 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
         initializeHapticSystem();
 
+        // Password visibility toggle
+        etPassword.setOnTouchListener((v, event) -> {
+            final int DRAWABLE_RIGHT = 2;
+            if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
+                if (event.getRawX() >= (etPassword.getRight() - etPassword.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
+                    int selection = etPassword.getSelectionEnd();
+                    if (etPassword.getTransformationMethod() instanceof android.text.method.PasswordTransformationMethod) {
+                        etPassword.setTransformationMethod(android.text.method.HideReturnsTransformationMethod.getInstance());
+                        etPassword.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_eye_off, 0);
+                    } else {
+                        etPassword.setTransformationMethod(android.text.method.PasswordTransformationMethod.getInstance());
+                        etPassword.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_eye, 0);
+                    }
+                    etPassword.setSelection(selection);
+                    // Re-apply tint
+                    for (android.graphics.drawable.Drawable drawable : etPassword.getCompoundDrawables()) {
+                        if (drawable != null) {
+                            drawable.setTint(ContextCompat.getColor(MainActivity.this, R.color.muted_foreground));
+                        }
+                    }
+                    return true;
+                }
+            }
+            return false;
+        });
+
         // Set click listeners
         btnLogin.setOnClickListener(v -> handleLogin());
         btnOpenCamera.setOnClickListener(v -> checkCameraPermission());
@@ -155,14 +181,18 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             .apply();
 
         // Hide login UI
-        etEmail.setVisibility(android.view.View.GONE);
-        etPassword.setVisibility(android.view.View.GONE);
-        btnLogin.setVisibility(android.view.View.GONE);
-        btnOpenCamera.setVisibility(android.view.View.VISIBLE);
+        etEmail.setVisibility(android.view.View.VISIBLE);
+        etPassword.setVisibility(android.view.View.VISIBLE);
+        btnLogin.setVisibility(android.view.View.VISIBLE);
+        btnOpenCamera.setVisibility(android.view.View.GONE);
 
         // Start LoadingActivity (which will then navigate to HomeActivity)
         Intent intent = new Intent(MainActivity.this, LoadingActivity.class);
         startActivity(intent);
+        
+        // Clear fields so they are empty when user returns
+        etEmail.setText("");
+        etPassword.setText("");
 
         // Initialize WebSocket connection
         String wsUrl = "wss://your-backend-url/ws"; // TODO: replace with your actual backend URL

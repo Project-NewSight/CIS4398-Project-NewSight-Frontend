@@ -99,6 +99,8 @@
         android:padding="16dp"
         android:layout_marginTop="8dp"
         android:inputType="textPassword"
+        android:drawableEnd="@drawable/ic_eye"
+        android:drawableTint="@color/muted_foreground"
         app:layout_constraintTop_toBottomOf="@id/tvPasswordLabel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
