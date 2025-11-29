@@ -20,7 +20,7 @@ public class TrustedContactsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        FrameLayout btnAddContact = findViewById(R.id.btnAddContact);
+        FrameLayout btnAddContact = findViewById(R.id.btn_add_contact);
         btnAddContact.setOnClickListener(v -> {
             // Placeholder for Add Contact logic
             // Intent intent = new Intent(this, AddContactActivity.class);

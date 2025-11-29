@@ -87,7 +87,7 @@
 
             <!-- Add Contact Button -->
             <FrameLayout
-                android:id="@+id/btnAddContact"
+                android:id="@+id/btn_add_contact"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
@@ -122,7 +122,7 @@
 
             <!-- Contacts List (Static for now) -->
             <LinearLayout
-                android:id="@+id/listContacts"
+                android:id="@+id/layout_contacts_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
