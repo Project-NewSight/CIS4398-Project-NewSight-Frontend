@@ -88,6 +88,14 @@ public class HomeActivity extends AppCompatActivity {
         android.widget.TextView textLevel = findViewById(R.id.textLevel);
         android.widget.TextView textStreak = findViewById(R.id.textStreak);
         android.view.View progressLevel = findViewById(R.id.progressLevel);
+        android.widget.TextView tvDate = findViewById(R.id.tvDate);
+
+        // Set current date
+        if (tvDate != null) {
+            java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("EEEE, MMM dd", java.util.Locale.getDefault());
+            String currentDate = dateFormat.format(new java.util.Date());
+            tvDate.setText(currentDate);
+        }
 
         if (textPoints != null) textPoints.setText("0");
         if (textLevel != null) textLevel.setText("0");
