@@ -34,7 +34,7 @@
             android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Welcome to Newsight"
+            android:text="Welcome to NewSight"
             android:textSize="32sp"
             android:textStyle="bold"
             android:textColor="@color/primary"
