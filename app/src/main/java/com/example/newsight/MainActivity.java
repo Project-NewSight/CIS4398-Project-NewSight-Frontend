@@ -80,20 +80,20 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         // Initialize link TextViews
         TextView tvForgotPassword = findViewById(R.id.tvForgotPassword);
         TextView tvCreateAccount = findViewById(R.id.tvCreateAccount);
-        
+
         // Initialize labels for highlighting
         TextView tvEmailLabel = findViewById(R.id.tvEmailLabel);
         TextView tvPasswordLabel = findViewById(R.id.tvPasswordLabel);
 
         // Focus listeners for label highlighting
         etEmail.setOnFocusChangeListener((v, hasFocus) -> {
-            tvEmailLabel.setTextColor(ContextCompat.getColor(this, 
-                hasFocus ? R.color.primary : R.color.muted_foreground));
+            tvEmailLabel.setTextColor(ContextCompat.getColor(this,
+                    hasFocus ? R.color.primary : R.color.muted_foreground));
         });
 
         etPassword.setOnFocusChangeListener((v, hasFocus) -> {
-            tvPasswordLabel.setTextColor(ContextCompat.getColor(this, 
-                hasFocus ? R.color.primary : R.color.muted_foreground));
+            tvPasswordLabel.setTextColor(ContextCompat.getColor(this,
+                    hasFocus ? R.color.primary : R.color.muted_foreground));
         });
 
         btnOpenCamera.setVisibility(android.view.View.GONE);
@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             btnLogin.setVisibility(android.view.View.VISIBLE);
             btnOpenCamera.setVisibility(View.GONE);
 
-            String wsUrl = "ws://10.0.2.2:8000/ws/verify";
+            String wsUrl = "wss://cis4398-project-newsight-backend.onrender.com/ws/verify";
             wsManager = new WebSocketManager(wsUrl, this);
             wsManager.setFeature(currentFeature);
             wsManager.connect();
@@ -183,9 +183,9 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
         // Save email to SharedPreferences
         getSharedPreferences("UserPrefs", MODE_PRIVATE)
-            .edit()
-            .putString("user_email", email)
-            .apply();
+                .edit()
+                .putString("user_email", email)
+                .apply();
 
         // Hide login UI
         etEmail.setVisibility(android.view.View.VISIBLE);
@@ -196,13 +196,13 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         // Start LoadingActivity (which will then navigate to HomeActivity)
         Intent intent = new Intent(MainActivity.this, LoadingActivity.class);
         startActivity(intent);
-        
+
         // Clear fields so they are empty when user returns
         etEmail.setText("");
         etPassword.setText("");
 
         // Initialize WebSocket connection
-        String wsUrl = "ws://10.0.2.2:8000/ws/verify"; // TODO: replace with your actual backend URL
+        String wsUrl = "wss://cis4398-project-newsight-backend.onrender.com/ws/verify";
         wsManager = new WebSocketManager(wsUrl, this);
 
         currentFeature = "familiar_face";

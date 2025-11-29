@@ -118,7 +118,7 @@ public class HomeActivity extends AppCompatActivity {
         if (textPoints != null) textPoints.setText("0");
         if (textLevel != null) textLevel.setText("0");
         if (textStreak != null) textStreak.setText("0 day streak!");
-        
+
         // Initialize progress bar to 0 width
         if (progressLevel != null) {
             android.widget.FrameLayout.LayoutParams params = (android.widget.FrameLayout.LayoutParams) progressLevel.getLayoutParams();
@@ -232,12 +232,12 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
     }
-    
+
     private void startBackgroundLocation() {
         if (!checkLocationPermission()) {
             return; // Will request permissions when needed
         }
-        
+
         // Start GPS tracking
         locationHelper = new com.example.newsight.helpers.LocationHelper(this);
         locationHelper.setLocationCallback(new com.example.newsight.helpers.LocationHelper.LocationUpdateCallback() {
@@ -255,13 +255,13 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
         locationHelper.startLocationUpdates();
-        
+
         // Connect location WebSocket
         locationWebSocketHelper = new com.example.newsight.helpers.LocationWebSocketHelper(
-            "ws://192.168.1.254:8000/location/ws", sessionId);
+                "wss://cis4398-project-newsight-backend.onrender.com/location/ws", sessionId);
         locationWebSocketHelper.connect();
     }
-    
+
     private boolean checkLocationPermission() {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED;
@@ -284,7 +284,7 @@ public class HomeActivity extends AppCompatActivity {
             case "NAVIGATION":
                 // Check if we got full directions from backend
                 JSONObject directionsObj = extractedParams.optJSONObject("directions");
-                
+
                 intent = new Intent(HomeActivity.this, NavigateActivity.class);
                 if (directionsObj != null) {
                     // We have full directions! Pass them to NavigateActivity
