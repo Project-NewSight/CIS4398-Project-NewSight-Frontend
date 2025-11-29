@@ -98,11 +98,9 @@
         <activity android:name=".VoiceAndHapticsActivity" android:exported="true" />
         <activity android:name=".HelpAndSupportActivity" android:exported="true" />
 
-        <!-- Optional future activities
         <activity android:name=".RemoveContactActivity" android:exported="true" />
         <activity android:name=".EditProfileActivity" android:exported="true" />
         <activity android:name=".PrivacyAndDataActivity" android:exported="true" />
         <activity android:name=".LogoutActivity" android:exported="true" />
-        -->
     </application>
 </manifest>
