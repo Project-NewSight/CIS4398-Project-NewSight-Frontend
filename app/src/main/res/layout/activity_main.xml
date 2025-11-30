@@ -180,6 +180,7 @@
         android:background="@drawable/bg_bottom_nav_pill"
         android:elevation="8dp"
         android:paddingVertical="8dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">

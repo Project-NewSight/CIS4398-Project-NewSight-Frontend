@@ -244,7 +244,11 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         etPassword.setVisibility(android.view.View.GONE);
         btnLogin.setVisibility(android.view.View.GONE);
         
-        // Setup bottom navigation
+        // Show and setup bottom navigation for face detection mode
+        android.view.View bottomNav = findViewById(R.id.floatingBottomNav);
+        if (bottomNav != null) {
+            bottomNav.setVisibility(android.view.View.VISIBLE);
+        }
         setupBottomNavigation();
         
         startCamera();
