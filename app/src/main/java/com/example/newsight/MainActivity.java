@@ -243,6 +243,10 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         etEmail.setVisibility(android.view.View.GONE);
         etPassword.setVisibility(android.view.View.GONE);
         btnLogin.setVisibility(android.view.View.GONE);
+        
+        // Setup bottom navigation
+        setupBottomNavigation();
+        
         startCamera();
     }
 
@@ -426,6 +430,37 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             } else {
                 Toast.makeText(this, "Camera permission required", Toast.LENGTH_LONG).show();
             }
+        }
+    }
+
+    private void setupBottomNavigation() {
+        android.widget.LinearLayout navHome = findViewById(R.id.navHome);
+        android.widget.LinearLayout navVoice = findViewById(R.id.navVoice);
+        android.widget.LinearLayout navSettings = findViewById(R.id.navSettings);
+
+        if (navHome != null) {
+            navHome.setOnClickListener(v -> {
+                // Go back to Home screen
+                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+                finish();
+            });
+        }
+
+        if (navVoice != null) {
+            navVoice.setOnClickListener(v -> {
+                // TODO: Trigger voice command
+                Toast.makeText(this, "Voice command - Coming soon", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        if (navSettings != null) {
+            navSettings.setOnClickListener(v -> {
+                // Open Settings
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            });
         }
     }
 
