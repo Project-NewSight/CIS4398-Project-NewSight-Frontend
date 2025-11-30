@@ -34,5 +34,28 @@ public class HelpAndSupportActivity extends AppCompatActivity {
             // Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://visionaid.com/docs"));
             // startActivity(intent);
         });
+
+        // Bottom Navigation
+        android.widget.LinearLayout navHome = findViewById(R.id.navHome);
+        android.widget.LinearLayout navVoice = findViewById(R.id.navVoice);
+        android.widget.LinearLayout navSettings = findViewById(R.id.navSettings);
+
+        navHome.setOnClickListener(v -> {
+            Intent intent = new Intent(this, HomeActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+        });
+
+        navVoice.setOnClickListener(v -> {
+            // TODO: Trigger voice command functionality
+            android.widget.Toast.makeText(this, "Voice command activated", android.widget.Toast.LENGTH_SHORT).show();
+        });
+
+        navSettings.setOnClickListener(v -> {
+            // Navigate to main settings page
+            Intent intent = new Intent(this, SettingsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+        });
     }
 }
