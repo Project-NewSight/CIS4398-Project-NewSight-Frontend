@@ -32,6 +32,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity implements WebSocketManager.WsListener {
 
@@ -44,6 +45,9 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     private PreviewView previewView;
     private ExecutorService cameraExecutor;
     private WebSocketManager wsManager;
+    private VoiceCommandHelper voiceCommandHelper;
+    private TtsHelper ttsHelper;
+    private static final int PERMISSION_REQUEST_CODE = 200;
 
     //Haptic Feedback Components
     private VibrationMotor vibrationMotor;
@@ -103,6 +107,56 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         hapticHandler = new Handler();
 
         initializeHapticSystem();
+
+        // Initialize voice command helper
+        voiceCommandHelper = new VoiceCommandHelper(this);
+        ttsHelper = new TtsHelper(this);
+
+        // Set up voice command callbacks
+        voiceCommandHelper.setCallback(new VoiceCommandHelper.VoiceCommandCallback() {
+            @Override
+            public void onWakeWordDetected() {
+                Log.d(TAG, "Wake word detected");
+            }
+
+            @Override
+            public void onCommandStarted() {
+                Log.d(TAG, "Command recording started");
+            }
+
+            @Override
+            public void onCommandProcessing() {
+                Log.d(TAG, "Processing command");
+            }
+
+            @Override
+            public void onResponseReceived(String jsonResponse) {
+                Log.d(TAG, "Response received: " + jsonResponse);
+            }
+
+            @Override
+            public void onNavigateToFeature(String feature, JSONObject extractedParams) {
+                Log.d(TAG, "Navigating to feature: " + feature);
+                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error: " + error);
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "Voice command completed");
+            }
+        });
+
+        // Auto-start wake word detection if logged in and permission granted
+        if (isLoggedIn && checkMicrophonePermission()) {
+            voiceCommandHelper.startWakeWordDetection();
+        }
 
         // Password visibility toggle
         etPassword.setOnTouchListener((v, event) -> {
@@ -434,6 +488,16 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             } else {
                 Toast.makeText(this, "Camera permission required", Toast.LENGTH_LONG).show();
             }
+        } else if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Voice commands ready", Toast.LENGTH_SHORT).show();
+                if (isLoggedIn) {
+                    voiceCommandHelper.startWakeWordDetection();
+                }
+            } else {
+                Toast.makeText(this, "Microphone permission is required for voice commands",
+                        Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -454,8 +518,11 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
         if (navVoice != null) {
             navVoice.setOnClickListener(v -> {
-                // TODO: Trigger voice command
-                Toast.makeText(this, "Voice command - Coming soon", Toast.LENGTH_SHORT).show();
+                if (checkMicrophonePermission()) {
+                    voiceCommandHelper.startDirectRecording();
+                } else {
+                    requestMicrophonePermission();
+                }
             });
         }
 
@@ -469,12 +536,42 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if (voiceCommandHelper != null) {
+            voiceCommandHelper.stopListening();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (voiceCommandHelper != null && isLoggedIn && checkMicrophonePermission()) {
+            voiceCommandHelper.startWakeWordDetection();
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         cameraExecutor.shutdown();
         if (wsManager != null) wsManager.disconnect();
         if (vibrationMotor != null) vibrationMotor.close();
         if (hapticHandler != null) hapticHandler.removeCallbacksAndMessages(null);
+        if (voiceCommandHelper != null) {
+            voiceCommandHelper.cleanup();
+        }
+    }
+
+    private boolean checkMicrophonePermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestMicrophonePermission() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.RECORD_AUDIO},
+                PERMISSION_REQUEST_CODE);
     }
 
     // WebSocket callbacks
