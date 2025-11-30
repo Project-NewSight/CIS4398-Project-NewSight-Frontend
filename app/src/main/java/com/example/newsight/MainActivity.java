@@ -240,7 +240,9 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
                             FrameLayout.LayoutParams.MATCH_PARENT,
                             FrameLayout.LayoutParams.MATCH_PARENT));
         }
-
+        etEmail.setVisibility(android.view.View.GONE);
+        etPassword.setVisibility(android.view.View.GONE);
+        btnLogin.setVisibility(android.view.View.GONE);
         startCamera();
     }
 

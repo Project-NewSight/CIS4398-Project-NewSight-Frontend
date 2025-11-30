@@ -154,7 +154,7 @@ public class HomeActivity extends AppCompatActivity {
         });
 
         btnObserve.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, ObserveActivity.class);
+            Intent intent = new Intent(HomeActivity.this, ObstacleActivity.class);
             startActivity(intent);
         });
 
@@ -168,12 +168,15 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        btnFaces.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, MainActivity.class);
+            intent.putExtra("feature", "detect_people");
+            startActivity(intent);
+        });
+
         // Placeholder listeners for new buttons
         if (btnReadText != null) {
             btnReadText.setOnClickListener(v -> Toast.makeText(this, "Read Text clicked", Toast.LENGTH_SHORT).show());
-        }
-        if (btnFaces != null) {
-            btnFaces.setOnClickListener(v -> Toast.makeText(this, "Faces clicked", Toast.LENGTH_SHORT).show());
         }
         if (btnColors != null) {
             btnColors.setOnClickListener(v -> Toast.makeText(this, "Colors clicked", Toast.LENGTH_SHORT).show());
