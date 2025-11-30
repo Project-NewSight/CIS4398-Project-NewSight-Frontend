@@ -552,6 +552,16 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     @Override
     protected void onResume() {
         super.onResume();
+        
+        // Safety check: If login UI is visible, we are in login mode, so disable voice
+        if (etEmail != null && etEmail.getVisibility() == View.VISIBLE) {
+            isLoggedIn = false; // Ensure state matches UI
+            if (voiceCommandHelper != null) {
+                voiceCommandHelper.stopListening();
+            }
+            return;
+        }
+
         if (voiceCommandHelper != null) {
             if (isLoggedIn && checkMicrophonePermission()) {
                 voiceCommandHelper.startWakeWordDetection();
