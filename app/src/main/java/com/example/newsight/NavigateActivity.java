@@ -619,10 +619,15 @@ public class NavigateActivity extends AppCompatActivity {
                 ttsMessage = "Activating Emergency Contact";
                 break;
 
+            case "NONE":
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                Toast.makeText(this, "I am sorry, I am not able to detect the feature", Toast.LENGTH_SHORT).show();
+                return;
+
             default:
-                Log.w(TAG, "Unknown feature: " + feature);
-                ttsMessage = "Sorry, I didn't recognize that feature";
-                Toast.makeText(this, "Unknown feature: " + feature, Toast.LENGTH_SHORT).show();
+                Log.w(TAG, "Unknown feature: ");
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                Toast.makeText(this, "I am sorry, I am not able to detect the feature", Toast.LENGTH_SHORT).show();
                 return;
         }
 

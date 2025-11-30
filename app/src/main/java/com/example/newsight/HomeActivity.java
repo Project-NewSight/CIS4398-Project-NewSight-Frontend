@@ -343,14 +343,14 @@ public class HomeActivity extends AppCompatActivity {
                 break;
 
             case "NONE":
-                ttsMessage = "I am sorry, I am not able to detect your feature";
-                Toast.makeText(this, "I am sorry, I am not able to detect your feature", Toast.LENGTH_SHORT).show();
-                break;
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                Toast.makeText(this, "I am sorry, I am not able to detect the feature", Toast.LENGTH_SHORT).show();
+                return;
 
             default:
                 Log.w(TAG, "Unknown feature: ");
-                ttsMessage = "I am sorry, I am not able to detect your feature";
-                Toast.makeText(this, "I am sorry, I am not able to detect your feature", Toast.LENGTH_SHORT).show();
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                Toast.makeText(this, "I am sorry, I am not able to detect the feature", Toast.LENGTH_SHORT).show();
                 return;
         }
 
