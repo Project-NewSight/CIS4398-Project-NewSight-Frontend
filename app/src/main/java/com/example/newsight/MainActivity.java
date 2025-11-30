@@ -156,6 +156,9 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         // Auto-start wake word detection if logged in and permission granted
         if (isLoggedIn && checkMicrophonePermission()) {
             voiceCommandHelper.startWakeWordDetection();
+        } else {
+            // Ensure it's stopped if not logged in
+            voiceCommandHelper.stopListening();
         }
 
         // Password visibility toggle
@@ -490,13 +493,16 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             }
         } else if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Voice commands ready", Toast.LENGTH_SHORT).show();
                 if (isLoggedIn) {
+                    Toast.makeText(this, "Voice commands ready", Toast.LENGTH_SHORT).show();
                     voiceCommandHelper.startWakeWordDetection();
                 }
             } else {
-                Toast.makeText(this, "Microphone permission is required for voice commands",
-                        Toast.LENGTH_LONG).show();
+                // Only show error if we are logged in, otherwise it's fine
+                if (isLoggedIn) {
+                    Toast.makeText(this, "Microphone permission is required for voice commands",
+                            Toast.LENGTH_LONG).show();
+                }
             }
         }
     }
@@ -546,8 +552,12 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     @Override
     protected void onResume() {
         super.onResume();
-        if (voiceCommandHelper != null && isLoggedIn && checkMicrophonePermission()) {
-            voiceCommandHelper.startWakeWordDetection();
+        if (voiceCommandHelper != null) {
+            if (isLoggedIn && checkMicrophonePermission()) {
+                voiceCommandHelper.startWakeWordDetection();
+            } else {
+                voiceCommandHelper.stopListening();
+            }
         }
     }
 
