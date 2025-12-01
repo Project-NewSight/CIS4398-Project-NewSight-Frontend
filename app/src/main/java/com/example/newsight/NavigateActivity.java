@@ -564,11 +564,11 @@ public class NavigateActivity extends AppCompatActivity {
         }
         
         // Get user's current location from locationHelper
-        if (locationHelper == null || locationHelper.getLastLocation() == null) {
+        if (locationHelper == null || locationHelper.getLastKnownLocation() == null) {
             return;
         }
         
-        android.location.Location userLocation = locationHelper.getLastLocation();
+        android.location.Location userLocation = locationHelper.getLastKnownLocation();
         double userLat = userLocation.getLatitude();
         double userLng = userLocation.getLongitude();
         
