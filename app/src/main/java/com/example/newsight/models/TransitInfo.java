@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * TransitInfo - Contains all transit route options and alerts
+ * TransitInfo - Contains the best transit route and alerts
  */
 public class TransitInfo {
-    private List<TransitOption> options;
+    private TransitOption best_option;  // Single best route
     private List<TransitAlert> alerts;
     private Map<String, Object> destination;
 
@@ -50,12 +50,12 @@ public class TransitInfo {
         }
     }
 
-    public List<TransitOption> getOptions() {
-        return options;
+    public TransitOption getBestOption() {
+        return best_option;
     }
 
-    public void setOptions(List<TransitOption> options) {
-        this.options = options;
+    public void setBestOption(TransitOption best_option) {
+        this.best_option = best_option;
     }
 
     public List<TransitAlert> getAlerts() {
@@ -74,8 +74,8 @@ public class TransitInfo {
         this.destination = destination;
     }
 
-    public boolean hasOptions() {
-        return options != null && !options.isEmpty();
+    public boolean hasBestOption() {
+        return best_option != null;
     }
 
     public boolean hasAlerts() {

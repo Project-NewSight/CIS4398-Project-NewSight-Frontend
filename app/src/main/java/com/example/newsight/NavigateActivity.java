@@ -440,7 +440,7 @@ public class NavigateActivity extends AppCompatActivity {
                     
                     if (transitInfo != null && nearestStop != null) {
                         Log.d(TAG, "✅ Transit info stored: " + nearestStop.getName());
-                        Log.d(TAG, "📊 Transit options available: " + (transitInfo.hasOptions() ? transitInfo.getOptions().size() : 0));
+                        Log.d(TAG, "📊 Best transit route available: " + (transitInfo.hasBestOption() ? "Yes" : "No"));
                     }
                 }
                 
@@ -568,55 +568,53 @@ public class NavigateActivity extends AppCompatActivity {
     }
     
     /**
-     * Display transit route options to the user
+     * Display the best transit route to the user
      */
     private void showTransitOptions() {
-        if (transitInfo == null || !transitInfo.hasOptions()) {
-            Log.w(TAG, "⚠️ No transit options available");
-            ttsHelper.speak("You've arrived at the bus stop, but no transit options are currently available.");
+        if (transitInfo == null || !transitInfo.hasBestOption()) {
+            Log.w(TAG, "⚠️ No transit route available");
+            ttsHelper.speak("You've arrived at the bus stop, but no transit route is currently available.");
             return;
         }
         
-        Log.d(TAG, "🚌 Showing transit options");
+        Log.d(TAG, "🚌 Showing best transit route");
         
-        // Build announcement of available routes
+        TransitOption bestRoute = transitInfo.getBestOption();
+        
+        // Build announcement for the best route
         StringBuilder announcement = new StringBuilder("You've arrived at ");
         if (nearestStop != null) {
             announcement.append(nearestStop.getName()).append(". ");
         }
         
-        announcement.append("Available routes: ");
-        
-        int optionCount = Math.min(3, transitInfo.getOptions().size()); // Announce up to 3 options
-        for (int i = 0; i < optionCount; i++) {
-            TransitOption option = transitInfo.getOptions().get(i);
-            if (i > 0) announcement.append(", ");
-            announcement.append(option.getSummary());
-        }
+        // Extract route info from best option
+        String routeInfo = bestRoute.getSummary();
+        announcement.append("Take ").append(routeInfo);
         
         ttsHelper.speak(announcement.toString());
         
-        // Display transit options in UI
+        // Display transit route in UI
         displayTransitOptionsInUI();
     }
     
     /**
-     * Display transit options in the AR overlay
+     * Display the best transit route in the AR overlay
      */
     private void displayTransitOptionsInUI() {
-        if (transitInfo == null || !transitInfo.hasOptions()) {
+        if (transitInfo == null || !transitInfo.hasBestOption()) {
             return;
         }
         
-        // Update the UI to show transit options instead of walking directions
-        tvStreetName.setText("🚌 Transit Options");
+        TransitOption bestRoute = transitInfo.getBestOption();
         
-        // Show first transit option as primary
-        TransitOption firstOption = transitInfo.getOptions().get(0);
-        tvInstruction.setText(firstOption.getSummary());
+        // Update the UI to show the best transit route
+        tvStreetName.setText("🚌 Best Route");
         
-        if (firstOption.getDurationMin() != null) {
-            tvDistance.setText(firstOption.getDurationMin() + " min trip");
+        // Show route summary
+        tvInstruction.setText(bestRoute.getSummary());
+        
+        if (bestRoute.getDurationMin() != null) {
+            tvDistance.setText(bestRoute.getDurationMin() + " min trip");
         }
         
         // Show bus icon instead of navigation arrow
@@ -627,9 +625,8 @@ public class NavigateActivity extends AppCompatActivity {
             announceTransitAlerts();
         }
         
-        // TODO: In the future, can add a dialog or bottom sheet with all options
         Toast.makeText(this, 
-                String.format("Found %d transit route(s). Tap for details.", transitInfo.getOptions().size()),
+                "Best transit route found. Follow the directions.",
                 Toast.LENGTH_LONG).show();
     }
     
