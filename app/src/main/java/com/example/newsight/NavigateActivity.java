@@ -31,6 +31,9 @@ import com.example.newsight.helpers.NavigationHelper;
 import com.example.newsight.models.DirectionsResponse;
 import com.example.newsight.models.NavigationUpdate;
 import com.example.newsight.models.VoiceResponse;
+import com.example.newsight.models.TransitInfo;
+import com.example.newsight.models.TransitStop;
+import com.example.newsight.models.TransitOption;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.Gson;
 
@@ -85,6 +88,13 @@ public class NavigateActivity extends AppCompatActivity {
     private boolean isNavigating = false;
     private boolean locationWsConnected = false;
     private DirectionsResponse currentDirections;
+    
+    // Transit-specific state
+    private boolean isTransitNavigation = false;
+    private TransitInfo transitInfo;
+    private TransitStop nearestStop;
+    private boolean transitOptionsShown = false;
+    private static final int TRANSIT_OPTIONS_DISTANCE_THRESHOLD = 100; // Show options when within 100m of stop
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -391,6 +401,10 @@ public class NavigateActivity extends AppCompatActivity {
             if ("NAVIGATION".equals(feature)) {
                 Log.d(TAG, "✅ NAVIGATION feature detected!");
                 
+                // Check if this is transit navigation
+                boolean isTransit = response.getExtractedParams().isTransitNavigation();
+                Log.d(TAG, "🚌 Navigation type: " + (isTransit ? "TRANSIT" : "WALKING"));
+                
                 // Backend should return directions object
                 DirectionsResponse directions = response.getExtractedParams().getDirections();
                 
@@ -417,6 +431,19 @@ public class NavigateActivity extends AppCompatActivity {
                 
                 Log.d(TAG, "✅ Got " + directions.getSteps().size() + " steps to " + directions.getDestination());
                 currentDirections = directions;
+                
+                // If transit navigation, store transit info
+                if (isTransit) {
+                    isTransitNavigation = true;
+                    transitInfo = response.getExtractedParams().getTransitInfo();
+                    nearestStop = response.getExtractedParams().getNearestStop();
+                    
+                    if (transitInfo != null && nearestStop != null) {
+                        Log.d(TAG, "✅ Transit info stored: " + nearestStop.getName());
+                        Log.d(TAG, "📊 Transit options available: " + (transitInfo.hasOptions() ? transitInfo.getOptions().size() : 0));
+                    }
+                }
+                
                 startNavigation(directions);
                 
             } else {
@@ -518,9 +545,106 @@ public class NavigateActivity extends AppCompatActivity {
             if (update.isShouldAnnounce() && update.getAnnouncement() != null) {
                 ttsHelper.speak(update.getAnnouncement());
             }
+            
+            // FOR TRANSIT NAVIGATION: Check if close to bus stop
+            if (isTransitNavigation && !transitOptionsShown && nearestStop != null) {
+                checkProximityToBusStop(update);
+            }
 
             Log.d(TAG, "🗺️ " + update.toString());
         });
+    }
+    
+    /**
+     * Check if user is close to bus stop and show transit options
+     */
+    private void checkProximityToBusStop(NavigationUpdate update) {
+        // If we're close to the final destination (bus stop), show transit options
+        if (update.getDistanceToNext() <= TRANSIT_OPTIONS_DISTANCE_THRESHOLD) {
+            Log.d(TAG, "🚌 User is within " + TRANSIT_OPTIONS_DISTANCE_THRESHOLD + "m of bus stop!");
+            transitOptionsShown = true;
+            showTransitOptions();
+        }
+    }
+    
+    /**
+     * Display transit route options to the user
+     */
+    private void showTransitOptions() {
+        if (transitInfo == null || !transitInfo.hasOptions()) {
+            Log.w(TAG, "⚠️ No transit options available");
+            ttsHelper.speak("You've arrived at the bus stop, but no transit options are currently available.");
+            return;
+        }
+        
+        Log.d(TAG, "🚌 Showing transit options");
+        
+        // Build announcement of available routes
+        StringBuilder announcement = new StringBuilder("You've arrived at ");
+        if (nearestStop != null) {
+            announcement.append(nearestStop.getName()).append(". ");
+        }
+        
+        announcement.append("Available routes: ");
+        
+        int optionCount = Math.min(3, transitInfo.getOptions().size()); // Announce up to 3 options
+        for (int i = 0; i < optionCount; i++) {
+            TransitOption option = transitInfo.getOptions().get(i);
+            if (i > 0) announcement.append(", ");
+            announcement.append(option.getSummary());
+        }
+        
+        ttsHelper.speak(announcement.toString());
+        
+        // Display transit options in UI
+        displayTransitOptionsInUI();
+    }
+    
+    /**
+     * Display transit options in the AR overlay
+     */
+    private void displayTransitOptionsInUI() {
+        if (transitInfo == null || !transitInfo.hasOptions()) {
+            return;
+        }
+        
+        // Update the UI to show transit options instead of walking directions
+        tvStreetName.setText("🚌 Transit Options");
+        
+        // Show first transit option as primary
+        TransitOption firstOption = transitInfo.getOptions().get(0);
+        tvInstruction.setText(firstOption.getSummary());
+        
+        if (firstOption.getDurationMin() != null) {
+            tvDistance.setText(firstOption.getDurationMin() + " min trip");
+        }
+        
+        // Show bus icon instead of navigation arrow
+        ivArrow.setImageResource(android.R.drawable.ic_menu_directions);
+        
+        // Show alerts if any
+        if (transitInfo.hasAlerts()) {
+            announceTransitAlerts();
+        }
+        
+        // TODO: In the future, can add a dialog or bottom sheet with all options
+        Toast.makeText(this, 
+                String.format("Found %d transit route(s). Tap for details.", transitInfo.getOptions().size()),
+                Toast.LENGTH_LONG).show();
+    }
+    
+    /**
+     * Announce any transit alerts (delays, cancellations)
+     */
+    private void announceTransitAlerts() {
+        if (transitInfo == null || !transitInfo.hasAlerts()) {
+            return;
+        }
+        
+        for (TransitInfo.TransitAlert alert : transitInfo.getAlerts()) {
+            Log.w(TAG, "⚠️ Transit alert: " + alert.getMessage());
+            ttsHelper.speak("Alert: " + alert.getMessage());
+        }
     }
 
     private void updateArrowForInstruction(String instruction) {
@@ -557,6 +681,12 @@ public class NavigateActivity extends AppCompatActivity {
 
     private void stopNavigation() {
         isNavigating = false;
+        
+        // Reset transit state
+        isTransitNavigation = false;
+        transitInfo = null;
+        nearestStop = null;
+        transitOptionsShown = false;
         
         if (navigationHelper != null) {
             navigationHelper.disconnect();
