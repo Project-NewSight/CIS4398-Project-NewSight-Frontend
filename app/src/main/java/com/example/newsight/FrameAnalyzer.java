@@ -18,6 +18,10 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
     private final FeatureProvider featureProvider;
     private final ByteArrayOutputStream jpegStream = new ByteArrayOutputStream();
     private long lastLogTime = 0;
+    
+    // Frame throttling for text detection
+    private long lastFrameSentTime = 0;
+    private static final long MIN_FRAME_INTERVAL_MS = 400; // Send max 2.5 frames/second (was unlimited!)
 
     public interface FeatureProvider {
         String getActiveFeature();
@@ -36,6 +40,20 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
             // Only process frames if a feature is active and the socket is connected
             if (wsManager != null && wsManager.isConnected() && activeFeature != null) {
+
+                // THROTTLE: Check if enough time has passed since last frame
+                long currentTime = System.currentTimeMillis();
+                long timeSinceLastFrame = currentTime - lastFrameSentTime;
+                
+                if (timeSinceLastFrame < MIN_FRAME_INTERVAL_MS) {
+                    // Skip this frame - too soon!
+                    return; // Important: still need to close imageProxy in finally block
+                }
+                
+                // Update last sent time
+                lastFrameSentTime = currentTime;
+                
+                Log.d(TAG, "Sending frame (interval: " + timeSinceLastFrame + "ms)");
 
                 // 1. Convert ImageProxy to a Bitmap (handles YUV conversion)
                 Bitmap bitmap = imageProxy.toBitmap();
