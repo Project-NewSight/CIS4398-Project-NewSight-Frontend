@@ -65,10 +65,12 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     private String lastSpokenText = "";  // Track what we last spoke
     private long lastUpdateTime = 0;
     private long lastSpeechTime = 0;
-    private static final long UPDATE_INTERVAL_MS = 500; // Update text every 500ms (faster response)
-    private static final long SPEECH_COOLDOWN_MS = 2000; // Wait 2 seconds before speaking same text again
-    private static final long NO_TEXT_TIMEOUT_MS = 3000; // Clear text if nothing detected for 3 seconds
+    private static final long UPDATE_INTERVAL_MS = 300; // Update text every 300ms (even faster)
+    private static final long SPEECH_COOLDOWN_MS = 1500; // Wait 1.5 seconds before speaking same text again (reduced)
+    private static final long NO_TEXT_TIMEOUT_MS = 2000; // Clear text if nothing detected for 2 seconds (reduced)
     private long lastTextDetectedTime = 0;
+    private int consecutiveEmptyResults = 0; // Track empty results
+    private static final int CLEAR_AFTER_EMPTY_COUNT = 3; // Clear after 3 empty results
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -141,17 +143,18 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
         if (wsManager != null && wsManager.isConnected()) {
             isDetecting = true;
             
-            // Reset state for fresh detection
+            // Reset ALL state for fresh detection
             lastDetectedText = "";
             lastSpokenText = "";
             lastUpdateTime = 0;
             lastSpeechTime = 0;
             lastTextDetectedTime = System.currentTimeMillis();
+            consecutiveEmptyResults = 0;
             
             btnStartStop.setText("Stop Detection");
             tvDetectedText.setText("Detecting text...");
             Toast.makeText(this, "Text detection started - will speak text automatically", Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "Text detection started - auto-speech enabled");
+            Log.d(TAG, "🚀 Text detection started - all state reset, auto-speech enabled");
         } else {
             Toast.makeText(this, "Not connected to backend", Toast.LENGTH_SHORT).show();
         }
@@ -328,6 +331,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
             // Update UI if text is detected
             if (!normalizedText.isEmpty()) {
                 lastTextDetectedTime = currentTime;
+                consecutiveEmptyResults = 0; // Reset empty counter when text is found
                 
                 if (currentTime - lastUpdateTime >= UPDATE_INTERVAL_MS) {
                     lastDetectedText = normalizedText;
@@ -362,16 +366,30 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
                     }
                 }
             } else {
-                // No text detected - check if we should clear the display
-                long timeSinceLastText = currentTime - lastTextDetectedTime;
-                if (!lastDetectedText.isEmpty() && timeSinceLastText >= NO_TEXT_TIMEOUT_MS) {
-                    Log.d(TAG, "🧹 Clearing display after " + timeSinceLastText + "ms of no text");
+                // No text detected - increment empty counter
+                consecutiveEmptyResults++;
+                
+                // Clear state more aggressively after consecutive empty results
+                if (consecutiveEmptyResults >= CLEAR_AFTER_EMPTY_COUNT && !lastDetectedText.isEmpty()) {
+                    Log.d(TAG, "🧹 Clearing state after " + consecutiveEmptyResults + " empty results");
                     tvDetectedText.setText("Detecting text...");
                     lastDetectedText = "";
                     lastSpokenText = "";
-                    // Reset times to allow immediate speech on next detection
                     lastSpeechTime = 0;
                     lastUpdateTime = 0;
+                    consecutiveEmptyResults = 0;
+                } else if (!lastDetectedText.isEmpty()) {
+                    // Also clear based on time
+                    long timeSinceLastText = currentTime - lastTextDetectedTime;
+                    if (timeSinceLastText >= NO_TEXT_TIMEOUT_MS) {
+                        Log.d(TAG, "🧹 Clearing display after " + timeSinceLastText + "ms of no text");
+                        tvDetectedText.setText("Detecting text...");
+                        lastDetectedText = "";
+                        lastSpokenText = "";
+                        lastSpeechTime = 0;
+                        lastUpdateTime = 0;
+                        consecutiveEmptyResults = 0;
+                    }
                 }
             }
             
