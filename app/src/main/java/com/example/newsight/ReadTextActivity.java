@@ -276,36 +276,54 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
             // Try to get the combined text string first
             String detectedText = "";
             
-            if (json.has("text_string")) {
+            // Try text_string first (what we send from backend)
+            if (json.has("text_string") && !json.isNull("text_string")) {
                 detectedText = json.getString("text_string");
-            } else if (json.has("stable_text")) {
-                // Fallback to stable_text if available
+                Log.d(TAG, "Got text_string: " + detectedText);
+            } 
+            // Fallback to stable_text if available
+            else if (json.has("stable_text") && !json.isNull("stable_text")) {
                 detectedText = json.getString("stable_text");
-            } else if (json.has("detections")) {
-                // Fallback: combine text from individual detections
+                Log.d(TAG, "Got stable_text: " + detectedText);
+            } 
+            // Fallback to full_text if available
+            else if (json.has("full_text") && !json.isNull("full_text")) {
+                detectedText = json.getString("full_text");
+                Log.d(TAG, "Got full_text: " + detectedText);
+            }
+            // Last resort: combine text from individual detections
+            else if (json.has("detections")) {
                 JSONArray detections = json.getJSONArray("detections");
                 StringBuilder textBuilder = new StringBuilder();
                 
                 for (int i = 0; i < detections.length(); i++) {
                     JSONObject detection = detections.getJSONObject(i);
-                    String text = detection.getString("text");
-                    double confidence = detection.getDouble("confidence");
-                    
-                    // Only include text with confidence above threshold
-                    if (confidence >= 0.5) {
-                        if (textBuilder.length() > 0) {
-                            textBuilder.append(" ");
+                    if (detection.has("text")) {
+                        String text = detection.getString("text");
+                        double confidence = detection.optDouble("confidence", 0.0);
+                        
+                        // Only include text with confidence above threshold
+                        if (confidence >= 0.5) {
+                            if (textBuilder.length() > 0) {
+                                textBuilder.append(" ");
+                            }
+                            textBuilder.append(text);
                         }
-                        textBuilder.append(text);
                     }
                 }
                 
                 detectedText = textBuilder.toString();
+                Log.d(TAG, "Got detections array: " + detectedText);
             }
             
-            // Normalize text (trim, lowercase for comparison)
+            // Normalize text (trim, handle null/"null" string)
+            if (detectedText == null || detectedText.equals("null")) {
+                detectedText = "";
+            }
             String normalizedText = detectedText.trim();
             String normalizedLower = normalizedText.toLowerCase();
+            
+            Log.d(TAG, "Normalized text: '" + normalizedText + "' (empty=" + normalizedText.isEmpty() + ")");
             
             // Update UI if text is detected
             if (!normalizedText.isEmpty()) {
@@ -318,34 +336,48 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
                     // Update text display
                     tvDetectedText.setText(normalizedText);
                     
-                    Log.d(TAG, "Detected text: " + normalizedText);
+                    Log.d(TAG, "✅ Detected text: " + normalizedText);
                     
                     // AUTO-SPEAK: Speak if this is new/different text
-                    boolean isNewText = !normalizedLower.equals(lastSpokenText.toLowerCase());
+                    String lastSpokenLower = lastSpokenText.toLowerCase();
+                    boolean isNewText = lastSpokenLower.isEmpty() || !normalizedLower.equals(lastSpokenLower);
                     boolean enoughTimePassed = (currentTime - lastSpeechTime) >= SPEECH_COOLDOWN_MS;
                     
+                    Log.d(TAG, "Speech check: isNewText=" + isNewText + 
+                             " ('" + normalizedLower + "' vs '" + lastSpokenLower + "'), " +
+                             "enoughTimePassed=" + enoughTimePassed +
+                             " (" + (currentTime - lastSpeechTime) + "ms / " + SPEECH_COOLDOWN_MS + "ms)");
+                    
                     if (isNewText || enoughTimePassed) {
-                        if (ttsHelper != null) {
+                        if (ttsHelper != null && ttsHelper.isReady()) {
+                            Log.d(TAG, "🔊 Auto-speaking: " + normalizedText);
                             ttsHelper.speak(normalizedText);
                             lastSpokenText = normalizedText;
                             lastSpeechTime = currentTime;
-                            Log.d(TAG, "Auto-speaking: " + normalizedText);
+                        } else {
+                            Log.w(TAG, "⚠️ TTS not ready, cannot speak");
                         }
+                    } else {
+                        Log.d(TAG, "⏭️ Skipping speech (same text, too soon)");
                     }
                 }
             } else {
                 // No text detected - check if we should clear the display
-                if (!lastDetectedText.isEmpty() && 
-                    (currentTime - lastTextDetectedTime) >= NO_TEXT_TIMEOUT_MS) {
-                    Log.d(TAG, "No text detected for " + NO_TEXT_TIMEOUT_MS + "ms, clearing display");
+                long timeSinceLastText = currentTime - lastTextDetectedTime;
+                if (!lastDetectedText.isEmpty() && timeSinceLastText >= NO_TEXT_TIMEOUT_MS) {
+                    Log.d(TAG, "🧹 Clearing display after " + timeSinceLastText + "ms of no text");
                     tvDetectedText.setText("Detecting text...");
                     lastDetectedText = "";
                     lastSpokenText = "";
+                    // Reset times to allow immediate speech on next detection
+                    lastSpeechTime = 0;
+                    lastUpdateTime = 0;
                 }
             }
             
         } catch (JSONException e) {
-            Log.e(TAG, "Error parsing text detection results: " + e.getMessage());
+            Log.e(TAG, "❌ Error parsing text detection results: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
