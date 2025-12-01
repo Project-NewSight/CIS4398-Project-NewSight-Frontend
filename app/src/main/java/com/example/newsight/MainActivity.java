@@ -6,9 +6,11 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -30,6 +32,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity implements WebSocketManager.WsListener {
 
@@ -42,6 +45,9 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     private PreviewView previewView;
     private ExecutorService cameraExecutor;
     private WebSocketManager wsManager;
+    private VoiceCommandHelper voiceCommandHelper;
+    private TtsHelper ttsHelper;
+    private static final int PERMISSION_REQUEST_CODE = 200;
 
     //Haptic Feedback Components
     private VibrationMotor vibrationMotor;
@@ -75,6 +81,25 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         btnTestHaptic = findViewById(R.id.btnTestHaptic);
         cameraContainer = findViewById(R.id.cameraContainer);
 
+        // Initialize link TextViews
+        TextView tvForgotPassword = findViewById(R.id.tvForgotPassword);
+        TextView tvCreateAccount = findViewById(R.id.tvCreateAccount);
+
+        // Initialize labels for highlighting
+        TextView tvEmailLabel = findViewById(R.id.tvEmailLabel);
+        TextView tvPasswordLabel = findViewById(R.id.tvPasswordLabel);
+
+        // Focus listeners for label highlighting
+        etEmail.setOnFocusChangeListener((v, hasFocus) -> {
+            tvEmailLabel.setTextColor(ContextCompat.getColor(this,
+                    hasFocus ? R.color.primary : R.color.muted_foreground));
+        });
+
+        etPassword.setOnFocusChangeListener((v, hasFocus) -> {
+            tvPasswordLabel.setTextColor(ContextCompat.getColor(this,
+                    hasFocus ? R.color.primary : R.color.muted_foreground));
+        });
+
         btnOpenCamera.setVisibility(android.view.View.GONE);
         cameraContainer.setVisibility(android.view.View.GONE);
 
@@ -83,10 +108,102 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
         initializeHapticSystem();
 
+        // Initialize voice command helper
+        voiceCommandHelper = new VoiceCommandHelper(this);
+        ttsHelper = new TtsHelper(this);
+
+        // Set up voice command callbacks
+        voiceCommandHelper.setCallback(new VoiceCommandHelper.VoiceCommandCallback() {
+            @Override
+            public void onWakeWordDetected() {
+                Log.d(TAG, "Wake word detected");
+            }
+
+            @Override
+            public void onCommandStarted() {
+                Log.d(TAG, "Command recording started");
+            }
+
+            @Override
+            public void onCommandProcessing() {
+                Log.d(TAG, "Processing command");
+            }
+
+            @Override
+            public void onResponseReceived(String jsonResponse) {
+                Log.d(TAG, "Response received: " + jsonResponse);
+            }
+
+            @Override
+            public void onNavigateToFeature(String feature, JSONObject extractedParams) {
+                Log.d(TAG, "Navigating to feature: " + feature);
+                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error: " + error);
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "Voice command completed");
+            }
+        });
+
+        // Auto-start wake word detection if logged in and permission granted
+        if (isLoggedIn && checkMicrophonePermission()) {
+            voiceCommandHelper.startWakeWordDetection();
+        } else {
+            // Ensure it's stopped if not logged in
+            voiceCommandHelper.stopListening();
+        }
+
+        // Password visibility toggle
+        etPassword.setOnTouchListener((v, event) -> {
+            final int DRAWABLE_RIGHT = 2;
+            if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
+                if (event.getRawX() >= (etPassword.getRight() - etPassword.getCompoundDrawables()[DRAWABLE_RIGHT].getBounds().width())) {
+                    int selection = etPassword.getSelectionEnd();
+                    if (etPassword.getTransformationMethod() instanceof android.text.method.PasswordTransformationMethod) {
+                        etPassword.setTransformationMethod(android.text.method.HideReturnsTransformationMethod.getInstance());
+                        etPassword.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_eye_off, 0);
+                    } else {
+                        etPassword.setTransformationMethod(android.text.method.PasswordTransformationMethod.getInstance());
+                        etPassword.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_eye, 0);
+                    }
+                    etPassword.setSelection(selection);
+                    // Re-apply tint
+                    for (android.graphics.drawable.Drawable drawable : etPassword.getCompoundDrawables()) {
+                        if (drawable != null) {
+                            drawable.setTint(ContextCompat.getColor(MainActivity.this, R.color.muted_foreground));
+                        }
+                    }
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        // Set click listeners
         btnLogin.setOnClickListener(v -> handleLogin());
         btnOpenCamera.setOnClickListener(v -> checkCameraPermission());
         btnTestHaptic.setOnClickListener(v -> testAllHapticPatterns());
 
+        // Navigation links
+        tvForgotPassword.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, ForgotPasswordActivity.class);
+            startActivity(intent);
+        });
+
+        tvCreateAccount.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, SignupActivity.class);
+            startActivity(intent);
+        });
+
+        // ✅ Dynamic feature handling
 
         String featureFromIntent = getIntent().getStringExtra("feature");
         if (featureFromIntent != null && !featureFromIntent.isEmpty()) {
@@ -94,12 +211,12 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             isLoggedIn = true;
 
             // Hide login UI since user came from a feature activity
-            etEmail.setVisibility(android.view.View.GONE);
-            etPassword.setVisibility(android.view.View.GONE);
-            btnLogin.setVisibility(android.view.View.GONE);
-            btnOpenCamera.setVisibility(android.view.View.VISIBLE);
+            etEmail.setVisibility(android.view.View.VISIBLE);
+            etPassword.setVisibility(android.view.View.VISIBLE);
+            btnLogin.setVisibility(android.view.View.VISIBLE);
+            btnOpenCamera.setVisibility(View.GONE);
 
-            String wsUrl = "ws://10.0.2.2:8000/ws/verify";
+            String wsUrl = "wss://cis4398-project-newsight-backend.onrender.com/ws/verify";
             wsManager = new WebSocketManager(wsUrl, this);
             wsManager.setFeature(currentFeature);
             wsManager.connect();
@@ -121,18 +238,28 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         isLoggedIn = true;
         Toast.makeText(this, "Logged in as " + email, Toast.LENGTH_SHORT).show();
 
-        // Hide login UI
-        etEmail.setVisibility(android.view.View.GONE);
-        etPassword.setVisibility(android.view.View.GONE);
-        btnLogin.setVisibility(android.view.View.GONE);
-        btnOpenCamera.setVisibility(android.view.View.VISIBLE);
+        // Save email to SharedPreferences
+        getSharedPreferences("UserPrefs", MODE_PRIVATE)
+                .edit()
+                .putString("user_email", email)
+                .apply();
 
-        // Start HomeActivity
-        Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+        // Hide login UI
+        etEmail.setVisibility(android.view.View.VISIBLE);
+        etPassword.setVisibility(android.view.View.VISIBLE);
+        btnLogin.setVisibility(android.view.View.VISIBLE);
+        btnOpenCamera.setVisibility(android.view.View.GONE);
+
+        // Start LoadingActivity (which will then navigate to HomeActivity)
+        Intent intent = new Intent(MainActivity.this, LoadingActivity.class);
         startActivity(intent);
 
+        // Clear fields so they are empty when user returns
+        etEmail.setText("");
+        etPassword.setText("");
+
         // Initialize WebSocket connection
-        String wsUrl = "ws://10.0.2.2:8000/ws/verify"; // TODO: replace with your actual backend URL
+        String wsUrl = "wss://cis4398-project-newsight-backend.onrender.com/ws/verify";
         wsManager = new WebSocketManager(wsUrl, this);
 
         currentFeature = "familiar_face";
@@ -170,7 +297,17 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
                             FrameLayout.LayoutParams.MATCH_PARENT,
                             FrameLayout.LayoutParams.MATCH_PARENT));
         }
-
+        etEmail.setVisibility(android.view.View.GONE);
+        etPassword.setVisibility(android.view.View.GONE);
+        btnLogin.setVisibility(android.view.View.GONE);
+        
+        // Show and setup bottom navigation for face detection mode
+        android.view.View bottomNav = findViewById(R.id.floatingBottomNav);
+        if (bottomNav != null) {
+            bottomNav.setVisibility(android.view.View.VISIBLE);
+        }
+        setupBottomNavigation();
+        
         startCamera();
     }
 
@@ -354,6 +491,83 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             } else {
                 Toast.makeText(this, "Camera permission required", Toast.LENGTH_LONG).show();
             }
+        } else if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (isLoggedIn) {
+                    Toast.makeText(this, "Voice commands ready", Toast.LENGTH_SHORT).show();
+                    voiceCommandHelper.startWakeWordDetection();
+                }
+            } else {
+                // Only show error if we are logged in, otherwise it's fine
+                if (isLoggedIn) {
+                    Toast.makeText(this, "Microphone permission is required for voice commands",
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
+    private void setupBottomNavigation() {
+        android.widget.LinearLayout navHome = findViewById(R.id.navHome);
+        android.widget.LinearLayout navVoice = findViewById(R.id.navVoice);
+        android.widget.LinearLayout navSettings = findViewById(R.id.navSettings);
+
+        if (navHome != null) {
+            navHome.setOnClickListener(v -> {
+                // Go back to Home screen
+                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+                finish();
+            });
+        }
+
+        if (navVoice != null) {
+            navVoice.setOnClickListener(v -> {
+                if (checkMicrophonePermission()) {
+                    voiceCommandHelper.startDirectRecording();
+                } else {
+                    requestMicrophonePermission();
+                }
+            });
+        }
+
+        if (navSettings != null) {
+            navSettings.setOnClickListener(v -> {
+                // Open Settings
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            });
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (voiceCommandHelper != null) {
+            voiceCommandHelper.stopListening();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        
+        // Safety check: If login UI is visible, we are in login mode, so disable voice
+        if (etEmail != null && etEmail.getVisibility() == View.VISIBLE) {
+            isLoggedIn = false; // Ensure state matches UI
+            if (voiceCommandHelper != null) {
+                voiceCommandHelper.stopListening();
+            }
+            return;
+        }
+
+        if (voiceCommandHelper != null) {
+            if (isLoggedIn && checkMicrophonePermission()) {
+                voiceCommandHelper.startWakeWordDetection();
+            } else {
+                voiceCommandHelper.stopListening();
+            }
         }
     }
 
@@ -364,6 +578,20 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         if (wsManager != null) wsManager.disconnect();
         if (vibrationMotor != null) vibrationMotor.close();
         if (hapticHandler != null) hapticHandler.removeCallbacksAndMessages(null);
+        if (voiceCommandHelper != null) {
+            voiceCommandHelper.cleanup();
+        }
+    }
+
+    private boolean checkMicrophonePermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestMicrophonePermission() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.RECORD_AUDIO},
+                PERMISSION_REQUEST_CODE);
     }
 
     // WebSocket callbacks

@@ -4,8 +4,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="Cyan">#00CFFF</color>
 
-
-
     <color name="Grey">#546168</color>
     <color name="Red">#ef4042</color>
     <color name="Green">#3bd8ad</color>
@@ -17,6 +15,21 @@
     <color name="PaleGreen">#c7f5ac</color>
     <color name="Taupe">#a47b56</color>
 
-
-
+    <!-- Light Mode Theme Colors -->
+    <color name="background">#f8f9fa</color>
+    <color name="foreground">#15181d</color>
+    <color name="card">#ffffff</color>
+    <color name="surface_1">#f2f4f6</color>
+    <color name="surface_2">#e6eaee</color>
+    <color name="primary">#0b61da</color>
+    <color name="primary_variant">#2563eb</color>
+    <color name="secondary">#d3d7de</color>
+    <color name="accent">#14b79c</color>
+    <color name="muted">#eeeff1</color>
+    <color name="muted_foreground">#5b6470</color>
+    <color name="border">#e2e4e8</color>
+    <color name="input_bg">#0D000000</color> <!-- 5% black for light mode -->
+    <color name="input_border">#1A000000</color> <!-- 10% black for light mode -->
+    <color name="glass_background">#CCFFFFFF</color>
+    <color name="glass_border">#1A000000</color>
 </resources>

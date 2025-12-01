@@ -90,43 +90,99 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
 
-        // Navigate
+        // Initialize views for animation
+        FrameLayout cardRewards = findViewById(R.id.cardRewards);
+        FrameLayout btnMic = findViewById(R.id.btnMic);
+        FrameLayout btnEmergency = findViewById(R.id.btnEmergency);
         FrameLayout btnNavigate = findViewById(R.id.btnNavigate);
+        FrameLayout btnReadText = findViewById(R.id.btnReadText);
+        FrameLayout btnObserve = findViewById(R.id.btnObserve); // Identify
+        FrameLayout btnFaces = findViewById(R.id.btnFaces);
+        FrameLayout btnCommunicate = findViewById(R.id.btnCommunicate); // ASL
+        FrameLayout btnColors = findViewById(R.id.btnColors);
+
+        // Populate Rewards Data (Default 0)
+        android.widget.TextView textPoints = findViewById(R.id.textPoints);
+        android.widget.TextView textLevel = findViewById(R.id.textLevel);
+        android.widget.TextView textStreak = findViewById(R.id.textStreak);
+        android.view.View progressLevel = findViewById(R.id.progressLevel);
+        android.widget.TextView tvDate = findViewById(R.id.tvDate);
+
+        // Set current date
+        if (tvDate != null) {
+            java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("EEEE, MMM dd", java.util.Locale.getDefault());
+            String currentDate = dateFormat.format(new java.util.Date());
+            tvDate.setText(currentDate);
+        }
+
+        if (textPoints != null) textPoints.setText("0");
+        if (textLevel != null) textLevel.setText("0");
+        if (textStreak != null) textStreak.setText("0 day streak!");
+
+        // Initialize progress bar to 0 width
+        if (progressLevel != null) {
+            android.widget.FrameLayout.LayoutParams params = (android.widget.FrameLayout.LayoutParams) progressLevel.getLayoutParams();
+            params.width = 0;
+            progressLevel.setLayoutParams(params);
+        }
+
+        // Apply staggered animations
+        animateView(cardRewards, 100);
+        animateView(btnMic, 150);
+        animateView(btnEmergency, 200);
+        animateView(btnNavigate, 250);
+        animateView(btnReadText, 300);
+        animateView(btnObserve, 350);
+        animateView(btnFaces, 400);
+        animateView(btnCommunicate, 450);
+        animateView(btnColors, 500);
+
+        // Apply touch animations to all tiles
+        addTouchAnimation(btnMic);
+        addTouchAnimation(btnEmergency);
+        addTouchAnimation(btnNavigate);
+        addTouchAnimation(btnReadText);
+        addTouchAnimation(btnObserve);
+        addTouchAnimation(btnFaces);
+        addTouchAnimation(btnCommunicate);
+        addTouchAnimation(btnColors);
+
+        // Set Click Listeners
         btnNavigate.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, NavigateActivity.class);
             startActivity(intent);
         });
 
-        // Observe
-        FrameLayout btnObserve = findViewById(R.id.btnObserve);
         btnObserve.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, ObserveActivity.class);
+            Intent intent = new Intent(HomeActivity.this, ObstacleActivity.class);
             startActivity(intent);
         });
 
-        // Communicate
-        FrameLayout btnCommunicate = findViewById(R.id.btnCommunicate);
         btnCommunicate.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, CommunicateActivity.class);
             startActivity(intent);
         });
 
-        // Emergency
-        FrameLayout btnEmergency = findViewById(R.id.btnEmergency);
         btnEmergency.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, EmergencyActivity.class);
             startActivity(intent);
         });
 
-        // Settings
-        FrameLayout btnSettings = findViewById(R.id.btnSettings);
-        btnSettings.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
+        btnFaces.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, MainActivity.class);
+            intent.putExtra("feature", "detect_people");
             startActivity(intent);
         });
 
-        // Read and Ask
-        FrameLayout btnMic = findViewById(R.id.btnMic);
+        // Placeholder listeners for new buttons
+        if (btnReadText != null) {
+            btnReadText.setOnClickListener(v -> Toast.makeText(this, "Read Text clicked", Toast.LENGTH_SHORT).show());
+        }
+        if (btnColors != null) {
+            btnColors.setOnClickListener(v -> Toast.makeText(this, "Colors clicked", Toast.LENGTH_SHORT).show());
+        }
+
+        // Read and Ask (Voice Search)
         btnMic.setOnClickListener(v -> {
             if (checkMicrophonePermission()) {
                 // Start voice recording directly in this activity
@@ -143,13 +199,48 @@ public class HomeActivity extends AppCompatActivity {
         if (checkMicrophonePermission()) {
             voiceCommandHelper.startWakeWordDetection();
         }
+
+        // Logout button
+        FrameLayout btnLogout = findViewById(R.id.btnLogout);
+        btnLogout.setOnClickListener(v -> {
+            // TODO: Implement actual logout functionality (clear session, tokens, etc.)
+            // For now, just navigate to login screen
+            Intent intent = new Intent(HomeActivity.this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        });
+
+        // Bottom Navigation
+        android.widget.LinearLayout navHome = findViewById(R.id.navHome);
+        android.widget.LinearLayout navVoice = findViewById(R.id.navVoice);
+        android.widget.LinearLayout navSettings = findViewById(R.id.navSettings);
+        android.widget.ScrollView scrollView = findViewById(R.id.scrollView);
+
+        navHome.setOnClickListener(v -> {
+            // Scroll to top
+            scrollView.fullScroll(android.widget.ScrollView.FOCUS_UP);
+        });
+
+        navVoice.setOnClickListener(v -> {
+            if (checkMicrophonePermission()) {
+                voiceCommandHelper.startDirectRecording();
+            } else {
+                requestMicrophonePermission();
+            }
+        });
+
+        navSettings.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, SettingsActivity.class);
+            startActivity(intent);
+        });
     }
-    
+
     private void startBackgroundLocation() {
         if (!checkLocationPermission()) {
             return; // Will request permissions when needed
         }
-        
+
         // Start GPS tracking
         locationHelper = new com.example.newsight.helpers.LocationHelper(this);
         locationHelper.setLocationCallback(new com.example.newsight.helpers.LocationHelper.LocationUpdateCallback() {
@@ -167,13 +258,13 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
         locationHelper.startLocationUpdates();
-        
+
         // Connect location WebSocket
         locationWebSocketHelper = new com.example.newsight.helpers.LocationWebSocketHelper(
-            "ws://192.168.1.254:8000/location/ws", sessionId);
+                "wss://cis4398-project-newsight-backend.onrender.com/location/ws", sessionId);
         locationWebSocketHelper.connect();
     }
-    
+
     private boolean checkLocationPermission() {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED;
@@ -196,7 +287,7 @@ public class HomeActivity extends AppCompatActivity {
             case "NAVIGATION":
                 // Check if we got full directions from backend
                 JSONObject directionsObj = extractedParams.optJSONObject("directions");
-                
+
                 intent = new Intent(HomeActivity.this, NavigateActivity.class);
                 if (directionsObj != null) {
                     // We have full directions! Pass them to NavigateActivity
@@ -254,10 +345,15 @@ public class HomeActivity extends AppCompatActivity {
                 Toast.makeText(this, "Opening Emergency", Toast.LENGTH_SHORT).show();
                 break;
 
+            case "NONE":
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                Toast.makeText(this, "I am sorry, I am not able to detect the feature", Toast.LENGTH_SHORT).show();
+                return;
+
             default:
-                Log.w(TAG, "Unknown feature: " + feature);
-                ttsMessage = "I am sorry, I am not able to detect your feature";
-                Toast.makeText(this, "Unknown feature: " + feature, Toast.LENGTH_SHORT).show();
+                Log.w(TAG, "Unknown feature: ");
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                Toast.makeText(this, "I am sorry, I am not able to detect the feature", Toast.LENGTH_SHORT).show();
                 return;
         }
 
@@ -290,6 +386,49 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         }
     }
+
+    private void animateView(android.view.View view, long delay) {
+        if (view == null) return;
+        view.setAlpha(0f);
+        view.setTranslationY(50f);
+        view.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setStartDelay(delay)
+                .setDuration(500)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .start();
+    }
+
+    @android.annotation.SuppressLint("ClickableViewAccessibility")
+    private void addTouchAnimation(android.view.View view) {
+        if (view == null) return;
+        view.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case android.view.MotionEvent.ACTION_DOWN:
+                    // Scale up slightly on press (like React's whileTap)
+                    v.animate()
+                            .scaleX(0.98f)
+                            .scaleY(0.98f)
+                            .setDuration(100)
+                            .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                            .start();
+                    break;
+                case android.view.MotionEvent.ACTION_UP:
+                case android.view.MotionEvent.ACTION_CANCEL:
+                    // Return to normal size
+                    v.animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .setDuration(100)
+                            .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                            .start();
+                    break;
+            }
+            return false; // Allow click events to propagate
+        });
+    }
+
 
     private boolean checkMicrophonePermission() {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)

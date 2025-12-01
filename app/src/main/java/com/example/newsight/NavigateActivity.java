@@ -45,7 +45,7 @@ import java.util.concurrent.ExecutionException;
 
 /**
  * NavigateActivity - AR Navigation with voice commands
- * 
+ *
  * Features:
  * - Full-screen camera preview
  * - Voice command integration
@@ -57,9 +57,9 @@ public class NavigateActivity extends AppCompatActivity {
 
     private static final String TAG = "NavigateActivity";
     private static final int PERMISSION_REQUEST_CODE = 200;
-    private static final String BACKEND_URL = "http://192.168.1.254:8000";
-    private static final String LOCATION_WS_URL = "ws://192.168.1.254:8000/location/ws";
-    private static final String NAVIGATION_WS_URL = "ws://192.168.1.254:8000/navigation/ws";
+    private static final String BACKEND_URL = "https://cis4398-project-newsight-backend.onrender.com";
+    private static final String LOCATION_WS_URL = "wss://cis4398-project-newsight-backend.onrender.com/location/ws";
+    private static final String NAVIGATION_WS_URL = "wss://cis4398-project-newsight-backend.onrender.com/navigation/ws";
 
     // UI Components
     private PreviewView previewView;
@@ -71,8 +71,9 @@ public class NavigateActivity extends AppCompatActivity {
     private TextView tvInstruction;
     private TextView tvLoadingMessage;
     private TextView tvConnectionStatus;
-    private FrameLayout btnHome;
-    private FrameLayout btnMic;
+    private LinearLayout navHome;
+    private LinearLayout navVoice;
+    private LinearLayout navSettings;
 
     // Helpers
     private TtsHelper ttsHelper;
@@ -118,39 +119,39 @@ public class NavigateActivity extends AppCompatActivity {
         // Request permissions
         if (checkAllPermissions()) {
             startServices();
-            
+
             // Check if we were launched with navigation data from another activity
             checkForAutoStartNavigation();
         } else {
             requestAllPermissions();
         }
     }
-    
+
     /**
      * Check if this activity was launched with navigation data from voice command in another activity
      */
     private void checkForAutoStartNavigation() {
         Intent intent = getIntent();
         boolean autoStart = intent.getBooleanExtra("auto_start_navigation", false);
-        
+
         if (!autoStart) {
             return; // Not launched from navigation voice command
         }
-        
+
         Log.d(TAG, "🚀 Auto-starting navigation from another activity");
-        
+
         String directionsJson = intent.getStringExtra("directions_json");
         String destination = intent.getStringExtra("destination");
         String passedSessionId = intent.getStringExtra("session_id");
-        
+
         if (directionsJson != null && !directionsJson.isEmpty()) {
             // We have full directions! Parse and start navigation immediately
             Log.d(TAG, "✅ Got full directions from previous activity");
-            
+
             mainHandler.postDelayed(() -> {
                 try {
                     DirectionsResponse directions = gson.fromJson(directionsJson, DirectionsResponse.class);
-                    
+
                     if (directions != null && directions.getSteps() != null && !directions.getSteps().isEmpty()) {
                         Log.d(TAG, "📍 Starting navigation with " + directions.getSteps().size() + " steps");
                         startNavigation(directions);
@@ -163,15 +164,15 @@ public class NavigateActivity extends AppCompatActivity {
                     Toast.makeText(this, "Error loading directions", Toast.LENGTH_SHORT).show();
                 }
             }, 1500); // Wait for camera and services to initialize
-            
+
         } else if (destination != null && !destination.isEmpty()) {
             // We only have destination, need to get directions
             Log.d(TAG, "⚠️ Only have destination, need to get directions");
             Log.d(TAG, "Destination: " + destination);
-            
+
             mainHandler.postDelayed(() -> {
                 showLoading("Getting directions to " + destination + "...");
-                
+
                 // Auto-trigger voice command to get directions
                 // Wait a bit more for location WS to connect
                 mainHandler.postDelayed(() -> {
@@ -197,8 +198,9 @@ public class NavigateActivity extends AppCompatActivity {
         tvInstruction = findViewById(R.id.tvInstruction);
         tvLoadingMessage = findViewById(R.id.tvLoadingMessage);
         tvConnectionStatus = findViewById(R.id.tvConnectionStatus);
-        btnHome = findViewById(R.id.btnHome);
-        btnMic = findViewById(R.id.btnMic);
+        navHome = findViewById(R.id.navHome);
+        navVoice = findViewById(R.id.navVoice);
+        navSettings = findViewById(R.id.navSettings);
     }
 
     private void initializeHelpers() {
@@ -257,7 +259,7 @@ public class NavigateActivity extends AppCompatActivity {
             @Override
             public void onLocationUpdate(double latitude, double longitude, float accuracy) {
                 Log.d(TAG, String.format("📍 Location: (%.6f, %.6f) ±%.1fm", latitude, longitude, accuracy));
-                
+
                 // Send to location WebSocket (for background tracking)
                 sendLocationToBackend(latitude, longitude);
 
@@ -276,20 +278,26 @@ public class NavigateActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        // Home Button
-        btnHome.setOnClickListener(v -> {
+        // Home Navigation
+        navHome.setOnClickListener(v -> {
             Intent intent = new Intent(NavigateActivity.this, HomeActivity.class);
             startActivity(intent);
             finish();
         });
 
-        // Mic Button
-        btnMic.setOnClickListener(v -> {
+        // Voice Navigation
+        navVoice.setOnClickListener(v -> {
             if (checkMicrophonePermission()) {
                 voiceCommandHelper.startDirectRecording();
             } else {
                 requestAllPermissions();
             }
+        });
+
+        // Settings Navigation
+        navSettings.setOnClickListener(v -> {
+            Intent intent = new Intent(NavigateActivity.this, SettingsActivity.class);
+            startActivity(intent);
         });
     }
 
@@ -297,7 +305,7 @@ public class NavigateActivity extends AppCompatActivity {
         startCamera();
         startLocationTracking();
         startLocationWebSocket();
-        
+
         // Auto-start wake word detection
         if (checkMicrophonePermission()) {
             voiceCommandHelper.startWakeWordDetection();
@@ -361,7 +369,7 @@ public class NavigateActivity extends AppCompatActivity {
                 Log.e(TAG, "❌ Location WebSocket error: " + error);
             }
         });
-        
+
         locationWebSocketHelper.connect();
         Log.d(TAG, "🔌 Starting location WebSocket...");
     }
@@ -380,15 +388,15 @@ public class NavigateActivity extends AppCompatActivity {
     private void handleVoiceResponse(String jsonResponse) {
         try {
             Log.d(TAG, "📦 RAW Response: " + jsonResponse);
-            
+
             VoiceResponse response = gson.fromJson(jsonResponse, VoiceResponse.class);
-            
+
             if (response == null) {
                 Log.e(TAG, "❌ Response is NULL");
                 hideLoading();
                 return;
             }
-            
+
             if (response.getExtractedParams() == null) {
                 Log.e(TAG, "❌ ExtractedParams is NULL");
                 hideLoading();
@@ -397,7 +405,7 @@ public class NavigateActivity extends AppCompatActivity {
 
             String feature = response.getExtractedParams().getFeature();
             Log.d(TAG, "🎯 Feature: " + feature);
-            
+
             if ("NAVIGATION".equals(feature)) {
                 Log.d(TAG, "✅ NAVIGATION feature detected!");
                 
@@ -405,21 +413,22 @@ public class NavigateActivity extends AppCompatActivity {
                 boolean isTransit = response.getExtractedParams().isTransitNavigation();
                 Log.d(TAG, "🚌 Navigation type: " + (isTransit ? "TRANSIT" : "WALKING"));
                 
+
                 // Backend should return directions object
                 DirectionsResponse directions = response.getExtractedParams().getDirections();
-                
+
                 if (directions == null) {
                     Log.e(TAG, "❌ Directions is NULL - checking if we got destination at least");
                     String destination = response.getExtractedParams().getDestination();
                     Log.e(TAG, "Destination from response: " + destination);
-                    
+
                     hideLoading();
                     String errorMsg = "Backend didn't return directions. Check session ID.";
                     ttsHelper.speak(errorMsg);
                     Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
                     return;
                 }
-                
+
                 if (directions.getSteps() == null || directions.getSteps().isEmpty()) {
                     Log.e(TAG, "❌ No steps in directions - status: " + directions.getStatus());
                     hideLoading();
@@ -428,7 +437,7 @@ public class NavigateActivity extends AppCompatActivity {
                     Toast.makeText(this, errorMsg, Toast.LENGTH_LONG).show();
                     return;
                 }
-                
+
                 Log.d(TAG, "✅ Got " + directions.getSteps().size() + " steps to " + directions.getDestination());
                 currentDirections = directions;
                 
@@ -445,14 +454,14 @@ public class NavigateActivity extends AppCompatActivity {
                 }
                 
                 startNavigation(directions);
-                
+
             } else {
                 Log.d(TAG, "ℹ️ Non-navigation feature: " + feature);
                 // Non-navigation feature
                 hideLoading();
                 navigateToOtherFeature(feature, response.getExtractedParams());
             }
-            
+
         } catch (Exception e) {
             Log.e(TAG, "❌ Error parsing voice response: " + e.getMessage(), e);
             e.printStackTrace();
@@ -465,7 +474,7 @@ public class NavigateActivity extends AppCompatActivity {
 
     private void startNavigation(DirectionsResponse directions) {
         Log.d(TAG, "🗺️ Starting navigation to: " + directions.getDestination());
-        
+
         isNavigating = true;
         currentDirections = directions;
 
@@ -493,7 +502,7 @@ public class NavigateActivity extends AppCompatActivity {
 
             @Override
             public void onConnectionStatus(boolean isConnected) {
-                updateConnectionStatus(isConnected ? "Navigation Active" : "Reconnecting...", 
+                updateConnectionStatus(isConnected ? "Navigation Active" : "Reconnecting...",
                         isConnected ? "#00FF00" : "#FFAA00");
             }
 
@@ -503,7 +512,7 @@ public class NavigateActivity extends AppCompatActivity {
                 Toast.makeText(NavigateActivity.this, "Navigation error: " + error, Toast.LENGTH_SHORT).show();
             }
         });
-        
+
         navigationHelper.connect();
 
         // Display first step
@@ -514,16 +523,16 @@ public class NavigateActivity extends AppCompatActivity {
 
     private void displayFirstStep(DirectionsResponse directions) {
         var firstStep = directions.getSteps().get(0);
-        
+
         tvStreetName.setText("Starting Navigation");
-        
+
         // Safely display instruction
         String instruction = firstStep.getInstruction();
         tvInstruction.setText(instruction != null ? instruction : "Continue...");
-        
+
         // Display distance
         tvDistance.setText(formatDistance(firstStep.getDistanceMeters()));
-        
+
         // Update arrow
         updateArrowForInstruction(instruction);
     }
@@ -533,11 +542,11 @@ public class NavigateActivity extends AppCompatActivity {
             // Safely set instruction with null check
             String instruction = update.getInstruction();
             tvInstruction.setText(instruction != null ? instruction : "Continue...");
-            
+
             // Format distance from distance_to_next (in meters)
             String distance = formatDistance((int) update.getDistanceToNext());
             tvDistance.setText(distance);
-            
+
             // Update arrow
             updateArrowForInstruction(instruction);
 
@@ -673,9 +682,9 @@ public class NavigateActivity extends AppCompatActivity {
             ivArrow.setImageResource(R.drawable.ic_arrow_straight);
             return;
         }
-        
+
         String lower = instruction.toLowerCase();
-        
+
         int arrowResource;
         if (lower.contains("left")) {
             arrowResource = lower.contains("slight") ? R.drawable.ic_arrow_slight_left : R.drawable.ic_arrow_left;
@@ -684,13 +693,13 @@ public class NavigateActivity extends AppCompatActivity {
         } else {
             arrowResource = R.drawable.ic_arrow_straight;
         }
-        
+
         ivArrow.setImageResource(arrowResource);
     }
 
     private String formatDistance(int meters) {
         double feet = meters * 3.28084;
-        
+
         if (feet < 528) {
             return String.format("%.0f ft", feet);
         } else {
@@ -708,14 +717,15 @@ public class NavigateActivity extends AppCompatActivity {
         nearestStop = null;
         transitOptionsShown = false;
         
+
         if (navigationHelper != null) {
             navigationHelper.disconnect();
             navigationHelper = null;
         }
-        
+
         arOverlay.setVisibility(View.GONE);
         updateConnectionStatus("GPS Active", "#00FF00");
-        
+
         Toast.makeText(this, "Navigation ended", Toast.LENGTH_SHORT).show();
     }
 
@@ -761,10 +771,15 @@ public class NavigateActivity extends AppCompatActivity {
                 ttsMessage = "Activating Emergency Contact";
                 break;
 
+            case "NONE":
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                Toast.makeText(this, "I am sorry, I am not able to detect the feature", Toast.LENGTH_SHORT).show();
+                return;
+
             default:
-                Log.w(TAG, "Unknown feature: " + feature);
-                ttsMessage = "Sorry, I didn't recognize that feature";
-                Toast.makeText(this, "Unknown feature: " + feature, Toast.LENGTH_SHORT).show();
+                Log.w(TAG, "Unknown feature: ");
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                Toast.makeText(this, "I am sorry, I am not able to detect the feature", Toast.LENGTH_SHORT).show();
                 return;
         }
 
@@ -839,7 +854,7 @@ public class NavigateActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        
+
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (checkAllPermissions()) {
                 Toast.makeText(this, "Permissions granted", Toast.LENGTH_SHORT).show();
@@ -872,7 +887,7 @@ public class NavigateActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        
+
         // Clean up
         if (voiceCommandHelper != null) {
             voiceCommandHelper.cleanup();

@@ -1,11 +1,17 @@
 package com.example.newsight;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import org.json.JSONObject;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,10 +31,13 @@ import java.util.concurrent.Executors;
 public class ObstacleActivity extends AppCompatActivity {
 
     private static final int REQUEST_CAMERA_PERMISSION = 100;
+    private static final int PERMISSION_REQUEST_CODE = 200;
     private static final String TAG = "ObstacleActivity";
 
     private PreviewView previewView;
     private OverlayView overlayView;
+    private VoiceCommandHelper voiceCommandHelper;
+    private TtsHelper ttsHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,12 +50,24 @@ public class ObstacleActivity extends AppCompatActivity {
         previewView = findViewById(R.id.previewView);
         overlayView = findViewById(R.id.overlay);
 
+        // Initialize voice command helper
+        voiceCommandHelper = new VoiceCommandHelper(this);
+        ttsHelper = new TtsHelper(this);
+
+        setupVoiceCommands();
+        setupBottomNavigation();
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
         } else {
             startCameraStream();
+        }
+
+        // Auto-start wake word detection if permission granted
+        if (checkMicrophonePermission()) {
+            voiceCommandHelper.startWakeWordDetection();
         }
     }
 
@@ -98,6 +119,124 @@ public class ObstacleActivity extends AppCompatActivity {
                 Toast.makeText(this, "Camera permission denied.", Toast.LENGTH_SHORT).show();
                 finish();
             }
+        } else if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Voice commands ready", Toast.LENGTH_SHORT).show();
+                voiceCommandHelper.startWakeWordDetection();
+            } else {
+                Toast.makeText(this, "Microphone permission is required for voice commands",
+                        Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    private void setupVoiceCommands() {
+        voiceCommandHelper.setCallback(new VoiceCommandHelper.VoiceCommandCallback() {
+            @Override
+            public void onWakeWordDetected() {
+                Log.d(TAG, "Wake word detected");
+            }
+
+            @Override
+            public void onCommandStarted() {
+                Log.d(TAG, "Command recording started");
+            }
+
+            @Override
+            public void onCommandProcessing() {
+                Log.d(TAG, "Processing command");
+            }
+
+            @Override
+            public void onResponseReceived(String jsonResponse) {
+                Log.d(TAG, "Response received: " + jsonResponse);
+            }
+
+            @Override
+            public void onNavigateToFeature(String feature, JSONObject extractedParams) {
+                Log.d(TAG, "Navigating to feature: " + feature);
+                Intent intent = new Intent(ObstacleActivity.this, HomeActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+                finish();
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error: " + error);
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "Voice command completed");
+            }
+        });
+    }
+
+    private void setupBottomNavigation() {
+        LinearLayout navHome = findViewById(R.id.navHome);
+        LinearLayout navVoice = findViewById(R.id.navVoice);
+        LinearLayout navSettings = findViewById(R.id.navSettings);
+
+        if (navHome != null) {
+            navHome.setOnClickListener(v -> {
+                Intent intent = new Intent(ObstacleActivity.this, HomeActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+                finish();
+            });
+        }
+
+        if (navVoice != null) {
+            navVoice.setOnClickListener(v -> {
+                if (checkMicrophonePermission()) {
+                    voiceCommandHelper.startDirectRecording();
+                } else {
+                    requestMicrophonePermission();
+                }
+            });
+        }
+
+        if (navSettings != null) {
+            navSettings.setOnClickListener(v -> {
+                Intent intent = new Intent(ObstacleActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            });
+        }
+    }
+
+    private boolean checkMicrophonePermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestMicrophonePermission() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.RECORD_AUDIO},
+                PERMISSION_REQUEST_CODE);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (voiceCommandHelper != null) {
+            voiceCommandHelper.stopListening();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (voiceCommandHelper != null && checkMicrophonePermission()) {
+            voiceCommandHelper.startWakeWordDetection();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (voiceCommandHelper != null) {
+            voiceCommandHelper.cleanup();
         }
     }
 }
