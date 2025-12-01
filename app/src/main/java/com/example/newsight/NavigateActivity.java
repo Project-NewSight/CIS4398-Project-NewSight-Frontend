@@ -482,8 +482,9 @@ public class NavigateActivity extends AppCompatActivity {
         arOverlay.setVisibility(View.VISIBLE);
         hideLoading();
 
-        // Announce destination
-        ttsHelper.speak("Starting navigation to " + directions.getDestination());
+        // Announce destination with navigation mode
+        String navigationMode = isTransitNavigation ? "transit" : "walking";
+        ttsHelper.speak("Starting navigation with " + navigationMode + " to " + directions.getDestination());
 
         // Connect to navigation WebSocket
         navigationHelper = new NavigationHelper(NAVIGATION_WS_URL, sessionId);
