@@ -482,9 +482,16 @@ public class NavigateActivity extends AppCompatActivity {
         arOverlay.setVisibility(View.VISIBLE);
         hideLoading();
 
-        // Announce destination with navigation mode
+        // Announce destination with navigation mode and duration
         String navigationMode = isTransitNavigation ? "transit" : "walking";
-        ttsHelper.speak("Starting navigation with " + navigationMode + " to " + directions.getDestination());
+        String announcement = "Starting navigation with " + navigationMode + " to " + directions.getDestination();
+        
+        // Add duration if available
+        if (directions.getTotalDuration() != null && !directions.getTotalDuration().isEmpty()) {
+            announcement += ". Estimated time: " + directions.getTotalDuration();
+        }
+        
+        ttsHelper.speak(announcement);
 
         // Connect to navigation WebSocket
         navigationHelper = new NavigationHelper(NAVIGATION_WS_URL, sessionId);
