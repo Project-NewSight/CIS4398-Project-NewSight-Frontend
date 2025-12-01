@@ -16,6 +16,9 @@ public class VoiceResponse {
         private String query;
         private String destination;
         private DirectionsResponse directions;
+        private String navigation_type;  // "walking" or "transit"
+        private TransitInfo transit_info;
+        private TransitStop nearest_stop;
 
         public String getFeature() {
             return feature;
@@ -47,6 +50,34 @@ public class VoiceResponse {
 
         public void setDirections(DirectionsResponse directions) {
             this.directions = directions;
+        }
+
+        public String getNavigationType() {
+            return navigation_type;
+        }
+
+        public void setNavigationType(String navigation_type) {
+            this.navigation_type = navigation_type;
+        }
+
+        public TransitInfo getTransitInfo() {
+            return transit_info;
+        }
+
+        public void setTransitInfo(TransitInfo transit_info) {
+            this.transit_info = transit_info;
+        }
+
+        public TransitStop getNearestStop() {
+            return nearest_stop;
+        }
+
+        public void setNearestStop(TransitStop nearest_stop) {
+            this.nearest_stop = nearest_stop;
+        }
+
+        public boolean isTransitNavigation() {
+            return "transit".equals(navigation_type);
         }
     }
 
