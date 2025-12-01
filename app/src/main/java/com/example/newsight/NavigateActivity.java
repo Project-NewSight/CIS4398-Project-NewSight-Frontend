@@ -559,8 +559,31 @@ public class NavigateActivity extends AppCompatActivity {
      * Check if user is close to bus stop and show transit options
      */
     private void checkProximityToBusStop(NavigationUpdate update) {
-        // If we're close to the final destination (bus stop), show transit options
-        if (update.getDistanceToNext() <= TRANSIT_OPTIONS_DISTANCE_THRESHOLD) {
+        if (nearestStop == null) {
+            return;
+        }
+        
+        // Get user's current location from locationHelper
+        if (locationHelper == null || locationHelper.getLastLocation() == null) {
+            return;
+        }
+        
+        android.location.Location userLocation = locationHelper.getLastLocation();
+        double userLat = userLocation.getLatitude();
+        double userLng = userLocation.getLongitude();
+        
+        // Calculate actual distance from user to bus stop
+        double stopLat = nearestStop.getLat();
+        double stopLng = nearestStop.getLng();
+        
+        float[] results = new float[1];
+        android.location.Location.distanceBetween(userLat, userLng, stopLat, stopLng, results);
+        float distanceToStop = results[0];  // Distance in meters
+        
+        Log.d(TAG, String.format("📏 Distance to bus stop: %.1f meters", distanceToStop));
+        
+        // If we're close to the bus stop (within threshold), show transit options
+        if (distanceToStop <= TRANSIT_OPTIONS_DISTANCE_THRESHOLD) {
             Log.d(TAG, "🚌 User is within " + TRANSIT_OPTIONS_DISTANCE_THRESHOLD + "m of bus stop!");
             transitOptionsShown = true;
             showTransitOptions();
