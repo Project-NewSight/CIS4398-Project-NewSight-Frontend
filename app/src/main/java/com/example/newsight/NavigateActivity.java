@@ -34,6 +34,7 @@ import com.example.newsight.models.VoiceResponse;
 import com.example.newsight.models.TransitInfo;
 import com.example.newsight.models.TransitStop;
 import com.example.newsight.models.TransitOption;
+import com.example.newsight.models.TransitLeg;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.Gson;
 
