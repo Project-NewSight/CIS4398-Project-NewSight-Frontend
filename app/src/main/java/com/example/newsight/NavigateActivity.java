@@ -65,6 +65,7 @@ public class NavigateActivity extends AppCompatActivity {
     private PreviewView previewView;
     private RelativeLayout arOverlay;
     private LinearLayout loadingContainer;
+    private TextView tvTransitInfo;  // NEW: Persistent transit banner
     private TextView tvStreetName;
     private TextView tvDistance;
     private ImageView ivArrow;
@@ -192,6 +193,7 @@ public class NavigateActivity extends AppCompatActivity {
         previewView = findViewById(R.id.previewView);
         arOverlay = findViewById(R.id.arOverlay);
         loadingContainer = findViewById(R.id.loadingContainer);
+        tvTransitInfo = findViewById(R.id.tvTransitInfo);
         tvStreetName = findViewById(R.id.tvStreetName);
         tvDistance = findViewById(R.id.tvDistance);
         ivArrow = findViewById(R.id.ivArrow);
@@ -482,6 +484,14 @@ public class NavigateActivity extends AppCompatActivity {
         arOverlay.setVisibility(View.VISIBLE);
         hideLoading();
 
+        // Show transit banner if this is transit navigation
+        if (isTransitNavigation && transitInfo != null && nearestStop != null) {
+            showPersistentTransitBanner();
+        } else {
+            // Hide transit banner for walking-only navigation
+            tvTransitInfo.setVisibility(View.GONE);
+        }
+
         // Announce destination with navigation mode and duration
         String navigationMode = isTransitNavigation ? "transit" : "walking";
         String announcement = "Starting navigation with " + navigationMode + " to " + directions.getDestination();
@@ -714,6 +724,100 @@ public class NavigateActivity extends AppCompatActivity {
             double miles = feet / 5280;
             return String.format("%.1f mi", miles);
         }
+    }
+
+    /**
+     * Show persistent transit banner with bus route and arrival time
+     */
+    private void showPersistentTransitBanner() {
+        if (transitInfo == null || !transitInfo.hasBestOption() || nearestStop == null) {
+            return;
+        }
+
+        TransitOption bestRoute = transitInfo.getBestOption();
+        
+        // Extract bus route name
+        String routeName = extractRouteName(bestRoute);
+        
+        // Extract and format arrival time
+        String arrivalInfo = formatBusArrivalTime(bestRoute);
+        
+        // Get final destination (from transit info or extract from somewhere)
+        String destination = extractDestination();
+        
+        // Build banner text (2 lines)
+        String bannerText = "🚌 " + routeName + ": " + arrivalInfo + "\nto " + destination;
+        
+        // Display banner
+        tvTransitInfo.setText(bannerText);
+        tvTransitInfo.setVisibility(View.VISIBLE);
+        
+        Log.d(TAG, "✅ Transit banner displayed: " + bannerText);
+    }
+    
+    /**
+     * Extract bus route name from transit option
+     */
+    private String extractRouteName(TransitOption bestRoute) {
+        if (bestRoute == null || bestRoute.getLegs() == null) {
+            return "Bus";
+        }
+        
+        for (TransitLeg leg : bestRoute.getLegs()) {
+            if (leg.isTransit() && leg.getRouteShortName() != null && !leg.getRouteShortName().isEmpty()) {
+                return "Bus " + leg.getRouteShortName();
+            }
+        }
+        return "Bus";
+    }
+    
+    /**
+     * Format bus arrival time as "Next in X min"
+     */
+    private String formatBusArrivalTime(TransitOption bestRoute) {
+        if (bestRoute == null || bestRoute.getLegs() == null) {
+            return "Check schedule";
+        }
+        
+        // Find transit leg with departure time
+        for (TransitLeg leg : bestRoute.getLegs()) {
+            if (leg.isTransit() && leg.getDepartureTime() != null) {
+                long departureTime = leg.getDepartureTime();
+                long now = System.currentTimeMillis() / 1000;
+                int minutesUntil = (int) ((departureTime - now) / 60);
+                
+                if (minutesUntil <= 1) {
+                    return "Arriving now!";
+                } else if (minutesUntil < 60) {
+                    return "Next in " + minutesUntil + " min";
+                } else {
+                    // Show actual time if > 1 hour
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("h:mm a", java.util.Locale.US);
+                    return "at " + sdf.format(new java.util.Date(departureTime * 1000));
+                }
+            }
+        }
+        
+        return "Check schedule";
+    }
+    
+    /**
+     * Extract final destination from transit info or current directions
+     */
+    private String extractDestination() {
+        if (transitInfo != null && transitInfo.getDestination() != null) {
+            Object destText = transitInfo.getDestination().get("text");
+            if (destText != null) {
+                return destText.toString();
+            }
+        }
+        
+        if (currentDirections != null && currentDirections.getDestination() != null) {
+            // This is the bus stop, not final destination, but fallback
+            return currentDirections.getDestination();
+        }
+        
+        return "destination";
     }
 
     private void stopNavigation() {

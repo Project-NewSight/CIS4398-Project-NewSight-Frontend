@@ -11,6 +11,8 @@ public class TransitLeg {
     private String route_short_name;  // "23", "R5", etc.
     private String route_long_name;  // Full route name
     private DepartureStatus departure_status;
+    private Long departure_time;  // Unix timestamp - when bus arrives
+    private Long scheduled_time;  // Scheduled departure time
 
     public static class DepartureStatus {
         private String status;  // "on_time", "delayed", "cancelled", "live"
@@ -95,6 +97,22 @@ public class TransitLeg {
 
     public boolean isWalk() {
         return "walk".equals(type);
+    }
+
+    public Long getDepartureTime() {
+        return departure_time;
+    }
+
+    public void setDepartureTime(Long departure_time) {
+        this.departure_time = departure_time;
+    }
+
+    public Long getScheduledTime() {
+        return scheduled_time;
+    }
+
+    public void setScheduledTime(Long scheduled_time) {
+        this.scheduled_time = scheduled_time;
     }
 }
 
