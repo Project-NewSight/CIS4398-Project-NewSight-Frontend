@@ -11,7 +11,9 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import org.json.JSONException;
 import org.json.JSONObject;
+import com.example.newsight.models.VoiceResponse;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -155,10 +157,7 @@ public class ObstacleActivity extends AppCompatActivity {
             @Override
             public void onNavigateToFeature(String feature, JSONObject extractedParams) {
                 Log.d(TAG, "Navigating to feature: " + feature);
-                Intent intent = new Intent(ObstacleActivity.this, HomeActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-                finish();
+                navigateToOtherFeature(feature, extractedParams);
             }
 
             @Override
@@ -237,6 +236,101 @@ public class ObstacleActivity extends AppCompatActivity {
         super.onDestroy();
         if (voiceCommandHelper != null) {
             voiceCommandHelper.cleanup();
+        }
+    }
+    private void navigateToOtherFeature(String feature, JSONObject params) {
+        if (feature == null || feature.isEmpty()) {
+            return;
+        }
+
+        Intent intent = null;
+        String ttsMessage = null;
+
+        switch (feature.toUpperCase()) {
+            case "NAVIGATION":
+                intent = new Intent(this, NavigateActivity.class);
+                intent.putExtra("auto_start_navigation", true);
+                if (params != null) {
+                    try {
+                        if (params.has("destination")) {
+                            intent.putExtra("destination", params.getString("destination"));
+                        }
+                        if (params.has("directions")) {
+                            intent.putExtra("directions_json", params.getJSONObject("directions").toString());
+                        }
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing navigation params", e);
+                    }
+                }
+                ttsMessage = "Starting Navigation";
+                break;
+
+            case "OBJECT_DETECTION":
+                // Already here
+                ttsHelper.speak("You are already in Object Detection mode");
+                return;
+
+            case "FACIAL_RECOGNITION":
+                intent = new Intent(this, MainActivity.class);
+                intent.putExtra("feature", "detect_people");
+                ttsMessage = "Activating Facial Recognition";
+                break;
+
+            case "TEXT_DETECTION":
+                intent = new Intent(this, ReadTextActivity.class);
+                intent.putExtra("feature", "text_detection");
+                ttsMessage = "Activating Text Detection";
+                break;
+
+            case "COLOR_CUE":
+                intent = new Intent(this, ColorCueActivity.class);
+                ttsMessage = "Activating Color Cue";
+                break;
+
+            case "ASL_DETECTOR":
+                intent = new Intent(this, CommunicateActivity.class);
+                ttsMessage = "Activating ASL Detector";
+                break;
+
+            case "EMERGENCY_CONTACT":
+                intent = new Intent(this, EmergencyActivity.class);
+                ttsMessage = "Activating Emergency Contact";
+                break;
+                
+            case "HOME":
+                intent = new Intent(this, HomeActivity.class);
+                ttsMessage = "Going to Home";
+                break;
+                
+            case "SETTINGS":
+                intent = new Intent(this, SettingsActivity.class);
+                ttsMessage = "Opening Settings";
+                break;
+
+            case "NONE":
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                return;
+
+            default:
+                Log.w(TAG, "Unknown feature: " + feature);
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                return;
+        }
+
+        if (intent != null && ttsMessage != null) {
+            ttsHelper.speak(ttsMessage);
+            final Intent finalIntent = intent;
+            // Add flags to clear top if going home or similar, but for feature switching usually we just start it
+            if (feature.equalsIgnoreCase("HOME")) {
+                finalIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            }
+            
+            new Handler(getMainLooper()).postDelayed(() -> {
+                startActivity(finalIntent);
+                if (!feature.equalsIgnoreCase("SETTINGS")) {
+                    finish();
+                }
+            }, 1000);
         }
     }
 }

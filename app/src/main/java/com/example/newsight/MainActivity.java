@@ -141,9 +141,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             @Override
             public void onNavigateToFeature(String feature, JSONObject extractedParams) {
                 Log.d(TAG, "Navigating to feature: " + feature);
-                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
+                navigateToOtherFeature(feature, extractedParams);
             }
 
             @Override
@@ -638,5 +636,98 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             Log.i(TAG, status);
             Toast.makeText(this, status, Toast.LENGTH_SHORT).show();
         });
+    }
+    private void navigateToOtherFeature(String feature, JSONObject params) {
+        if (feature == null || feature.isEmpty()) {
+            return;
+        }
+
+        Intent intent = null;
+        String ttsMessage = null;
+
+        switch (feature.toUpperCase()) {
+            case "NAVIGATION":
+                intent = new Intent(this, NavigateActivity.class);
+                intent.putExtra("auto_start_navigation", true);
+                if (params != null) {
+                    try {
+                        if (params.has("destination")) {
+                            intent.putExtra("destination", params.getString("destination"));
+                        }
+                        if (params.has("directions")) {
+                            intent.putExtra("directions_json", params.getJSONObject("directions").toString());
+                        }
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing navigation params", e);
+                    }
+                }
+                ttsMessage = "Starting Navigation";
+                break;
+
+            case "OBJECT_DETECTION":
+                intent = new Intent(this, ObstacleActivity.class);
+                ttsMessage = "Activating Object Detection";
+                break;
+
+            case "FACIAL_RECOGNITION":
+                // Already here
+                ttsHelper.speak("You are already in Facial Recognition mode");
+                return;
+
+            case "TEXT_DETECTION":
+                intent = new Intent(this, ReadTextActivity.class);
+                intent.putExtra("feature", "text_detection");
+                ttsMessage = "Activating Text Detection";
+                break;
+
+            case "COLOR_CUE":
+                intent = new Intent(this, ColorCueActivity.class);
+                ttsMessage = "Activating Color Cue";
+                break;
+
+            case "ASL_DETECTOR":
+                intent = new Intent(this, CommunicateActivity.class);
+                ttsMessage = "Activating ASL Detector";
+                break;
+
+            case "EMERGENCY_CONTACT":
+                intent = new Intent(this, EmergencyActivity.class);
+                ttsMessage = "Activating Emergency Contact";
+                break;
+                
+            case "HOME":
+                intent = new Intent(this, HomeActivity.class);
+                ttsMessage = "Going to Home";
+                break;
+                
+            case "SETTINGS":
+                intent = new Intent(this, SettingsActivity.class);
+                ttsMessage = "Opening Settings";
+                break;
+
+            case "NONE":
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                return;
+
+            default:
+                Log.w(TAG, "Unknown feature: " + feature);
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                return;
+        }
+
+        if (intent != null && ttsMessage != null) {
+            ttsHelper.speak(ttsMessage);
+            final Intent finalIntent = intent;
+            if (feature.equalsIgnoreCase("HOME")) {
+                finalIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            }
+            
+            new Handler(getMainLooper()).postDelayed(() -> {
+                startActivity(finalIntent);
+                if (!feature.equalsIgnoreCase("SETTINGS")) {
+                    finish();
+                }
+            }, 1000);
+        }
     }
 }
