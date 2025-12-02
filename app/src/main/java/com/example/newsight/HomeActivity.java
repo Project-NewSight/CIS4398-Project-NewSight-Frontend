@@ -177,6 +177,7 @@ public class HomeActivity extends AppCompatActivity {
         // Placeholder listeners for new buttons
             btnReadText.setOnClickListener(v -> {
                 Intent intent = new Intent(HomeActivity.this, ReadTextActivity.class);
+                intent.putExtra("feature", "text_detection");
                 startActivity(intent);
             });
         if (btnColors != null) {
@@ -262,7 +263,7 @@ public class HomeActivity extends AppCompatActivity {
 
         // Connect location WebSocket
         locationWebSocketHelper = new com.example.newsight.helpers.LocationWebSocketHelper(
-                "ws://192.168.1.254:8000/ws", sessionId);
+                "wss://cis4398-project-newsight-backend.onrender.com/ws", sessionId);
         locationWebSocketHelper.connect();
     }
 
@@ -324,6 +325,7 @@ public class HomeActivity extends AppCompatActivity {
 
             case "TEXT_DETECTION":
                 intent = new Intent(HomeActivity.this, ReadTextActivity.class);
+                intent.putExtra("feature", "text_detection");
                 ttsMessage = "Activating Text Detection";
                 Toast.makeText(this, "Opening Read Text", Toast.LENGTH_SHORT).show();
                 break;

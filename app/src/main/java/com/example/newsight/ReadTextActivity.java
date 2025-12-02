@@ -39,7 +39,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     private static final int REQUEST_CAMERA_PERMISSION = 101;
 
     // Backend WebSocket URL - UPDATE THIS TO MATCH YOUR BACKEND
-    private static final String SERVER_WS_URL = "ws://192.168.1.254:8000/ws";  // For Android emulator
+    private static final String SERVER_WS_URL = "wss://cis4398-project-newsight-backend.onrender.com/ws";  // For Android emulator
     // For real device, use: "ws://YOUR_BACKEND_IP:8000/ws"
 
     // Feature identifier for text detection

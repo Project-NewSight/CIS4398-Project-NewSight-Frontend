@@ -873,6 +873,7 @@ public class NavigateActivity extends AppCompatActivity {
 
             case "TEXT_DETECTION":
                 intent = new Intent(this, ReadTextActivity.class);
+                intent.putExtra("feature", "text_detection");
                 ttsMessage = "Activating Text Detection";
                 break;
 
