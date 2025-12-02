@@ -91,7 +91,7 @@ public class NavigateActivity extends AppCompatActivity {
     private boolean isNavigating = false;
     private boolean locationWsConnected = false;
     private DirectionsResponse currentDirections;
-    
+
     // Transit-specific state
     private boolean isTransitNavigation = false;
     private TransitInfo transitInfo;
@@ -142,13 +142,88 @@ public class NavigateActivity extends AppCompatActivity {
 
         Log.d(TAG, "🚀 Auto-starting navigation from another activity");
 
+        String fullNavResponse = intent.getStringExtra("full_navigation_response");
         String directionsJson = intent.getStringExtra("directions_json");
         String destination = intent.getStringExtra("destination");
         String passedSessionId = intent.getStringExtra("session_id");
 
-        if (directionsJson != null && !directionsJson.isEmpty()) {
-            // We have full directions! Parse and start navigation immediately
-            Log.d(TAG, "✅ Got full directions from previous activity");
+        if (fullNavResponse != null && !fullNavResponse.isEmpty()) {
+            // NEW: Parse the full navigation response with all transit data
+            Log.d(TAG, "✅ Got full navigation response from HomeActivity");
+
+            mainHandler.postDelayed(() -> {
+                try {
+                    JSONObject navData = new JSONObject(fullNavResponse);
+
+                    Log.d(TAG, "🔍 Full nav data keys: " + navData.keys().toString());
+
+                    // Parse directions
+                    JSONObject directionsObj = navData.optJSONObject("directions");
+                    if (directionsObj == null) {
+                        Log.e(TAG, "❌ No directions in navigation response");
+                        Toast.makeText(this, "No directions available", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    DirectionsResponse directions = gson.fromJson(directionsObj.toString(), DirectionsResponse.class);
+
+                    if (directions == null || directions.getSteps() == null || directions.getSteps().isEmpty()) {
+                        Log.e(TAG, "❌ Invalid directions data");
+                        Toast.makeText(this, "Error: Invalid directions", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // Check if this is transit navigation
+                    boolean isTransit = navData.optBoolean("is_transit_navigation", false);
+                    String navType = navData.optString("navigation_type", "walking");
+
+                    Log.d(TAG, "🔍 is_transit_navigation: " + isTransit);
+                    Log.d(TAG, "🔍 navigation_type: " + navType);
+
+                    if (isTransit || "transit".equals(navType)) {
+                        isTransitNavigation = true;
+
+                        // Parse transit_info
+                        JSONObject transitInfoObj = navData.optJSONObject("transit_info");
+                        if (transitInfoObj != null) {
+                            transitInfo = gson.fromJson(transitInfoObj.toString(), TransitInfo.class);
+                            Log.d(TAG, "✅ Transit info parsed");
+                        } else {
+                            Log.w(TAG, "⚠️ No transit_info in response");
+                        }
+
+                        // Parse nearest_stop
+                        JSONObject nearestStopObj = navData.optJSONObject("nearest_stop");
+                        if (nearestStopObj != null) {
+                            nearestStop = gson.fromJson(nearestStopObj.toString(), TransitStop.class);
+                            Log.d(TAG, "✅ Nearest stop parsed: " + nearestStop.getName());
+                        } else {
+                            Log.w(TAG, "⚠️ No nearest_stop in response");
+                        }
+
+                        Log.d(TAG, "🚌 Transit navigation data loaded from HomeActivity");
+                    } else {
+                        // Walking navigation - reset transit state
+                        isTransitNavigation = false;
+                        transitInfo = null;
+                        nearestStop = null;
+                        transitOptionsShown = false;
+                        Log.d(TAG, "🚶 Walking navigation - transit state reset");
+                    }
+
+                    Log.d(TAG, "📍 Starting navigation with " + directions.getSteps().size() + " steps");
+                    startNavigation(directions);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "❌ Error parsing navigation response: " + e.getMessage(), e);
+                    e.printStackTrace();
+                    Toast.makeText(this, "Error loading navigation", Toast.LENGTH_SHORT).show();
+                }
+            }, 1500); // Wait for camera and services to initialize
+
+        } else if (directionsJson != null && !directionsJson.isEmpty()) {
+            // Fallback: old way with just directions (no transit info)
+            Log.d(TAG, "✅ Got directions JSON (legacy mode)");
 
             mainHandler.postDelayed(() -> {
                 try {
@@ -156,6 +231,13 @@ public class NavigateActivity extends AppCompatActivity {
 
                     if (directions != null && directions.getSteps() != null && !directions.getSteps().isEmpty()) {
                         Log.d(TAG, "📍 Starting navigation with " + directions.getSteps().size() + " steps");
+
+                        // No transit info in legacy mode
+                        isTransitNavigation = false;
+                        transitInfo = null;
+                        nearestStop = null;
+                        transitOptionsShown = false;
+
                         startNavigation(directions);
                     } else {
                         Log.e(TAG, "❌ Invalid directions data");
@@ -165,28 +247,15 @@ public class NavigateActivity extends AppCompatActivity {
                     Log.e(TAG, "❌ Error parsing directions: " + e.getMessage(), e);
                     Toast.makeText(this, "Error loading directions", Toast.LENGTH_SHORT).show();
                 }
-            }, 1500); // Wait for camera and services to initialize
+            }, 1500);
 
         } else if (destination != null && !destination.isEmpty()) {
-            // We only have destination, need to get directions
-            Log.d(TAG, "⚠️ Only have destination, need to get directions");
-            Log.d(TAG, "Destination: " + destination);
-
-            mainHandler.postDelayed(() -> {
-                showLoading("Getting directions to " + destination + "...");
-
-                // Auto-trigger voice command to get directions
-                // Wait a bit more for location WS to connect
-                mainHandler.postDelayed(() -> {
-                    if (checkMicrophonePermission() && voiceCommandHelper != null) {
-                        Log.d(TAG, "🎤 Auto-triggering voice command for directions");
-                        voiceCommandHelper.startDirectRecording();
-                    } else {
-                        hideLoading();
-                        Toast.makeText(this, "Microphone permission needed", Toast.LENGTH_SHORT).show();
-                    }
-                }, 2000);
-            }, 500);
+            // Only destination provided - don't auto-trigger recording
+            Log.d(TAG, "⚠️ Only have destination: " + destination);
+            hideLoading();
+            Toast.makeText(this,
+                    "Use voice command or tap the mic button to get directions",
+                    Toast.LENGTH_LONG).show();
         }
     }
 
@@ -411,11 +480,11 @@ public class NavigateActivity extends AppCompatActivity {
 
             if ("NAVIGATION".equals(feature)) {
                 Log.d(TAG, "✅ NAVIGATION feature detected!");
-                
+
                 // Check if this is transit navigation
                 boolean isTransit = response.getExtractedParams().isTransitNavigation();
                 Log.d(TAG, "🚌 Navigation type: " + (isTransit ? "TRANSIT" : "WALKING"));
-                
+
 
                 // Backend should return directions object
                 DirectionsResponse directions = response.getExtractedParams().getDirections();
@@ -443,13 +512,13 @@ public class NavigateActivity extends AppCompatActivity {
 
                 Log.d(TAG, "✅ Got " + directions.getSteps().size() + " steps to " + directions.getDestination());
                 currentDirections = directions;
-                
+
                 // If transit navigation, store transit info
                 if (isTransit) {
                     isTransitNavigation = true;
                     transitInfo = response.getExtractedParams().getTransitInfo();
                     nearestStop = response.getExtractedParams().getNearestStop();
-                    
+
                     if (transitInfo != null && nearestStop != null) {
                         Log.d(TAG, "✅ Transit info stored: " + nearestStop.getName());
                         Log.d(TAG, "📊 Best transit route available: " + (transitInfo.hasBestOption() ? "Yes" : "No"));
@@ -462,7 +531,7 @@ public class NavigateActivity extends AppCompatActivity {
                     transitOptionsShown = false;
                     Log.d(TAG, "🚶 Walking navigation - transit state reset");
                 }
-                
+
                 startNavigation(directions);
 
             } else {
@@ -503,12 +572,12 @@ public class NavigateActivity extends AppCompatActivity {
         // Announce destination with navigation mode and duration
         String navigationMode = isTransitNavigation ? "transit" : "walking";
         String announcement = "Starting navigation with " + navigationMode + " to " + directions.getDestination();
-        
+
         // Add duration if available
         if (directions.getTotalDuration() != null && !directions.getTotalDuration().isEmpty()) {
             announcement += ". Estimated time: " + directions.getTotalDuration();
         }
-        
+
         ttsHelper.speak(announcement);
 
         // Connect to navigation WebSocket
@@ -580,7 +649,7 @@ public class NavigateActivity extends AppCompatActivity {
             if (update.isShouldAnnounce() && update.getAnnouncement() != null) {
                 ttsHelper.speak(update.getAnnouncement());
             }
-            
+
             // FOR TRANSIT NAVIGATION: Check if close to bus stop
             if (isTransitNavigation && !transitOptionsShown && nearestStop != null) {
                 checkProximityToBusStop(update);
@@ -589,7 +658,7 @@ public class NavigateActivity extends AppCompatActivity {
             Log.d(TAG, "🗺️ " + update.toString());
         });
     }
-    
+
     /**
      * Check if user is close to bus stop and show transit options
      */
@@ -597,26 +666,26 @@ public class NavigateActivity extends AppCompatActivity {
         if (nearestStop == null) {
             return;
         }
-        
+
         // Get user's current location from locationHelper
         if (locationHelper == null || locationHelper.getLastKnownLocation() == null) {
             return;
         }
-        
+
         android.location.Location userLocation = locationHelper.getLastKnownLocation();
         double userLat = userLocation.getLatitude();
         double userLng = userLocation.getLongitude();
-        
+
         // Calculate actual distance from user to bus stop
         double stopLat = nearestStop.getLat();
         double stopLng = nearestStop.getLng();
-        
+
         float[] results = new float[1];
         android.location.Location.distanceBetween(userLat, userLng, stopLat, stopLng, results);
         float distanceToStop = results[0];  // Distance in meters
-        
+
         Log.d(TAG, String.format("📏 Distance to bus stop: %.1f meters", distanceToStop));
-        
+
         // If we're close to the bus stop (within threshold), show transit options
         if (distanceToStop <= TRANSIT_OPTIONS_DISTANCE_THRESHOLD) {
             Log.d(TAG, "🚌 User is within " + TRANSIT_OPTIONS_DISTANCE_THRESHOLD + "m of bus stop!");
@@ -624,7 +693,7 @@ public class NavigateActivity extends AppCompatActivity {
             showTransitOptions();
         }
     }
-    
+
     /**
      * Display the best transit route to the user
      */
@@ -634,27 +703,27 @@ public class NavigateActivity extends AppCompatActivity {
             ttsHelper.speak("You've arrived at the bus stop, but no transit route is currently available.");
             return;
         }
-        
+
         Log.d(TAG, "🚌 Showing best transit route");
-        
+
         TransitOption bestRoute = transitInfo.getBestOption();
-        
+
         // Build announcement for the best route
         StringBuilder announcement = new StringBuilder("You've arrived at ");
         if (nearestStop != null) {
             announcement.append(nearestStop.getName()).append(". ");
         }
-        
+
         // Extract route info from best option
         String routeInfo = bestRoute.getSummary();
         announcement.append("Take ").append(routeInfo);
-        
+
         ttsHelper.speak(announcement.toString());
-        
+
         // Display transit route in UI
         displayTransitOptionsInUI();
     }
-    
+
     /**
      * Display the best transit route in the AR overlay
      */
@@ -662,32 +731,32 @@ public class NavigateActivity extends AppCompatActivity {
         if (transitInfo == null || !transitInfo.hasBestOption()) {
             return;
         }
-        
+
         TransitOption bestRoute = transitInfo.getBestOption();
-        
+
         // Update the UI to show the best transit route
         tvStreetName.setText("🚌 Best Route");
-        
+
         // Show route summary
         tvInstruction.setText(bestRoute.getSummary());
-        
+
         if (bestRoute.getDurationMin() != null) {
             tvDistance.setText(bestRoute.getDurationMin() + " min trip");
         }
-        
+
         // Show bus icon instead of navigation arrow
         ivArrow.setImageResource(android.R.drawable.ic_menu_directions);
-        
+
         // Show alerts if any
         if (transitInfo.hasAlerts()) {
             announceTransitAlerts();
         }
-        
-        Toast.makeText(this, 
+
+        Toast.makeText(this,
                 "Best transit route found. Follow the directions.",
                 Toast.LENGTH_LONG).show();
     }
-    
+
     /**
      * Announce any transit alerts (delays, cancellations)
      */
@@ -695,7 +764,7 @@ public class NavigateActivity extends AppCompatActivity {
         if (transitInfo == null || !transitInfo.hasAlerts()) {
             return;
         }
-        
+
         for (TransitInfo.TransitAlert alert : transitInfo.getAlerts()) {
             Log.w(TAG, "⚠️ Transit alert: " + alert.getMessage());
             ttsHelper.speak("Alert: " + alert.getMessage());
@@ -743,26 +812,26 @@ public class NavigateActivity extends AppCompatActivity {
         }
 
         TransitOption bestRoute = transitInfo.getBestOption();
-        
+
         // Extract bus route name
         String routeName = extractRouteName(bestRoute);
-        
+
         // Extract and format arrival time
         String arrivalInfo = formatBusArrivalTime(bestRoute);
-        
+
         // Get final destination (from transit info or extract from somewhere)
         String destination = extractDestination();
-        
+
         // Build banner text (2 lines)
         String bannerText = "🚌 " + routeName + ": " + arrivalInfo + "\nto " + destination;
-        
+
         // Display banner
         tvTransitInfo.setText(bannerText);
         tvTransitInfo.setVisibility(View.VISIBLE);
-        
+
         Log.d(TAG, "✅ Transit banner displayed: " + bannerText);
     }
-    
+
     /**
      * Extract bus route name from transit option
      */
@@ -770,7 +839,7 @@ public class NavigateActivity extends AppCompatActivity {
         if (bestRoute == null || bestRoute.getLegs() == null) {
             return "Bus";
         }
-        
+
         for (TransitLeg leg : bestRoute.getLegs()) {
             if (leg.isTransit() && leg.getRouteShortName() != null && !leg.getRouteShortName().isEmpty()) {
                 return "Bus " + leg.getRouteShortName();
@@ -778,7 +847,7 @@ public class NavigateActivity extends AppCompatActivity {
         }
         return "Bus";
     }
-    
+
     /**
      * Format bus arrival time as "Next in X min"
      */
@@ -786,14 +855,14 @@ public class NavigateActivity extends AppCompatActivity {
         if (bestRoute == null || bestRoute.getLegs() == null) {
             return "Check schedule";
         }
-        
+
         // Find transit leg with departure time
         for (TransitLeg leg : bestRoute.getLegs()) {
             if (leg.isTransit() && leg.getDepartureTime() != null) {
                 long departureTime = leg.getDepartureTime();
                 long now = System.currentTimeMillis() / 1000;
                 int minutesUntil = (int) ((departureTime - now) / 60);
-                
+
                 if (minutesUntil <= 1) {
                     return "Arriving now!";
                 } else if (minutesUntil < 60) {
@@ -805,10 +874,10 @@ public class NavigateActivity extends AppCompatActivity {
                 }
             }
         }
-        
+
         return "Check schedule";
     }
-    
+
     /**
      * Extract final destination from transit info or current directions
      */
@@ -819,24 +888,24 @@ public class NavigateActivity extends AppCompatActivity {
                 return destText.toString();
             }
         }
-        
+
         if (currentDirections != null && currentDirections.getDestination() != null) {
             // This is the bus stop, not final destination, but fallback
             return currentDirections.getDestination();
         }
-        
+
         return "destination";
     }
 
     private void stopNavigation() {
         isNavigating = false;
-        
+
         // Reset transit state
         isTransitNavigation = false;
         transitInfo = null;
         nearestStop = null;
         transitOptionsShown = false;
-        
+
 
         if (navigationHelper != null) {
             navigationHelper.disconnect();
@@ -875,6 +944,7 @@ public class NavigateActivity extends AppCompatActivity {
                 intent = new Intent(this, ReadTextActivity.class);
                 intent.putExtra("feature", "text_detection");
                 ttsMessage = "Activating Text Detection";
+                Toast.makeText(this, "Opening Read Text", Toast.LENGTH_SHORT).show();
                 break;
 
             case "COLOR_CUE":

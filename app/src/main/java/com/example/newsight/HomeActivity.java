@@ -174,12 +174,11 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Placeholder listeners for new buttons
-            btnReadText.setOnClickListener(v -> {
-                Intent intent = new Intent(HomeActivity.this, ReadTextActivity.class);
-                intent.putExtra("feature", "text_detection");
-                startActivity(intent);
-            });
+        btnReadText.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, ReadTextActivity.class);
+            intent.putExtra("feature", "text_detection");
+            startActivity(intent);
+        });
         if (btnColors != null) {
             btnColors.setOnClickListener(v -> Toast.makeText(this, "Colors clicked", Toast.LENGTH_SHORT).show());
         }
@@ -287,26 +286,25 @@ public class HomeActivity extends AppCompatActivity {
         // Map feature names to activities
         switch (feature.toUpperCase()) {
             case "NAVIGATION":
-                // Check if we got full directions from backend
-                JSONObject directionsObj = extractedParams.optJSONObject("directions");
-
                 intent = new Intent(HomeActivity.this, NavigateActivity.class);
-                if (directionsObj != null) {
-                    // We have full directions! Pass them to NavigateActivity
-                    intent.putExtra("auto_start_navigation", true);
-                    intent.putExtra("directions_json", directionsObj.toString());
-                    intent.putExtra("session_id", sessionId);
-                    ttsMessage = "Starting navigation";
-                    Log.d(TAG, "✅ Passing full directions to NavigateActivity");
+
+                // Pass the FULL extracted_params JSON so NavigateActivity can parse everything
+                intent.putExtra("auto_start_navigation", true);
+                intent.putExtra("full_navigation_response", extractedParams.toString());
+                intent.putExtra("session_id", sessionId);
+
+                // Check navigation type for appropriate TTS message
+                String navType = extractedParams.optString("navigation_type", "walking");
+                boolean isTransit = extractedParams.optBoolean("is_transit_navigation", false);
+
+                if (isTransit || "transit".equals(navType)) {
+                    ttsMessage = "Starting transit navigation";
+                    Log.d(TAG, "✅ Passing TRANSIT navigation to NavigateActivity");
                 } else {
-                    // No directions yet, just pass the destination
-                    String destination = extractedParams.optString("destination", null);
-                    intent.putExtra("auto_start_navigation", true);
-                    intent.putExtra("destination", destination);
-                    intent.putExtra("session_id", sessionId);
-                    ttsMessage = "Activating navigation";
-                    Log.d(TAG, "⚠️ Only passing destination to NavigateActivity");
+                    ttsMessage = "Starting walking navigation";
+                    Log.d(TAG, "✅ Passing WALKING navigation to NavigateActivity");
                 }
+
                 Toast.makeText(this, "Opening Navigation", Toast.LENGTH_SHORT).show();
                 break;
 
@@ -333,7 +331,7 @@ public class HomeActivity extends AppCompatActivity {
             case "COLOR_CUE":
                 intent = new Intent(HomeActivity.this, ColorCueActivity.class);
                 ttsMessage = "Activating Color Cue";
-                Toast.makeText(this, "Opening Color Cue", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Opening Observe", Toast.LENGTH_SHORT).show();
                 break;
 
             case "ASL_DETECTOR":
