@@ -62,6 +62,11 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     private ReadTextTTSHelper ttsHelper;
     private VoiceCommandHelper voiceCommandHelper;
 
+    // Navigation support
+    private String sessionId;
+    private com.example.newsight.helpers.LocationHelper locationHelper;
+    private com.example.newsight.helpers.LocationWebSocketHelper locationWebSocketHelper;
+
     // State management
     private boolean isDetecting = false;
     private String lastDetectedText = "";
@@ -80,9 +85,15 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_read_text);
 
+        // Generate session ID for navigation support
+        sessionId = java.util.UUID.randomUUID().toString();
+
         initializeViews();
         initializeComponents();
         setupClickListeners();
+
+        // Start background location tracking for navigation
+        startBackgroundLocation();
 
         // Check camera permission
         if (checkCameraPermission()) {
@@ -106,9 +117,10 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     private void initializeComponents() {
         cameraExecutor = Executors.newSingleThreadExecutor();
         ttsHelper = new ReadTextTTSHelper(this, this);
-        
+
         // Initialize voice command helper
         voiceCommandHelper = new VoiceCommandHelper(this);
+        voiceCommandHelper.setSessionId(sessionId); // Set session ID for navigation
         voiceCommandHelper.setCallback(new VoiceCommandHelper.VoiceCommandCallback() {
             @Override
             public void onWakeWordDetected() {
@@ -146,7 +158,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
                 Log.d(TAG, "Voice command completed");
             }
         });
-        
+
         // Auto-start wake word detection if permission granted
         if (checkMicrophonePermission()) {
             voiceCommandHelper.startWakeWordDetection();
@@ -182,7 +194,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
                 requestMicrophonePermission();
             }
         });
-        
+
         // Settings button
         navSettings.setOnClickListener(v -> {
             Intent intent = new Intent(this, SettingsActivity.class);
@@ -243,10 +255,44 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
                 new String[]{Manifest.permission.CAMERA},
                 REQUEST_CAMERA_PERMISSION);
     }
-    
+
     private boolean checkMicrophonePermission() {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private boolean checkLocationPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void startBackgroundLocation() {
+        if (!checkLocationPermission()) {
+            return; // Will request permissions when needed
+        }
+
+        // Start GPS tracking
+        locationHelper = new com.example.newsight.helpers.LocationHelper(this);
+        locationHelper.setLocationCallback(new com.example.newsight.helpers.LocationHelper.LocationUpdateCallback() {
+            @Override
+            public void onLocationUpdate(double latitude, double longitude, float accuracy) {
+                // Send to backend location WebSocket
+                if (locationWebSocketHelper != null && locationWebSocketHelper.isConnected()) {
+                    locationWebSocketHelper.sendLocation(latitude, longitude);
+                }
+            }
+
+            @Override
+            public void onLocationError(String error) {
+                Log.e(TAG, "Location error: " + error);
+            }
+        });
+        locationHelper.startLocationUpdates();
+
+        // Connect location WebSocket
+        locationWebSocketHelper = new com.example.newsight.helpers.LocationWebSocketHelper(
+                "ws://192.168.1.254:8000/location/ws", sessionId);
+        locationWebSocketHelper.connect();
     }
 
     private void requestMicrophonePermission() {
@@ -535,7 +581,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
             voiceCommandHelper.stopListening();
         }
     }
-    
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -562,15 +608,23 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
         if (ttsHelper != null) {
             ttsHelper.shutdown();
         }
-        
+
         // Clean up voice command helper
         if (voiceCommandHelper != null) {
             voiceCommandHelper.cleanup();
         }
 
+        // Clean up location tracking
+        if (locationHelper != null) {
+            locationHelper.cleanup();
+        }
+        if (locationWebSocketHelper != null) {
+            locationWebSocketHelper.cleanup();
+        }
+
         Log.d(TAG, "Activity destroyed, resources cleaned up");
     }
-    
+
     private void navigateToOtherFeature(String feature, JSONObject params) {
         if (feature == null || feature.isEmpty()) {
             return;
@@ -581,21 +635,42 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
 
         switch (feature.toUpperCase()) {
             case "NAVIGATION":
+                // Check if we got full directions from backend
+                JSONObject directionsObj = null;
+                try {
+                    if (params != null && params.has("directions")) {
+                        directionsObj = params.getJSONObject("directions");
+                    }
+                } catch (JSONException e) {
+                    Log.e(TAG, "Error getting directions from params", e);
+                }
+
                 intent = new Intent(this, NavigateActivity.class);
-                intent.putExtra("auto_start_navigation", true);
-                if (params != null) {
+                if (directionsObj != null) {
+                    // We have full directions! Pass them to NavigateActivity
+                    intent.putExtra("auto_start_navigation", true);
+                    intent.putExtra("directions_json", directionsObj.toString());
+                    intent.putExtra("session_id", sessionId);
+                    ttsMessage = "Starting navigation";
+                    Log.d(TAG, "✅ Passing full directions to NavigateActivity");
+                } else {
+                    // No directions yet, just pass the destination
+                    String destination = null;
                     try {
-                        if (params.has("destination")) {
-                            intent.putExtra("destination", params.getString("destination"));
-                        }
-                        if (params.has("directions")) {
-                            intent.putExtra("directions_json", params.getJSONObject("directions").toString());
+                        if (params != null && params.has("destination")) {
+                            destination = params.getString("destination");
                         }
                     } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing navigation params", e);
+                        Log.e(TAG, "Error getting destination from params", e);
                     }
+                    intent.putExtra("auto_start_navigation", true);
+                    intent.putExtra("session_id", sessionId);
+                    if (destination != null) {
+                        intent.putExtra("destination", destination);
+                    }
+                    ttsMessage = "Activating navigation";
+                    Log.d(TAG, "⚠️ Only passing destination to NavigateActivity");
                 }
-                ttsMessage = "Starting Navigation";
                 break;
 
             case "OBJECT_DETECTION":
@@ -630,12 +705,12 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
                 intent = new Intent(this, EmergencyActivity.class);
                 ttsMessage = "Activating Emergency Contact";
                 break;
-                
+
             case "HOME":
                 intent = new Intent(this, HomeActivity.class);
                 ttsMessage = "Going to Home";
                 break;
-                
+
             case "SETTINGS":
                 intent = new Intent(this, SettingsActivity.class);
                 ttsMessage = "Opening Settings";
@@ -663,7 +738,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
             if (feature.equalsIgnoreCase("HOME")) {
                 finalIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             }
-            
+
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                 startActivity(finalIntent);
                 finish();

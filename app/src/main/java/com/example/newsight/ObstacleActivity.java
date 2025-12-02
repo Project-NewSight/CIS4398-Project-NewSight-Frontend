@@ -40,11 +40,14 @@ public class ObstacleActivity extends AppCompatActivity {
     private OverlayView overlayView;
     private VoiceCommandHelper voiceCommandHelper;
     private TtsHelper ttsHelper;
+    private String sessionId;
+    private com.example.newsight.helpers.LocationHelper locationHelper;
+    private com.example.newsight.helpers.LocationWebSocketHelper locationWebSocketHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // force lancscape
+        // force landscape
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 
         setContentView(R.layout.activity_obstacle);
@@ -52,12 +55,19 @@ public class ObstacleActivity extends AppCompatActivity {
         previewView = findViewById(R.id.previewView);
         overlayView = findViewById(R.id.overlay);
 
-        // Initialize voice command helper
+        // Generate session ID
+        sessionId = java.util.UUID.randomUUID().toString();
+
+        // Initialize voice command helper with session ID
         voiceCommandHelper = new VoiceCommandHelper(this);
+        voiceCommandHelper.setSessionId(sessionId);
         ttsHelper = new TtsHelper(this);
 
         setupVoiceCommands();
         setupBottomNavigation();
+
+        // Start background location tracking for navigation requests
+        startBackgroundLocation();
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -71,6 +81,40 @@ public class ObstacleActivity extends AppCompatActivity {
         if (checkMicrophonePermission()) {
             voiceCommandHelper.startWakeWordDetection();
         }
+    }
+
+    private void startBackgroundLocation() {
+        if (!checkLocationPermission()) {
+            return;
+        }
+
+        // Start GPS tracking
+        locationHelper = new com.example.newsight.helpers.LocationHelper(this);
+        locationHelper.setLocationCallback(new com.example.newsight.helpers.LocationHelper.LocationUpdateCallback() {
+            @Override
+            public void onLocationUpdate(double latitude, double longitude, float accuracy) {
+                // Send to backend location WebSocket
+                if (locationWebSocketHelper != null && locationWebSocketHelper.isConnected()) {
+                    locationWebSocketHelper.sendLocation(latitude, longitude);
+                }
+            }
+
+            @Override
+            public void onLocationError(String error) {
+                Log.e(TAG, "Location error: " + error);
+            }
+        });
+        locationHelper.startLocationUpdates();
+
+        // Connect location WebSocket
+        locationWebSocketHelper = new com.example.newsight.helpers.LocationWebSocketHelper(
+                "ws://192.168.1.254:8000/location/ws", sessionId);
+        locationWebSocketHelper.connect();
+    }
+
+    private boolean checkLocationPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     private void startCameraStream() {
@@ -237,8 +281,15 @@ public class ObstacleActivity extends AppCompatActivity {
         if (voiceCommandHelper != null) {
             voiceCommandHelper.cleanup();
         }
+        if (locationHelper != null) {
+            locationHelper.cleanup();
+        }
+        if (locationWebSocketHelper != null) {
+            locationWebSocketHelper.cleanup();
+        }
     }
-    private void navigateToOtherFeature(String feature, JSONObject params) {
+
+    private void navigateToOtherFeature(String feature, JSONObject extractedParams) {
         if (feature == null || feature.isEmpty()) {
             return;
         }
@@ -249,20 +300,25 @@ public class ObstacleActivity extends AppCompatActivity {
         switch (feature.toUpperCase()) {
             case "NAVIGATION":
                 intent = new Intent(this, NavigateActivity.class);
+
+                // Pass the FULL extracted_params JSON so NavigateActivity can parse everything
                 intent.putExtra("auto_start_navigation", true);
-                if (params != null) {
-                    try {
-                        if (params.has("destination")) {
-                            intent.putExtra("destination", params.getString("destination"));
-                        }
-                        if (params.has("directions")) {
-                            intent.putExtra("directions_json", params.getJSONObject("directions").toString());
-                        }
-                    } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing navigation params", e);
-                    }
+                intent.putExtra("full_navigation_response", extractedParams.toString());
+                intent.putExtra("session_id", sessionId);
+
+                // Check navigation type for appropriate TTS message
+                String navType = extractedParams.optString("navigation_type", "walking");
+                boolean isTransit = extractedParams.optBoolean("is_transit_navigation", false);
+
+                if (isTransit || "transit".equals(navType)) {
+                    ttsMessage = "Starting transit navigation";
+                    Log.d(TAG, "✅ Passing TRANSIT navigation to NavigateActivity");
+                } else {
+                    ttsMessage = "Starting walking navigation";
+                    Log.d(TAG, "✅ Passing WALKING navigation to NavigateActivity");
                 }
-                ttsMessage = "Starting Navigation";
+
+                Toast.makeText(this, "Opening Navigation", Toast.LENGTH_SHORT).show();
                 break;
 
             case "OBJECT_DETECTION":
@@ -296,12 +352,12 @@ public class ObstacleActivity extends AppCompatActivity {
                 intent = new Intent(this, EmergencyActivity.class);
                 ttsMessage = "Activating Emergency Contact";
                 break;
-                
+
             case "HOME":
                 intent = new Intent(this, HomeActivity.class);
                 ttsMessage = "Going to Home";
                 break;
-                
+
             case "SETTINGS":
                 intent = new Intent(this, SettingsActivity.class);
                 ttsMessage = "Opening Settings";
@@ -320,17 +376,18 @@ public class ObstacleActivity extends AppCompatActivity {
         if (intent != null && ttsMessage != null) {
             ttsHelper.speak(ttsMessage);
             final Intent finalIntent = intent;
-            // Add flags to clear top if going home or similar, but for feature switching usually we just start it
+
+            // Add flags to clear top if going home
             if (feature.equalsIgnoreCase("HOME")) {
                 finalIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             }
-            
+
             new Handler(getMainLooper()).postDelayed(() -> {
                 startActivity(finalIntent);
                 if (!feature.equalsIgnoreCase("SETTINGS")) {
                     finish();
                 }
-            }, 1000);
+            }, 900); // Changed to 900ms to match HomeActivity
         }
     }
 }

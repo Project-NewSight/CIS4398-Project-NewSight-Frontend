@@ -50,6 +50,11 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     private TtsHelper ttsHelper;
     private static final int PERMISSION_REQUEST_CODE = 200;
 
+    // Session and location tracking
+    private String sessionId;
+    private com.example.newsight.helpers.LocationHelper locationHelper;
+    private com.example.newsight.helpers.LocationWebSocketHelper locationWebSocketHelper;
+
     // State variables for text display
     private String lastDisplayedText = null;
 
@@ -69,6 +74,9 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         setContentView(R.layout.activity_main);
 
         Toast.makeText(this, "MainActivity started", Toast.LENGTH_SHORT).show();
+
+        // Generate session ID
+        sessionId = java.util.UUID.randomUUID().toString();
 
         // Apply window insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -112,8 +120,9 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
         initializeHapticSystem();
 
-        // Initialize voice command helper
+        // Initialize voice command helper with session ID
         voiceCommandHelper = new VoiceCommandHelper(this);
+        voiceCommandHelper.setSessionId(sessionId);
         ttsHelper = new TtsHelper(this);
 
         // Set up voice command callbacks
@@ -218,6 +227,9 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             btnLogin.setVisibility(android.view.View.VISIBLE);
             btnOpenCamera.setVisibility(View.GONE);
 
+            // Start location tracking
+            startBackgroundLocation();
+
             String wsUrl = "wss://cis4398-project-newsight-backend.onrender.com/ws/verify";
             wsManager = new WebSocketManager(wsUrl, this);
             wsManager.setFeature(currentFeature);
@@ -226,6 +238,40 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             Log.i(TAG, "Launching feature: " + currentFeature);
             checkCameraPermission();
         }
+    }
+
+    private void startBackgroundLocation() {
+        if (!checkLocationPermission()) {
+            return;
+        }
+
+        // Start GPS tracking
+        locationHelper = new com.example.newsight.helpers.LocationHelper(this);
+        locationHelper.setLocationCallback(new com.example.newsight.helpers.LocationHelper.LocationUpdateCallback() {
+            @Override
+            public void onLocationUpdate(double latitude, double longitude, float accuracy) {
+                // Send to backend location WebSocket
+                if (locationWebSocketHelper != null && locationWebSocketHelper.isConnected()) {
+                    locationWebSocketHelper.sendLocation(latitude, longitude);
+                }
+            }
+
+            @Override
+            public void onLocationError(String error) {
+                Log.e(TAG, "Location error: " + error);
+            }
+        });
+        locationHelper.startLocationUpdates();
+
+        // Connect location WebSocket
+        locationWebSocketHelper = new com.example.newsight.helpers.LocationWebSocketHelper(
+                "ws://192.168.1.254:8000/location/ws", sessionId);
+        locationWebSocketHelper.connect();
+    }
+
+    private boolean checkLocationPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     private void handleLogin() {
@@ -268,6 +314,9 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         wsManager.setFeature(currentFeature);
 
         wsManager.connect();
+
+        // Start location tracking after login
+        startBackgroundLocation();
     }
 
     private void checkCameraPermission() {
@@ -302,14 +351,14 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         etEmail.setVisibility(android.view.View.GONE);
         etPassword.setVisibility(android.view.View.GONE);
         btnLogin.setVisibility(android.view.View.GONE);
-        
+
         // Show and setup bottom navigation for face detection mode
         android.view.View bottomNav = findViewById(R.id.floatingBottomNav);
         if (bottomNav != null) {
             bottomNav.setVisibility(android.view.View.VISIBLE);
         }
         setupBottomNavigation();
-        
+
         startCamera();
     }
 
@@ -554,7 +603,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     @Override
     protected void onResume() {
         super.onResume();
-        
+
         // Safety check: If login UI is visible, we are in login mode, so disable voice
         if (etEmail != null && etEmail.getVisibility() == View.VISIBLE) {
             isLoggedIn = false; // Ensure state matches UI
@@ -582,6 +631,12 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         if (hapticHandler != null) hapticHandler.removeCallbacksAndMessages(null);
         if (voiceCommandHelper != null) {
             voiceCommandHelper.cleanup();
+        }
+        if (locationHelper != null) {
+            locationHelper.cleanup();
+        }
+        if (locationWebSocketHelper != null) {
+            locationWebSocketHelper.cleanup();
         }
     }
 
@@ -612,7 +667,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
                 if (detectedText != null && !detectedText.isEmpty() && !detectedText.equals(lastDisplayedText)) {
                     lastDisplayedText = detectedText; // Update the state
                     Toast.makeText(this, lastDisplayedText, Toast.LENGTH_SHORT).show();
-                } 
+                }
                 // If no valid text is found, AND we have never shown any text before
                 else if ((detectedText == null || detectedText.isEmpty()) && lastDisplayedText == null) {
                     Toast.makeText(this, "Reading...", Toast.LENGTH_SHORT).show();
@@ -637,7 +692,8 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             Toast.makeText(this, status, Toast.LENGTH_SHORT).show();
         });
     }
-    private void navigateToOtherFeature(String feature, JSONObject params) {
+
+    private void navigateToOtherFeature(String feature, JSONObject extractedParams) {
         if (feature == null || feature.isEmpty()) {
             return;
         }
@@ -648,20 +704,23 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         switch (feature.toUpperCase()) {
             case "NAVIGATION":
                 intent = new Intent(this, NavigateActivity.class);
+
+                // Pass the FULL extracted_params JSON so NavigateActivity can parse everything
                 intent.putExtra("auto_start_navigation", true);
-                if (params != null) {
-                    try {
-                        if (params.has("destination")) {
-                            intent.putExtra("destination", params.getString("destination"));
-                        }
-                        if (params.has("directions")) {
-                            intent.putExtra("directions_json", params.getJSONObject("directions").toString());
-                        }
-                    } catch (JSONException e) {
-                        Log.e(TAG, "Error parsing navigation params", e);
-                    }
+                intent.putExtra("full_navigation_response", extractedParams.toString());
+                intent.putExtra("session_id", sessionId);
+
+                // Check navigation type for appropriate TTS message
+                String navType = extractedParams.optString("navigation_type", "walking");
+                boolean isTransit = extractedParams.optBoolean("is_transit_navigation", false);
+
+                if (isTransit || "transit".equals(navType)) {
+                    ttsMessage = "Starting transit navigation";
+                    Log.d(TAG, "✅ Passing TRANSIT navigation to NavigateActivity");
+                } else {
+                    ttsMessage = "Starting walking navigation";
+                    Log.d(TAG, "✅ Passing WALKING navigation to NavigateActivity");
                 }
-                ttsMessage = "Starting Navigation";
                 break;
 
             case "OBJECT_DETECTION":
@@ -694,12 +753,12 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
                 intent = new Intent(this, EmergencyActivity.class);
                 ttsMessage = "Activating Emergency Contact";
                 break;
-                
+
             case "HOME":
                 intent = new Intent(this, HomeActivity.class);
                 ttsMessage = "Going to Home";
                 break;
-                
+
             case "SETTINGS":
                 intent = new Intent(this, SettingsActivity.class);
                 ttsMessage = "Opening Settings";
@@ -721,13 +780,13 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             if (feature.equalsIgnoreCase("HOME")) {
                 finalIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             }
-            
+
             new Handler(getMainLooper()).postDelayed(() -> {
                 startActivity(finalIntent);
                 if (!feature.equalsIgnoreCase("SETTINGS")) {
                     finish();
                 }
-            }, 1000);
+            }, 900); // Changed to 900ms to match HomeActivity
         }
     }
 }
