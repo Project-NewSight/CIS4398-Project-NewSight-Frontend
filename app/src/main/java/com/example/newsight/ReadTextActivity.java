@@ -33,15 +33,15 @@ import java.util.concurrent.Executors;
  * Activity for real-time text detection using camera and backend OCR
  * Displays camera preview, detects text from frames, and reads text aloud using TTS
  */
-public class ReadTextActivity extends AppCompatActivity implements WebSocketManager.WsListener, TTSHelper.TTSListener {
+public class ReadTextActivity extends AppCompatActivity implements WebSocketManager.WsListener, ReadTextTTSHelper.TTSListener {
 
     private static final String TAG = "ReadTextActivity";
     private static final int REQUEST_CAMERA_PERMISSION = 101;
-    
+
     // Backend WebSocket URL - UPDATE THIS TO MATCH YOUR BACKEND
-    private static final String SERVER_WS_URL = "ws://10.0.2.2:8000/ws";  // For Android emulator
+    private static final String SERVER_WS_URL = "ws://192.168.1.254:8000/ws";  // For Android emulator
     // For real device, use: "ws://YOUR_BACKEND_IP:8000/ws"
-    
+
     // Feature identifier for text detection
     private static final String FEATURE_TEXT_DETECTION = "text_detection";
 
@@ -57,7 +57,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     // Core components
     private ExecutorService cameraExecutor;
     private WebSocketManager wsManager;
-    private TTSHelper ttsHelper;
+    private ReadTextTTSHelper ttsHelper;
 
     // State management
     private boolean isDetecting = false;
@@ -80,7 +80,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
         initializeViews();
         initializeComponents();
         setupClickListeners();
-        
+
         // Check camera permission
         if (checkCameraPermission()) {
             initializeCameraAndBackend();
@@ -101,7 +101,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
 
     private void initializeComponents() {
         cameraExecutor = Executors.newSingleThreadExecutor();
-        ttsHelper = new TTSHelper(this, this);
+        ttsHelper = new ReadTextTTSHelper(this, this);
     }
 
     private void setupClickListeners() {
@@ -142,7 +142,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     private void startDetection() {
         if (wsManager != null && wsManager.isConnected()) {
             isDetecting = true;
-            
+
             // Reset ALL state for fresh detection
             lastDetectedText = "";
             lastSpokenText = "";
@@ -150,7 +150,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
             lastSpeechTime = 0;
             lastTextDetectedTime = System.currentTimeMillis();
             consecutiveEmptyResults = 0;
-            
+
             btnStartStop.setText("Stop Detection");
             tvDetectedText.setText("Detecting text...");
             Toast.makeText(this, "Text detection started - will speak text automatically", Toast.LENGTH_SHORT).show();
@@ -164,12 +164,12 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
         isDetecting = false;
         btnStartStop.setText("Start Detection");
         tvDetectedText.setText("Ready to detect text");
-        
+
         // Stop any ongoing speech
         if (ttsHelper != null) {
             ttsHelper.stop();
         }
-        
+
         Toast.makeText(this, "Text detection stopped", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "Text detection stopped");
     }
@@ -189,7 +189,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
         // Initialize WebSocket connection
         wsManager = new WebSocketManager(SERVER_WS_URL, this);
         wsManager.connect();
-        
+
         // Start camera
         startCamera();
     }
@@ -210,10 +210,10 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
                 ImageAnalysis imageAnalyzer = new ImageAnalysis.Builder()
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build();
-                
+
                 // Set up frame analyzer with feature provider - USING ReadTextFrameAnalyzer
-                imageAnalyzer.setAnalyzer(cameraExecutor, 
-                    new ReadTextFrameAnalyzer(wsManager, () -> isDetecting ? FEATURE_TEXT_DETECTION : null));
+                imageAnalyzer.setAnalyzer(cameraExecutor,
+                        new ReadTextFrameAnalyzer(wsManager, () -> isDetecting ? FEATURE_TEXT_DETECTION : null));
 
                 // Select back camera
                 CameraSelector cameraSelector = new CameraSelector.Builder()
@@ -230,9 +230,9 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
                 Log.i(TAG, "Camera initialized successfully with ReadTextFrameAnalyzer");
             } catch (Exception e) {
                 Log.e(TAG, "Camera initialization failed", e);
-                Toast.makeText(this, 
-                    "Camera setup failed: " + e.getMessage(),
-                    Toast.LENGTH_LONG).show();
+                Toast.makeText(this,
+                        "Camera setup failed: " + e.getMessage(),
+                        Toast.LENGTH_LONG).show();
             }
         }, ContextCompat.getMainExecutor(this));
     }
@@ -271,24 +271,24 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
         if (!isDetecting) {
             return; // Don't process if detection is stopped
         }
-        
+
         try {
             JSONObject json = new JSONObject(jsonResults);
             long currentTime = System.currentTimeMillis();
-            
+
             // Try to get the combined text string first
             String detectedText = "";
-            
+
             // Try text_string first (what we send from backend)
             if (json.has("text_string") && !json.isNull("text_string")) {
                 detectedText = json.getString("text_string");
                 Log.d(TAG, "Got text_string: " + detectedText);
-            } 
+            }
             // Fallback to stable_text if available
             else if (json.has("stable_text") && !json.isNull("stable_text")) {
                 detectedText = json.getString("stable_text");
                 Log.d(TAG, "Got stable_text: " + detectedText);
-            } 
+            }
             // Fallback to full_text if available
             else if (json.has("full_text") && !json.isNull("full_text")) {
                 detectedText = json.getString("full_text");
@@ -298,13 +298,13 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
             else if (json.has("detections")) {
                 JSONArray detections = json.getJSONArray("detections");
                 StringBuilder textBuilder = new StringBuilder();
-                
+
                 for (int i = 0; i < detections.length(); i++) {
                     JSONObject detection = detections.getJSONObject(i);
                     if (detection.has("text")) {
                         String text = detection.getString("text");
                         double confidence = detection.optDouble("confidence", 0.0);
-                        
+
                         // Only include text with confidence above threshold
                         if (confidence >= 0.5) {
                             if (textBuilder.length() > 0) {
@@ -314,44 +314,44 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
                         }
                     }
                 }
-                
+
                 detectedText = textBuilder.toString();
                 Log.d(TAG, "Got detections array: " + detectedText);
             }
-            
+
             // Normalize text (trim, handle null/"null" string)
             if (detectedText == null || detectedText.equals("null")) {
                 detectedText = "";
             }
             String normalizedText = detectedText.trim();
             String normalizedLower = normalizedText.toLowerCase();
-            
+
             Log.d(TAG, "Normalized text: '" + normalizedText + "' (empty=" + normalizedText.isEmpty() + ")");
-            
+
             // Update UI if text is detected
             if (!normalizedText.isEmpty()) {
                 lastTextDetectedTime = currentTime;
                 consecutiveEmptyResults = 0; // Reset empty counter when text is found
-                
+
                 if (currentTime - lastUpdateTime >= UPDATE_INTERVAL_MS) {
                     lastDetectedText = normalizedText;
                     lastUpdateTime = currentTime;
-                    
+
                     // Update text display
                     tvDetectedText.setText(normalizedText);
-                    
+
                     Log.d(TAG, "✅ Detected text: " + normalizedText);
-                    
+
                     // AUTO-SPEAK: Speak if this is new/different text
                     String lastSpokenLower = lastSpokenText.toLowerCase();
                     boolean isNewText = lastSpokenLower.isEmpty() || !normalizedLower.equals(lastSpokenLower);
                     boolean enoughTimePassed = (currentTime - lastSpeechTime) >= SPEECH_COOLDOWN_MS;
-                    
-                    Log.d(TAG, "Speech check: isNewText=" + isNewText + 
-                             " ('" + normalizedLower + "' vs '" + lastSpokenLower + "'), " +
-                             "enoughTimePassed=" + enoughTimePassed +
-                             " (" + (currentTime - lastSpeechTime) + "ms / " + SPEECH_COOLDOWN_MS + "ms)");
-                    
+
+                    Log.d(TAG, "Speech check: isNewText=" + isNewText +
+                            " ('" + normalizedLower + "' vs '" + lastSpokenLower + "'), " +
+                            "enoughTimePassed=" + enoughTimePassed +
+                            " (" + (currentTime - lastSpeechTime) + "ms / " + SPEECH_COOLDOWN_MS + "ms)");
+
                     if (isNewText || enoughTimePassed) {
                         if (ttsHelper != null && ttsHelper.isReady()) {
                             Log.d(TAG, "🔊 Auto-speaking: " + normalizedText);
@@ -368,7 +368,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
             } else {
                 // No text detected - increment empty counter
                 consecutiveEmptyResults++;
-                
+
                 // Clear state more aggressively after consecutive empty results
                 if (consecutiveEmptyResults >= CLEAR_AFTER_EMPTY_COUNT && !lastDetectedText.isEmpty()) {
                     Log.d(TAG, "🧹 Clearing state after " + consecutiveEmptyResults + " empty results");
@@ -392,7 +392,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
                     }
                 }
             }
-            
+
         } catch (JSONException e) {
             Log.e(TAG, "❌ Error parsing text detection results: " + e.getMessage());
             e.printStackTrace();
@@ -403,16 +403,16 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     @Override
     public void onTTSReady() {
         Log.d(TAG, "TTS is ready");
-        runOnUiThread(() -> 
-            Toast.makeText(this, "Text-to-speech ready", Toast.LENGTH_SHORT).show()
+        runOnUiThread(() ->
+                Toast.makeText(this, "Text-to-speech ready", Toast.LENGTH_SHORT).show()
         );
     }
 
     @Override
     public void onTTSError(String error) {
         Log.e(TAG, "TTS error: " + error);
-        runOnUiThread(() -> 
-            Toast.makeText(this, "TTS error: " + error, Toast.LENGTH_SHORT).show()
+        runOnUiThread(() ->
+                Toast.makeText(this, "TTS error: " + error, Toast.LENGTH_SHORT).show()
         );
     }
 
@@ -433,13 +433,13 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
-            if (grantResults.length > 0 && 
-                grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.length > 0 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 initializeCameraAndBackend();
             } else {
-                Toast.makeText(this, 
-                    "Camera permission required for text detection", 
-                    Toast.LENGTH_LONG).show();
+                Toast.makeText(this,
+                        "Camera permission required for text detection",
+                        Toast.LENGTH_LONG).show();
                 finish();
             }
         }
@@ -458,22 +458,22 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        
+
         // Clean up camera
         if (cameraExecutor != null) {
             cameraExecutor.shutdown();
         }
-        
+
         // Clean up WebSocket
         if (wsManager != null) {
             wsManager.disconnect();
         }
-        
+
         // Clean up TTS
         if (ttsHelper != null) {
             ttsHelper.shutdown();
         }
-        
+
         Log.d(TAG, "Activity destroyed, resources cleaned up");
     }
 }

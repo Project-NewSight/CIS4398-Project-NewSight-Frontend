@@ -76,7 +76,7 @@
         <activity android:name=".ObserveActivity" android:exported="true" />
         <activity android:name=".DetectionActivity" android:exported="true" />
         <activity android:name=".DetectPeopleActivity" android:exported="true"/>
-
+        <activity android:name=".ReadTextActivity" android:exported="true" />
 
         <activity
             android:name=".ObstacleActivity"
