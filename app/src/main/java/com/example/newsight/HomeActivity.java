@@ -263,7 +263,7 @@ public class HomeActivity extends AppCompatActivity {
 
         // Connect location WebSocket
         locationWebSocketHelper = new com.example.newsight.helpers.LocationWebSocketHelper(
-                "wss://cis4398-project-newsight-backend.onrender.com/ws", sessionId);
+                "ws://192.168.1.254:8000/location/ws", sessionId);
         locationWebSocketHelper.connect();
     }
 

@@ -34,7 +34,7 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     private boolean backendEnabled = true;
     private String activeFeature = "familiar_face";
 
-    private final String SERVER_WS_URL = "wss://cis4398-project-newsight-backend.onrender.com/ws/verify";
+    private final String SERVER_WS_URL = "ws://192.168.1.254:8000/ws/verify";
 
 
     private Button btnNavigation, btnASL, btnObjectDetection, btnStopFeature;

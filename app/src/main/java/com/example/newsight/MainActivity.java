@@ -261,7 +261,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         etPassword.setText("");
 
         // Initialize WebSocket connection
-        String wsUrl = "wss://cis4398-project-newsight-backend.onrender.com/ws/verify";
+        String wsUrl = "ws://192.168.1.254:8000/ws/verify";
         wsManager = new WebSocketManager(wsUrl, this);
 
         currentFeature = "familiar_face";

@@ -58,9 +58,9 @@ public class NavigateActivity extends AppCompatActivity {
 
     private static final String TAG = "NavigateActivity";
     private static final int PERMISSION_REQUEST_CODE = 200;
-    private static final String BACKEND_URL = "https://cis4398-project-newsight-backend.onrender.com";
-    private static final String LOCATION_WS_URL = "wss://cis4398-project-newsight-backend.onrender.com/location/ws";
-    private static final String NAVIGATION_WS_URL = "wss://cis4398-project-newsight-backend.onrender.com/navigation/ws";
+    private static final String BACKEND_URL = "http://192.168.1.254:8000";
+    private static final String LOCATION_WS_URL = "ws://192.168.1.254:8000/location/ws";
+    private static final String NAVIGATION_WS_URL = "ws://192.168.1.254:8000/navigation/ws";
 
     // UI Components
     private PreviewView previewView;
