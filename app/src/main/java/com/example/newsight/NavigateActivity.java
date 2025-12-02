@@ -454,6 +454,13 @@ public class NavigateActivity extends AppCompatActivity {
                         Log.d(TAG, "✅ Transit info stored: " + nearestStop.getName());
                         Log.d(TAG, "📊 Best transit route available: " + (transitInfo.hasBestOption() ? "Yes" : "No"));
                     }
+                } else {
+                    // Reset transit state for walking navigation
+                    isTransitNavigation = false;
+                    transitInfo = null;
+                    nearestStop = null;
+                    transitOptionsShown = false;
+                    Log.d(TAG, "🚶 Walking navigation - transit state reset");
                 }
                 
                 startNavigation(directions);
