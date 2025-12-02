@@ -175,9 +175,10 @@ public class HomeActivity extends AppCompatActivity {
         });
 
         // Placeholder listeners for new buttons
-        if (btnReadText != null) {
-            btnReadText.setOnClickListener(v -> Toast.makeText(this, "Read Text clicked", Toast.LENGTH_SHORT).show());
-        }
+            btnReadText.setOnClickListener(v -> {
+                Intent intent = new Intent(HomeActivity.this, ReadTextActivity.class);
+                startActivity(intent);
+            });
         if (btnColors != null) {
             btnColors.setOnClickListener(v -> Toast.makeText(this, "Colors clicked", Toast.LENGTH_SHORT).show());
         }
@@ -322,15 +323,15 @@ public class HomeActivity extends AppCompatActivity {
                 break;
 
             case "TEXT_DETECTION":
-                intent = new Intent(HomeActivity.this, DetectionActivity.class);
+                intent = new Intent(HomeActivity.this, ReadTextActivity.class);
                 ttsMessage = "Activating Text Detection";
-                Toast.makeText(this, "Opening Observe", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Opening Read Text", Toast.LENGTH_SHORT).show();
                 break;
 
             case "COLOR_CUE":
                 intent = new Intent(HomeActivity.this, ColorCueActivity.class);
                 ttsMessage = "Activating Color Cue";
-                Toast.makeText(this, "Opening Observe", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Opening Color Cue", Toast.LENGTH_SHORT).show();
                 break;
 
             case "ASL_DETECTOR":

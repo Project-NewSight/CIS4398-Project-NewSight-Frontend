@@ -32,6 +32,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity implements WebSocketManager.WsListener {
@@ -48,6 +49,9 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     private VoiceCommandHelper voiceCommandHelper;
     private TtsHelper ttsHelper;
     private static final int PERMISSION_REQUEST_CODE = 200;
+
+    // State variables for text display
+    private String lastDisplayedText = null;
 
     //Haptic Feedback Components
     private VibrationMotor vibrationMotor;
@@ -598,8 +602,32 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     @Override
     public void onResultsReceived(String results) {
         runOnUiThread(() -> {
-            Log.d(TAG, "Backend results: " + results);
-            Toast.makeText(this, "Backend: " + results, Toast.LENGTH_SHORT).show();
+            try {
+                JSONObject jsonObject = new JSONObject(results);
+                String detectedText = null;
+
+                if (jsonObject.has("stable_text") && !jsonObject.isNull("stable_text")) {
+                    detectedText = jsonObject.getString("stable_text").trim();
+                }
+
+                // If new, valid text is found and it's different from the last one shown
+                if (detectedText != null && !detectedText.isEmpty() && !detectedText.equals(lastDisplayedText)) {
+                    lastDisplayedText = detectedText; // Update the state
+                    Toast.makeText(this, lastDisplayedText, Toast.LENGTH_SHORT).show();
+                } 
+                // If no valid text is found, AND we have never shown any text before
+                else if ((detectedText == null || detectedText.isEmpty()) && lastDisplayedText == null) {
+                    Toast.makeText(this, "Reading...", Toast.LENGTH_SHORT).show();
+                }
+                // Otherwise, do nothing to avoid overwriting a valid result with "Reading..."
+
+            } catch (JSONException e) {
+                Log.e(TAG, "Failed to parse backend JSON: " + results, e);
+                // Only show "Reading..." on error if we haven't found any text yet.
+                if (lastDisplayedText == null) {
+                    Toast.makeText(this, "Reading...", Toast.LENGTH_SHORT).show();
+                }
+            }
         });
     }
 
