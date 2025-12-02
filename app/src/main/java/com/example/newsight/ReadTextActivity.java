@@ -37,6 +37,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
 
     private static final String TAG = "ReadTextActivity";
     private static final int REQUEST_CAMERA_PERMISSION = 101;
+    private static final int PERMISSION_REQUEST_CODE = 200;
 
     // Backend WebSocket URL - UPDATE THIS TO MATCH YOUR BACKEND
     private static final String SERVER_WS_URL = "wss://cis4398-project-newsight-backend.onrender.com/ws";  // For Android emulator
@@ -51,13 +52,15 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     private TextView tvDetectedText;
     private Button btnStartStop;
     private Button btnReadAloud;
-    private FrameLayout btnHome;
-    private FrameLayout btnMic;
+    private android.widget.LinearLayout navHome;
+    private android.widget.LinearLayout navVoice;
+    private android.widget.LinearLayout navSettings;
 
     // Core components
     private ExecutorService cameraExecutor;
     private WebSocketManager wsManager;
     private ReadTextTTSHelper ttsHelper;
+    private VoiceCommandHelper voiceCommandHelper;
 
     // State management
     private boolean isDetecting = false;
@@ -95,13 +98,59 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
         tvDetectedText = findViewById(R.id.tvDetectedText);
         btnStartStop = findViewById(R.id.btnStartStop);
         btnReadAloud = findViewById(R.id.btnReadAloud);
-        btnHome = findViewById(R.id.btnHome);
-        btnMic = findViewById(R.id.btnMic);
+        navHome = findViewById(R.id.navHome);
+        navVoice = findViewById(R.id.navVoice);
+        navSettings = findViewById(R.id.navSettings);
     }
 
     private void initializeComponents() {
         cameraExecutor = Executors.newSingleThreadExecutor();
         ttsHelper = new ReadTextTTSHelper(this, this);
+        
+        // Initialize voice command helper
+        voiceCommandHelper = new VoiceCommandHelper(this);
+        voiceCommandHelper.setCallback(new VoiceCommandHelper.VoiceCommandCallback() {
+            @Override
+            public void onWakeWordDetected() {
+                Log.d(TAG, "Wake word detected");
+            }
+
+            @Override
+            public void onCommandStarted() {
+                Log.d(TAG, "Command recording started");
+            }
+
+            @Override
+            public void onCommandProcessing() {
+                Log.d(TAG, "Processing command");
+            }
+
+            @Override
+            public void onResponseReceived(String jsonResponse) {
+                Log.d(TAG, "Response received: " + jsonResponse);
+            }
+
+            @Override
+            public void onNavigateToFeature(String feature, JSONObject extractedParams) {
+                Log.d(TAG, "Navigating to feature: " + feature);
+                navigateToOtherFeature(feature, extractedParams);
+            }
+
+            @Override
+            public void onError(String error) {
+                Log.e(TAG, "Error: " + error);
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "Voice command completed");
+            }
+        });
+        
+        // Auto-start wake word detection if permission granted
+        if (checkMicrophonePermission()) {
+            voiceCommandHelper.startWakeWordDetection();
+        }
     }
 
     private void setupClickListeners() {
@@ -118,15 +167,25 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
         });
 
         // Home button
-        btnHome.setOnClickListener(v -> {
+        navHome.setOnClickListener(v -> {
             Intent intent = new Intent(this, HomeActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
             finish();
         });
 
-        // Microphone button - voice command
-        btnMic.setOnClickListener(v -> {
-            Intent intent = new Intent(this, VoiceCommandActivity.class);
+        // Voice button
+        navVoice.setOnClickListener(v -> {
+            if (checkMicrophonePermission()) {
+                voiceCommandHelper.startDirectRecording();
+            } else {
+                requestMicrophonePermission();
+            }
+        });
+        
+        // Settings button
+        navSettings.setOnClickListener(v -> {
+            Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
         });
     }
@@ -183,6 +242,17 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.CAMERA},
                 REQUEST_CAMERA_PERMISSION);
+    }
+    
+    private boolean checkMicrophonePermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestMicrophonePermission() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.RECORD_AUDIO},
+                PERMISSION_REQUEST_CODE);
     }
 
     private void initializeCameraAndBackend() {
@@ -442,6 +512,14 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
                         Toast.LENGTH_LONG).show();
                 finish();
             }
+        } else if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Voice commands ready", Toast.LENGTH_SHORT).show();
+                voiceCommandHelper.startWakeWordDetection();
+            } else {
+                Toast.makeText(this, "Microphone permission is required for voice commands",
+                        Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -452,6 +530,17 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
         stopDetection();
         if (ttsHelper != null) {
             ttsHelper.stop();
+        }
+        if (voiceCommandHelper != null) {
+            voiceCommandHelper.stopListening();
+        }
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (voiceCommandHelper != null && checkMicrophonePermission()) {
+            voiceCommandHelper.startWakeWordDetection();
         }
     }
 
@@ -473,7 +562,112 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
         if (ttsHelper != null) {
             ttsHelper.shutdown();
         }
+        
+        // Clean up voice command helper
+        if (voiceCommandHelper != null) {
+            voiceCommandHelper.cleanup();
+        }
 
         Log.d(TAG, "Activity destroyed, resources cleaned up");
+    }
+    
+    private void navigateToOtherFeature(String feature, JSONObject params) {
+        if (feature == null || feature.isEmpty()) {
+            return;
+        }
+
+        Intent intent = null;
+        String ttsMessage = null;
+
+        switch (feature.toUpperCase()) {
+            case "NAVIGATION":
+                intent = new Intent(this, NavigateActivity.class);
+                intent.putExtra("auto_start_navigation", true);
+                if (params != null) {
+                    try {
+                        if (params.has("destination")) {
+                            intent.putExtra("destination", params.getString("destination"));
+                        }
+                        if (params.has("directions")) {
+                            intent.putExtra("directions_json", params.getJSONObject("directions").toString());
+                        }
+                    } catch (JSONException e) {
+                        Log.e(TAG, "Error parsing navigation params", e);
+                    }
+                }
+                ttsMessage = "Starting Navigation";
+                break;
+
+            case "OBJECT_DETECTION":
+                intent = new Intent(this, ObstacleActivity.class);
+                ttsMessage = "Activating Object Detection";
+                break;
+
+            case "FACIAL_RECOGNITION":
+                intent = new Intent(this, MainActivity.class);
+                intent.putExtra("feature", "detect_people");
+                ttsMessage = "Activating Facial Recognition";
+                break;
+
+            case "TEXT_DETECTION":
+                // Already here
+                if (ttsHelper != null) {
+                    ttsHelper.speak("You are already in Text Detection mode");
+                }
+                return;
+
+            case "COLOR_CUE":
+                intent = new Intent(this, ColorCueActivity.class);
+                ttsMessage = "Activating Color Cue";
+                break;
+
+            case "ASL_DETECTOR":
+                intent = new Intent(this, CommunicateActivity.class);
+                ttsMessage = "Activating ASL Detector";
+                break;
+
+            case "EMERGENCY_CONTACT":
+                intent = new Intent(this, EmergencyActivity.class);
+                ttsMessage = "Activating Emergency Contact";
+                break;
+                
+            case "HOME":
+                intent = new Intent(this, HomeActivity.class);
+                ttsMessage = "Going to Home";
+                break;
+                
+            case "SETTINGS":
+                intent = new Intent(this, SettingsActivity.class);
+                ttsMessage = "Opening Settings";
+                break;
+
+            case "NONE":
+                if (ttsHelper != null) {
+                    ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                }
+                return;
+
+            default:
+                Log.w(TAG, "Unknown feature: " + feature);
+                if (ttsHelper != null) {
+                    ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                }
+                return;
+        }
+
+        if (intent != null && ttsMessage != null) {
+            if (ttsHelper != null) {
+                ttsHelper.speak(ttsMessage);
+            }
+            final Intent finalIntent = intent;
+            if (feature.equalsIgnoreCase("HOME")) {
+                finalIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            }
+            
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                startActivity(finalIntent);
+                finish();
+            }, 1000);
+        }
     }
 }
