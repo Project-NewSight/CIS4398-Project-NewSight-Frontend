@@ -40,7 +40,7 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     private static final int PERMISSION_REQUEST_CODE = 200;
 
     // Backend WebSocket URL - UPDATE THIS TO MATCH YOUR BACKEND
-    private static final String SERVER_WS_URL = "ws://192.168.1.254:8000/ws";  // For Android emulator
+    private static final String SERVER_WS_URL = "ws://100.19.30.133/ws";  // For Android emulator
     // For real device, use: "ws://YOUR_BACKEND_IP:8000/ws"
 
     // Feature identifier for text detection

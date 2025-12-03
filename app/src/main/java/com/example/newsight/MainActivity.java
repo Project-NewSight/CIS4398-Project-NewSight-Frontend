@@ -230,7 +230,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             // Start location tracking
             startBackgroundLocation();
 
-            String wsUrl = "wss://cis4398-project-newsight-backend.onrender.com/ws/verify";
+            String wsUrl = "ws://100.19.30.133/ws/verify";
             wsManager = new WebSocketManager(wsUrl, this);
             wsManager.setFeature(currentFeature);
             wsManager.connect();
