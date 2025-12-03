@@ -14,21 +14,16 @@ import android.text.method.PasswordTransformationMethod;
 import android.text.method.HideReturnsTransformationMethod;
 import androidx.core.content.ContextCompat;
 
-import com.example.newsight.helpers.AuthApiClient;
-
 public class SignupActivity extends AppCompatActivity {
 
     private EditText etName, etEmail, etPassword, etConfirmPassword;
     private Button btnSignup;
     private TextView tvAlreadyHaveAccount, tvError;
-    private AuthApiClient authApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
-
-        authApiClient = new AuthApiClient();
 
         // Initialize views
         etName = findViewById(R.id.etName);
@@ -47,23 +42,23 @@ public class SignupActivity extends AppCompatActivity {
 
         // Focus listeners for label highlighting
         etName.setOnFocusChangeListener((v, hasFocus) -> {
-            tvNameLabel.setTextColor(ContextCompat.getColor(this, 
-                hasFocus ? R.color.primary : R.color.muted_foreground));
+            tvNameLabel.setTextColor(ContextCompat.getColor(this,
+                    hasFocus ? R.color.primary : R.color.muted_foreground));
         });
 
         etEmail.setOnFocusChangeListener((v, hasFocus) -> {
-            tvEmailLabel.setTextColor(ContextCompat.getColor(this, 
-                hasFocus ? R.color.primary : R.color.muted_foreground));
+            tvEmailLabel.setTextColor(ContextCompat.getColor(this,
+                    hasFocus ? R.color.primary : R.color.muted_foreground));
         });
 
         etPassword.setOnFocusChangeListener((v, hasFocus) -> {
-            tvPasswordLabel.setTextColor(ContextCompat.getColor(this, 
-                hasFocus ? R.color.primary : R.color.muted_foreground));
+            tvPasswordLabel.setTextColor(ContextCompat.getColor(this,
+                    hasFocus ? R.color.primary : R.color.muted_foreground));
         });
 
         etConfirmPassword.setOnFocusChangeListener((v, hasFocus) -> {
-            tvConfirmPasswordLabel.setTextColor(ContextCompat.getColor(this, 
-                hasFocus ? R.color.primary : R.color.muted_foreground));
+            tvConfirmPasswordLabel.setTextColor(ContextCompat.getColor(this,
+                    hasFocus ? R.color.primary : R.color.muted_foreground));
         });
 
         // Setup password toggles
@@ -126,35 +121,12 @@ public class SignupActivity extends AppCompatActivity {
             return;
         }
 
-        btnSignup.setEnabled(false);
-        Toast.makeText(this, "Creating account...", Toast.LENGTH_SHORT).show();
+        // TODO: Implement actual signup logic here
+        Toast.makeText(this, "Account created for " + name, Toast.LENGTH_SHORT).show();
 
-        authApiClient.register(email, name, password, new AuthApiClient.SimpleCallback() {
-            @Override
-            public void onSuccess() {
-                runOnUiThread(() -> {
-                    btnSignup.setEnabled(true);
-
-                    Toast.makeText(SignupActivity.this,
-                            "Account created! Please log in.",
-                            Toast.LENGTH_LONG).show();
-
-                    // Go back to login & pre-fill email
-                    Intent intent = new Intent(SignupActivity.this, MainActivity.class);
-                    intent.putExtra("prefill_email", email);
-                    startActivity(intent);
-                    finish();
-                });
-            }
-
-            @Override
-            public void onError(String error) {
-                runOnUiThread(() -> {
-                    btnSignup.setEnabled(true);
-                    tvError.setText("Sign up failed: " + error);
-                    tvError.setVisibility(android.view.View.VISIBLE);
-                });
-            }
-        });
+        // Navigate to loading screen
+        Intent intent = new Intent(SignupActivity.this, LoadingActivity.class);
+        startActivity(intent);
+        finish();
     }
 }
