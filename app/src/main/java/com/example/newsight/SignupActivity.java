@@ -14,16 +14,21 @@ import android.text.method.PasswordTransformationMethod;
 import android.text.method.HideReturnsTransformationMethod;
 import androidx.core.content.ContextCompat;
 
+import com.example.newsight.helpers.AuthApiClient;
+
 public class SignupActivity extends AppCompatActivity {
 
     private EditText etName, etEmail, etPassword, etConfirmPassword;
     private Button btnSignup;
     private TextView tvAlreadyHaveAccount, tvError;
+    private AuthApiClient authApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
+
+        authApiClient = new AuthApiClient();
 
         // Initialize views
         etName = findViewById(R.id.etName);
@@ -121,12 +126,35 @@ public class SignupActivity extends AppCompatActivity {
             return;
         }
 
-        // TODO: Implement actual signup logic here
-        Toast.makeText(this, "Account created for " + name, Toast.LENGTH_SHORT).show();
+        btnSignup.setEnabled(false);
+        Toast.makeText(this, "Creating account...", Toast.LENGTH_SHORT).show();
 
-        // Navigate to loading screen
-        Intent intent = new Intent(SignupActivity.this, LoadingActivity.class);
-        startActivity(intent);
-        finish();
+        authApiClient.register(email, name, password, new AuthApiClient.SimpleCallback() {
+            @Override
+            public void onSuccess() {
+                runOnUiThread(() -> {
+                    btnSignup.setEnabled(true);
+
+                    Toast.makeText(SignupActivity.this,
+                            "Account created! Please log in.",
+                            Toast.LENGTH_LONG).show();
+
+                    // Go back to login & pre-fill email
+                    Intent intent = new Intent(SignupActivity.this, MainActivity.class);
+                    intent.putExtra("prefill_email", email);
+                    startActivity(intent);
+                    finish();
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    btnSignup.setEnabled(true);
+                    tvError.setText("Sign up failed: " + error);
+                    tvError.setVisibility(android.view.View.VISIBLE);
+                });
+            }
+        });
     }
 }

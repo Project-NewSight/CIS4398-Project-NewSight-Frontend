@@ -35,7 +35,15 @@ import java.util.concurrent.Executors;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+// User account
+import com.example.newsight.helpers.AuthApiClient;
+import com.example.newsight.helpers.SessionManager;
+
+
 public class MainActivity extends AppCompatActivity implements WebSocketManager.WsListener {
+
+    private AuthApiClient authApiClient;
+    private SessionManager sessionManager;
 
     private static final int REQUEST_CAMERA_PERMISSION = 1001;
     private static final String TAG = "MainActivity";
@@ -92,6 +100,11 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         btnOpenCamera = findViewById(R.id.btnOpenCamera);
         btnTestHaptic = findViewById(R.id.btnTestHaptic);
         cameraContainer = findViewById(R.id.cameraContainer);
+
+        // Auth and session helper
+        authApiClient = new AuthApiClient();
+        sessionManager = new SessionManager(this);
+
 
         // Initialize link TextViews
         TextView tvForgotPassword = findViewById(R.id.tvForgotPassword);
@@ -283,41 +296,85 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             return;
         }
 
-        isLoggedIn = true;
-        Toast.makeText(this, "Logged in as " + email, Toast.LENGTH_SHORT).show();
+        btnLogin.setEnabled(false);
+        Toast.makeText(this, "Logging in...", Toast.LENGTH_SHORT).show();
 
-        // Save email to SharedPreferences
-        getSharedPreferences("UserPrefs", MODE_PRIVATE)
-                .edit()
-                .putString("user_email", email)
-                .apply();
+        authApiClient.login(email, password, new AuthApiClient.LoginCallback() {
+            @Override
+            public void onSuccess(String accessToken) {
 
-        // Hide login UI
-        etEmail.setVisibility(android.view.View.VISIBLE);
-        etPassword.setVisibility(android.view.View.VISIBLE);
-        btnLogin.setVisibility(android.view.View.VISIBLE);
-        btnOpenCamera.setVisibility(android.view.View.GONE);
 
-        // Start LoadingActivity (which will then navigate to HomeActivity)
-        Intent intent = new Intent(MainActivity.this, LoadingActivity.class);
-        startActivity(intent);
+                authApiClient.getMe(accessToken, new AuthApiClient.MeCallback() {
+                    @Override
+                    public void onSuccess(AuthApiClient.UserResponse user) {
+                        runOnUiThread(() -> {
 
-        // Clear fields so they are empty when user returns
-        etEmail.setText("");
-        etPassword.setText("");
+                            isLoggedIn = true;
 
-        // Initialize WebSocket connection
-        String wsUrl = "ws://100.19.30.133/ws/verify";
-        wsManager = new WebSocketManager(wsUrl, this);
 
-        currentFeature = "familiar_face";
-        wsManager.setFeature(currentFeature);
+                            sessionManager.saveSession(
+                                    accessToken,
+                                    user.userId,
+                                    user.email,
+                                    user.name
+                            );
 
-        wsManager.connect();
 
-        // Start location tracking after login
-        startBackgroundLocation();
+                            getSharedPreferences("UserPrefs", MODE_PRIVATE)
+                                    .edit()
+                                    .putString("user_email", user.email)
+                                    .apply();
+
+                            Toast.makeText(MainActivity.this,
+                                    "Logged in as " + user.email,
+                                    Toast.LENGTH_SHORT).show();
+
+
+                            etEmail.setText("");
+                            etPassword.setText("");
+
+
+                            Intent intent = new Intent(MainActivity.this, LoadingActivity.class);
+                            startActivity(intent);
+                            // Initialize WebSocket connection
+                            String wsUrl = "ws://100.19.30.133/ws/verify";
+                            wsManager = new WebSocketManager(wsUrl, this);
+                          
+                            currentFeature = "familiar_face";
+                            wsManager.setFeature(currentFeature);
+                            wsManager.connect();
+
+
+                            startBackgroundLocation();
+
+                            btnLogin.setEnabled(true);
+                        });
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        runOnUiThread(() -> {
+                            btnLogin.setEnabled(true);
+                            Toast.makeText(MainActivity.this,
+                                    "Failed to load profile: " + error,
+                                    Toast.LENGTH_LONG).show();
+                        });
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    btnLogin.setEnabled(true);
+                    Toast.makeText(MainActivity.this,
+                            "Login failed: " + error,
+                            Toast.LENGTH_LONG).show();
+                });
+            }
+        });
     }
+
 
     private void checkCameraPermission() {
         if (!isLoggedIn) {
