@@ -166,9 +166,9 @@ public class ObserveActivity extends AppCompatActivity {
                 break;
 
             case "TEXT_DETECTION":
-                intent = new Intent(ObserveActivity.this, DetectionActivity.class);
+                intent = new Intent(this, ReadTextActivity.class);
+                intent.putExtra("feature", "text_detection");
                 ttsMessage = "Activating Text Detection";
-                Toast.makeText(this, "Opening Observe", Toast.LENGTH_SHORT).show();
                 break;
 
             case "COLOR_CUE":

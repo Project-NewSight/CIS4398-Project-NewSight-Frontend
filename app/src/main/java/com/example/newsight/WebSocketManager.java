@@ -82,7 +82,7 @@ public class WebSocketManager {
     }
 
     /** Preferred: control JSON then binary JPEG */
-    public void sendFrame(@NonNull byte[] frameBytes, @NonNull String feature) {
+    public void sendFrame(byte[] frameBytes, @NonNull String feature) {
         if (!connected || webSocket == null) {
             Log.d(TAG, "Skipping frame — not connected.");
             return;
@@ -96,18 +96,20 @@ public class WebSocketManager {
             if (currentFeature == null || !currentFeature.equals(feature)) {
                 currentFeature = feature;
             }
+            // Android Base64
+            String b64 = Base64.encodeToString(frameBytes, Base64.NO_WRAP);
 
-            String ctl = buildFrameControl(feature, frameBytes.length);
-            boolean okCtl = webSocket.send(ctl);
-            if (!okCtl) {
-                Log.w(TAG, "Failed to send frame control JSON");
-                return;
-            }
+            JSONObject obj = new JSONObject();
+            obj.put("type", "frame");
+            obj.put("feature", feature);
+            obj.put("image_b64", b64);
+            obj.put("len", frameBytes.length);
 
-            boolean okBin = webSocket.send(ByteString.of(frameBytes));
-            if (!okBin) {
-                Log.w(TAG, "Failed to send binary frame.");
+            boolean sent = webSocket.send(obj.toString());
+            if (!sent) {
+                Log.w(TAG, "Failed to send frame.");
             } else {
+                framesSent.incrementAndGet();
                 Log.d(TAG, "Sent frame: feature=" + feature + " (" + frameBytes.length + " bytes)");
             }
         } catch (Exception e) {
@@ -187,32 +189,10 @@ public class WebSocketManager {
             if (listener != null) listener.onConnectionStatus(true);
         }
 
-        /*@Override
-        public void onMessage(@NonNull WebSocket ws, @NonNull String text) {
+        @Override
+        public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
             Log.d(TAG, "recv(text): " + text);
             if (listener != null) listener.onResultsReceived(text);
-        }
-        */
-
-
-        @Override
-        public void onMessage(@NonNull WebSocket ws, @NonNull String text) {
-            try {
-                org.json.JSONObject obj = new org.json.JSONObject(text);
-
-                boolean match = obj.optBoolean("match", false);
-                String name = obj.optString("contactName",
-                        obj.optString("name", "Unknown"));
-
-
-                Log.d(TAG, "rec(text) match: " + match + ", contactName: " + name);
-
-
-                if (listener != null) listener.onResultsReceived(obj.toString());
-
-            } catch (Exception e) {
-                Log.d(TAG, "rec(text) (non-JSON)");
-            }
         }
 
         @Override
