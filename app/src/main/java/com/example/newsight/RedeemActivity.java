@@ -2,6 +2,7 @@ package com.example.newsight;
 
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
@@ -19,6 +20,7 @@ public class RedeemActivity extends AppCompatActivity {
 
     private RadioGroup radioGroupRewards;
     private Button buttonConfirmRedemption;
+    private ImageButton buttonBack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +35,10 @@ public class RedeemActivity extends AppCompatActivity {
         // Hook up views
         radioGroupRewards = findViewById(R.id.radioGroupRewards);
         buttonConfirmRedemption = findViewById(R.id.buttonConfirmRedemption);
+        buttonBack = findViewById(R.id.buttonBack);
+
+        // Back button to navigate back
+        buttonBack.setOnClickListener(view -> finish());
 
         // Handle "Confirm Redemption"
         buttonConfirmRedemption.setOnClickListener(view -> handleRedemption());

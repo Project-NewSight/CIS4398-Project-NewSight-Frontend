@@ -3,6 +3,7 @@ package com.example.newsight;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,6 +21,7 @@ public class RewardsActivity extends AppCompatActivity {
     private TextView textCurrentValue;
     private TextView textAwayFromNext;
     private Button buttonRedeemPoints;
+    private ImageButton buttonBack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +38,17 @@ public class RewardsActivity extends AppCompatActivity {
         textCurrentValue = findViewById(R.id.textCurrentValue);
         textAwayFromNext = findViewById(R.id.textAwayFromNext);
         buttonRedeemPoints = findViewById(R.id.buttonRedeemPoints);
+        buttonBack = findViewById(R.id.buttonBack);
 
         updateSummaryUI();
+
+        // Back button to navigate to home screen
+        buttonBack.setOnClickListener(view -> {
+            Intent intent = new Intent(RewardsActivity.this, HomeActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+        });
 
         // When user taps "Redeem Points"
         buttonRedeemPoints.setOnClickListener(view -> {

@@ -7,6 +7,18 @@
     android:background="@color/background"
     android:padding="16dp">
 
+    <!-- Back arrow -->
+    <ImageButton
+        android:id="@+id/buttonBack"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_arrow_left_s"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Back"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:tint="@color/foreground" />
+
     <!-- Title -->
     <TextView
         android:id="@+id/textRewardsTitle"
@@ -28,7 +40,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="@android:color/white"
+        android:background="@color/card"
         android:elevation="2dp"
         android:layout_marginTop="16dp"
         app:layout_constraintTop_toBottomOf="@id/textRewardsTitle"
@@ -95,7 +107,7 @@
             android:text="How you earn points"
             android:textStyle="bold"
             android:textSize="16sp"
-            android:textColor="@android:color/black" />
+            android:textColor="@color/foreground" />
 
         <TextView
             android:id="@+id/textHowYouEarnBody"
@@ -104,7 +116,7 @@
             android:layout_marginTop="8dp"
             android:textSize="14sp"
             android:textColor="@color/muted_foreground"
-            android:text="• Start and finish a navigation session: +50 pts\n• Use object detection during your walk: +40 pts\n• Use transit assist for a full trip: +60 pts\n• Daily check-in with the app: +10 pts\n• Maintain a 5-day weekly streak: +100 pts\n• Send feedback or report an issue: +20 pts" />
+            android:text="• Start and finish a navigation session: +50 pts\n• Use object detection during your walk: +40 pts\n• Use transit assist for a full trip: +60 pts\n• Daily check-in with the app: +10 pts\n• Maintain a 5-day weekly streak: +100 pts\n• Send feedback or report an issue: +20 pts.\n• Every 2000 you unlock new level" />
     </LinearLayout>
 
     <!-- Gift card tiers -->
@@ -114,7 +126,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="@android:color/white"
+        android:background="@color/card"
         android:elevation="2dp"
         android:layout_marginTop="24dp"
         app:layout_constraintTop_toBottomOf="@id/layoutHowYouEarn"
@@ -128,7 +140,7 @@
             android:text="Gift card reward tiers"
             android:textStyle="bold"
             android:textSize="16sp"
-            android:textColor="@android:color/black" />
+            android:textColor="@color/foreground" />
 
         <TextView
             android:id="@+id/textGiftCardBody"
@@ -147,6 +159,8 @@
         android:layout_height="wrap_content"
         android:text="Redeem Points"
         android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/primary"
         android:layout_marginTop="32dp"
         android:layout_marginBottom="16dp"
         app:layout_constraintTop_toBottomOf="@id/layoutGiftCardTiers"

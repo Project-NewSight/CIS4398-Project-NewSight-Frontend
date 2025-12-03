@@ -6,6 +6,18 @@
     android:background="@color/background"
     android:padding="16dp">
 
+    <!-- Back arrow -->
+    <ImageButton
+        android:id="@+id/buttonBack"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_arrow_left_s"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Back"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:tint="@color/foreground" />
+
     <!-- Title -->
     <TextView
         android:id="@+id/textRedeemTitle"

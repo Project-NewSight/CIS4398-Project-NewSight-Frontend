@@ -30,9 +30,10 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-        TextView textRewardsPoints = findViewById(R.id.textRewardsPoints);
-        textRewardsPoints.setOnClickListener((v) -> {
+        FrameLayout rewardCard = findViewById(R.id.cardRewards);
+        rewardCard.setOnClickListener((v) -> {
             Intent intent = new Intent(HomeActivity.this, RewardsActivity.class);
+            intent.putExtra("current_points", 1250);
             startActivity(intent);
         });
 
@@ -123,15 +124,20 @@ public class HomeActivity extends AppCompatActivity {
             tvDate.setText(currentDate);
         }
 
-        if (textPoints != null) textPoints.setText("0");
-        if (textLevel != null) textLevel.setText("0");
-        if (textStreak != null) textStreak.setText("0 day streak!");
+        if (textPoints != null) textPoints.setText("1,250");
+        if (textLevel != null) textLevel.setText("1");
+        if (textStreak != null) textStreak.setText("5 day streak!");
 
-        // Initialize progress bar to 0 width
+        // Initialize progress bar to 62.5% (1,250/2,000)
         if (progressLevel != null) {
-            android.widget.FrameLayout.LayoutParams params = (android.widget.FrameLayout.LayoutParams) progressLevel.getLayoutParams();
-            params.width = 0;
-            progressLevel.setLayoutParams(params);
+            android.view.View progressContainer = (android.view.View) progressLevel.getParent();
+            progressContainer.post(() -> {
+                int parentWidth = progressContainer.getWidth();
+                int progressWidth = (int) (parentWidth * 0.625); // 1,250/2,000 = 62.5%
+                android.widget.FrameLayout.LayoutParams params = (android.widget.FrameLayout.LayoutParams) progressLevel.getLayoutParams();
+                params.width = progressWidth;
+                progressLevel.setLayoutParams(params);
+            });
         }
 
         // Apply staggered animations
@@ -182,10 +188,11 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Placeholder listeners for new buttons
-        if (btnReadText != null) {
-            btnReadText.setOnClickListener(v -> Toast.makeText(this, "Read Text clicked", Toast.LENGTH_SHORT).show());
-        }
+        btnReadText.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, ReadTextActivity.class);
+            intent.putExtra("feature", "text_detection");
+            startActivity(intent);
+        });
         if (btnColors != null) {
             btnColors.setOnClickListener(v -> Toast.makeText(this, "Colors clicked", Toast.LENGTH_SHORT).show());
         }
@@ -269,7 +276,7 @@ public class HomeActivity extends AppCompatActivity {
 
         // Connect location WebSocket
         locationWebSocketHelper = new com.example.newsight.helpers.LocationWebSocketHelper(
-                "wss://cis4398-project-newsight-backend.onrender.com/location/ws", sessionId);
+                "ws://192.168.1.254:8000/location/ws", sessionId);
         locationWebSocketHelper.connect();
     }
 
@@ -293,26 +300,25 @@ public class HomeActivity extends AppCompatActivity {
         // Map feature names to activities
         switch (feature.toUpperCase()) {
             case "NAVIGATION":
-                // Check if we got full directions from backend
-                JSONObject directionsObj = extractedParams.optJSONObject("directions");
-
                 intent = new Intent(HomeActivity.this, NavigateActivity.class);
-                if (directionsObj != null) {
-                    // We have full directions! Pass them to NavigateActivity
-                    intent.putExtra("auto_start_navigation", true);
-                    intent.putExtra("directions_json", directionsObj.toString());
-                    intent.putExtra("session_id", sessionId);
-                    ttsMessage = "Starting navigation";
-                    Log.d(TAG, "✅ Passing full directions to NavigateActivity");
+
+                // Pass the FULL extracted_params JSON so NavigateActivity can parse everything
+                intent.putExtra("auto_start_navigation", true);
+                intent.putExtra("full_navigation_response", extractedParams.toString());
+                intent.putExtra("session_id", sessionId);
+
+                // Check navigation type for appropriate TTS message
+                String navType = extractedParams.optString("navigation_type", "walking");
+                boolean isTransit = extractedParams.optBoolean("is_transit_navigation", false);
+
+                if (isTransit || "transit".equals(navType)) {
+                    ttsMessage = "Starting transit navigation";
+                    Log.d(TAG, "✅ Passing TRANSIT navigation to NavigateActivity");
                 } else {
-                    // No directions yet, just pass the destination
-                    String destination = extractedParams.optString("destination", null);
-                    intent.putExtra("auto_start_navigation", true);
-                    intent.putExtra("destination", destination);
-                    intent.putExtra("session_id", sessionId);
-                    ttsMessage = "Activating navigation";
-                    Log.d(TAG, "⚠️ Only passing destination to NavigateActivity");
+                    ttsMessage = "Starting walking navigation";
+                    Log.d(TAG, "✅ Passing WALKING navigation to NavigateActivity");
                 }
+
                 Toast.makeText(this, "Opening Navigation", Toast.LENGTH_SHORT).show();
                 break;
 
@@ -330,9 +336,10 @@ public class HomeActivity extends AppCompatActivity {
                 break;
 
             case "TEXT_DETECTION":
-                intent = new Intent(HomeActivity.this, DetectionActivity.class);
+                intent = new Intent(HomeActivity.this, ReadTextActivity.class);
+                intent.putExtra("feature", "text_detection");
                 ttsMessage = "Activating Text Detection";
-                Toast.makeText(this, "Opening Observe", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Opening Read Text", Toast.LENGTH_SHORT).show();
                 break;
 
             case "COLOR_CUE":
