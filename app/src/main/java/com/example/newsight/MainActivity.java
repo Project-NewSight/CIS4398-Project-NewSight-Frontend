@@ -307,7 +307,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         etPassword.setText("");
 
         // Initialize WebSocket connection
-        String wsUrl = "ws://192.168.1.254:8000/ws/verify";
+        String wsUrl = "ws://100.19.30.133/ws/verify";
         wsManager = new WebSocketManager(wsUrl, this);
 
         currentFeature = "familiar_face";
