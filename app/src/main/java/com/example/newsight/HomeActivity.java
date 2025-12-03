@@ -11,6 +11,8 @@ import android.util.Log;
 import android.widget.FrameLayout;
 import android.content.Intent;
 import android.widget.Toast;
+import android.widget.TextView;
+
 
 import org.json.JSONObject;
 
@@ -28,6 +30,12 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        TextView textRewardsPoints = findViewById(R.id.textRewardsPoints);
+        textRewardsPoints.setOnClickListener((v) -> {
+            Intent intent = new Intent(HomeActivity.this, RewardsActivity.class);
+            startActivity(intent);
+        });
+
 
         // Generate session ID for this session
         sessionId = java.util.UUID.randomUUID().toString();
