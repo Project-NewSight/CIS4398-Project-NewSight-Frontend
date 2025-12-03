@@ -62,6 +62,7 @@ public class ObstacleActivity extends AppCompatActivity {
         voiceCommandHelper = new VoiceCommandHelper(this);
         voiceCommandHelper.setSessionId(sessionId);
         ttsHelper = new TtsHelper(this);
+        overlayView.setTtsHelper(ttsHelper);
 
         setupVoiceCommands();
         setupBottomNavigation();

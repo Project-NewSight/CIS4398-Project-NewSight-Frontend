@@ -37,8 +37,11 @@ public class OverlayView extends View {
     private int imageHeight = 0;  // backend input height
 
     private String summaryMessage = "";
+    private String lastSpokenSummary = ""; // Track last spoken message to avoid repetition
     private long hudLatencyMs = 0L;
     private float hudFps = 0f;
+
+    private TtsHelper ttsHelper; // TTS helper for speaking summary messages
 
     public OverlayView(Context context) {
         super(context);
@@ -73,6 +76,14 @@ public class OverlayView extends View {
     }
 
     /**
+     * Set the TtsHelper instance for speaking summary messages.
+     * This should be called from the Activity that creates this OverlayView.
+     */
+    public void setTtsHelper(TtsHelper ttsHelper) {
+        this.ttsHelper = ttsHelper;
+    }
+
+    /**
      * Called from the detector thread (via post()) when new results are available.
      * All bbox coordinates are normalized [0,1] on backend input image; we convert
      * them into absolute image coords here.
@@ -90,6 +101,12 @@ public class OverlayView extends View {
         this.summaryMessage = summaryMessage != null ? summaryMessage : "";
         this.hudLatencyMs = latencyMs;
         this.hudFps = fps;
+
+        // Speak the summary message if it has changed and TtsHelper is available
+        if (ttsHelper != null && !this.summaryMessage.isEmpty() && !this.summaryMessage.equals(lastSpokenSummary)) {
+            ttsHelper.speak(this.summaryMessage);
+            lastSpokenSummary = this.summaryMessage;
+        }
 
         lastBoxes.clear();
         lastBoxes.addAll(boxes);
