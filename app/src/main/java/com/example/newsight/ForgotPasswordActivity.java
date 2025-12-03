@@ -51,7 +51,15 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             return;
         }
 
-        // TODO: Implement actual password reset logic here
+        // FAKE AUTHENTICATION LOGIC
+        android.content.SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String storedEmail = prefs.getString("user_email", "");
+
+        if (storedEmail.isEmpty() || !storedEmail.equalsIgnoreCase(email)) {
+            Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         Toast.makeText(this, "Reset link sent to " + email, Toast.LENGTH_LONG).show();
 
         // Go back to login after a short delay
