@@ -189,16 +189,9 @@ public class WebSocketManager {
             if (listener != null) listener.onConnectionStatus(true);
         }
 
-        /*@Override
-        public void onMessage(@NonNull WebSocket ws, @NonNull String text) {
-            Log.d(TAG, "recv(text): " + text);
-            if (listener != null) listener.onResultsReceived(text);
-        }
-        */
-
-
         @Override
         public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
+            Log.d(TAG, "recv(text): " + text);
             if (listener != null) listener.onResultsReceived(text);
         }
 
