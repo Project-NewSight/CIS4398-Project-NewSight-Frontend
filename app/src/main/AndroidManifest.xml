@@ -36,6 +36,16 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.NewSight">
 
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <!-- Launcher Activity -->
         <!-- ===== Launcher Activity ===== -->
         <activity
@@ -79,6 +89,8 @@
         <!-- ===== Emergency Features ===== -->
         <activity android:name=".EmergencyActivity" android:exported="true" />
         <activity android:name=".EmergencySetupActivity" android:exported="true" />
+        <activity android:name=".RedeemActivity" android:exported="false" />
+        <activity android:name=".RewardsActivity" android:exported="false" />
 
         <!-- ===== Settings & Profile ===== -->
         <activity android:name=".SettingsActivity" android:exported="true" />

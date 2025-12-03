@@ -11,6 +11,8 @@ import android.util.Log;
 import android.widget.FrameLayout;
 import android.content.Intent;
 import android.widget.Toast;
+import android.widget.TextView;
+
 
 import org.json.JSONObject;
 
@@ -28,6 +30,13 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        FrameLayout rewardCard = findViewById(R.id.cardRewards);
+        rewardCard.setOnClickListener((v) -> {
+            Intent intent = new Intent(HomeActivity.this, RewardsActivity.class);
+            intent.putExtra("current_points", 1250);
+            startActivity(intent);
+        });
+
 
         // Generate session ID for this session
         sessionId = java.util.UUID.randomUUID().toString();
@@ -115,15 +124,20 @@ public class HomeActivity extends AppCompatActivity {
             tvDate.setText(currentDate);
         }
 
-        if (textPoints != null) textPoints.setText("0");
-        if (textLevel != null) textLevel.setText("0");
-        if (textStreak != null) textStreak.setText("0 day streak!");
+        if (textPoints != null) textPoints.setText("1,250");
+        if (textLevel != null) textLevel.setText("1");
+        if (textStreak != null) textStreak.setText("5 day streak!");
 
-        // Initialize progress bar to 0 width
+        // Initialize progress bar to 62.5% (1,250/2,000)
         if (progressLevel != null) {
-            android.widget.FrameLayout.LayoutParams params = (android.widget.FrameLayout.LayoutParams) progressLevel.getLayoutParams();
-            params.width = 0;
-            progressLevel.setLayoutParams(params);
+            android.view.View progressContainer = (android.view.View) progressLevel.getParent();
+            progressContainer.post(() -> {
+                int parentWidth = progressContainer.getWidth();
+                int progressWidth = (int) (parentWidth * 0.625); // 1,250/2,000 = 62.5%
+                android.widget.FrameLayout.LayoutParams params = (android.widget.FrameLayout.LayoutParams) progressLevel.getLayoutParams();
+                params.width = progressWidth;
+                progressLevel.setLayoutParams(params);
+            });
         }
 
         // Apply staggered animations
