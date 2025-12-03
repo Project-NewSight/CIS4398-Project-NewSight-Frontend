@@ -31,8 +31,10 @@ public class CommunicateActivity extends AppCompatActivity {
 
         FrameLayout btnSignTranslation = findViewById(R.id.btnSignTranslation);
         btnSignTranslation.setOnClickListener(v -> {
-            Intent intent = new Intent(this, SignTranslationActivity.class);
+            Intent intent = new Intent(CommunicateActivity.this, CameraActivity.class);
+            intent.putExtra("feature", "asl_detection");  // Tell backend to enable ASL model
             startActivity(intent);
         });
+
     }
 }

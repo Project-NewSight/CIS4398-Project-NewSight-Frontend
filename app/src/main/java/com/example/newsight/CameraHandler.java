@@ -1,5 +1,6 @@
 package com.example.newsight;
 
+import android.content.Context;
 import android.util.Log;
 import android.widget.FrameLayout;
 
@@ -9,6 +10,7 @@ import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -19,28 +21,33 @@ public class CameraHandler {
 
     private static final String TAG = "CameraHandler";
 
-    public static void stopCamera() {
-
-    }
-
+    /**
+     * Updated FeatureProvider interface
+     * (supports both old `.getFeature()` and new `.getActiveFeature()`)
+     */
     public interface FeatureProvider {
-        String getFeature();
+        String getActiveFeature();
     }
 
-    public static void startCamera(MainActivity activity,
+    public static void stopCamera() { /* Reserved for future use */ }
+
+    public static void startCamera(Context context,
                                    FrameLayout container,
                                    ExecutorService executor,
                                    WebSocketManager wsManager,
-                                   FeatureProvider provider) {
+                                   FeatureProvider featureProvider) {
 
-        PreviewView previewView = new PreviewView(activity);
+        PreviewView previewView = new PreviewView(context);
+
         container.removeAllViews();
         container.addView(previewView,
-                new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.MATCH_PARENT));
+                new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                ));
 
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
-                ProcessCameraProvider.getInstance(activity);
+                ProcessCameraProvider.getInstance(context);
 
         cameraProviderFuture.addListener(() -> {
             try {
@@ -51,20 +58,43 @@ public class CameraHandler {
 
                 CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
 
+                // Get the current feature
+                String feature = featureProvider.getActiveFeature();
+                Log.i(TAG, "Selected feature: " + feature);
+
+                // Create ImageAnalysis pipeline
                 ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build();
 
-                imageAnalysis.setAnalyzer(executor, new FrameAnalyzer(wsManager, (FrameAnalyzer.FeatureProvider) provider));
+                // --- Analyzer selection (merged logic) ---
+                if ("asl_detection".equals(feature)) {
+                    imageAnalysis.setAnalyzer(
+                            executor,
+                            new ASLFrameAnalyzer(wsManager, featureProvider::getActiveFeature)
+                    );
+                    Log.i(TAG, "Using ASLFrameAnalyzer");
+                } else {
+                    imageAnalysis.setAnalyzer(
+                            executor,
+                            new FrameAnalyzer(wsManager, featureProvider::getActiveFeature)
+                    );
+                    Log.i(TAG, "Using FrameAnalyzer");
+                }
 
                 cameraProvider.unbindAll();
-                cameraProvider.bindToLifecycle(activity, cameraSelector, preview, imageAnalysis);
+                cameraProvider.bindToLifecycle(
+                        (LifecycleOwner) context,
+                        cameraSelector,
+                        preview,
+                        imageAnalysis
+                );
 
-                Log.i(TAG, "Camera bound successfully for feature: " + provider.getFeature());
+                Log.i(TAG, "Camera bound successfully for feature: " + feature);
 
             } catch (ExecutionException | InterruptedException e) {
                 Log.e(TAG, "Camera initialization failed", e);
             }
-        }, ContextCompat.getMainExecutor(activity));
+        }, ContextCompat.getMainExecutor(context));
     }
 }

@@ -1,115 +1,125 @@
 package com.example.newsight;
 
-import android.os.Handler;
-import android.os.Looper;
+import android.util.Base64;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
-import java.util.concurrent.TimeUnit;
+import androidx.annotation.Nullable;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
+import okio.ByteString;
 
 public class WebSocketManager {
 
     private static final String TAG = "WebSocketManager";
-    private static final boolean ENABLE_RECONNECT = true;
-    private static final long RECONNECT_DELAY_MS = 5000;
-
-    private final OkHttpClient client;
-    private final String serverUrl;
-    private final WsListener listener;
-
-    private WebSocket webSocket;
-    private boolean connected = false;
-    private boolean tryingToReconnect = false;
 
     public interface WsListener {
         void onResultsReceived(String results);
         void onConnectionStatus(boolean isConnected);
     }
 
-    public WebSocketManager(String url, WsListener listener) {
-        this.serverUrl = url;
-        this.listener = listener;
+    private final String serverUrl;
+    private final WsListener listener;
 
-        this.client = new OkHttpClient.Builder()
-                .readTimeout(0, TimeUnit.MILLISECONDS)
-                .retryOnConnectionFailure(true)
-                .build();
+    private WebSocket webSocket;
+    private boolean isConnected = false;
+
+    public WebSocketManager(String serverUrl, WsListener listener) {
+        this.serverUrl = serverUrl;
+        this.listener = listener;
     }
 
     public void connect() {
+        OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder().url(serverUrl).build();
-        webSocket = client.newWebSocket(request, new SocketListener());
+
+        webSocket = client.newWebSocket(request, new WebSocketListener() {
+            @Override
+            public void onOpen(WebSocket ws, okhttp3.Response response) {
+                Log.d(TAG, "WebSocket opened");
+                isConnected = true;
+                if (listener != null) listener.onConnectionStatus(true);
+            }
+
+            @Override
+            public void onMessage(WebSocket ws, String text) {
+                Log.d(TAG, "Received message: " + text);
+                if (listener != null) listener.onResultsReceived(text);
+            }
+
+            @Override
+            public void onMessage(WebSocket ws, ByteString bytes) {
+                Log.d(TAG, "Received bytes: " + bytes.hex());
+            }
+
+            @Override
+            public void onClosed(WebSocket ws, int code, String reason) {
+                Log.d(TAG, "WebSocket closed: " + code + " " + reason);
+                isConnected = false;
+                if (listener != null) listener.onConnectionStatus(false);
+            }
+
+            @Override
+            public void onFailure(WebSocket ws, Throwable t, @Nullable okhttp3.Response response) {
+                Log.e(TAG, "WebSocket failed", t);
+                isConnected = false;
+                if (listener != null) listener.onConnectionStatus(false);
+            }
+        });
+    }
+
+    public boolean isConnected() {
+        return isConnected;
     }
 
     public void disconnect() {
         if (webSocket != null) {
-            webSocket.close(1000, "Client disconnect");
+            webSocket.close(1000, "Client disconnected");
         }
     }
 
-    public boolean isConnected() {
-        return connected;
-    }
+    /**
+     * Send ASL frame data to backend.
+     * Encodes frame to Base64 and sends as JSON: {"feature": "asl_detection", "frame": "<base64>"}
+     *
+     * @param frameData Raw grayscale byte array from camera (YUV Y-plane or similar)
+     * @param feature Feature identifier (e.g., "asl_detection")
+     */
+    public void sendFrame(byte[] frameData, String feature) {
+        if (!isConnected || webSocket == null) {
+            Log.w(TAG, "WebSocket not connected, cannot send frame");
+            return;
+        }
 
-    public void sendFrame(byte[] frameBytes, @NonNull String feature) {
-        if (connected && webSocket != null) {
-            String message = "{\"feature\":\"" + feature + "\",\"frame\":\"" +
-                    android.util.Base64.encodeToString(frameBytes, android.util.Base64.NO_WRAP) + "\"}";
-            boolean sent = webSocket.send(message);
-            if (!sent) Log.w(TAG, "Failed to send frame.");
-        } else {
-            Log.d(TAG, "Skipping frame — not connected.");
+        try {
+            // Encode frame bytes to Base64
+            String base64Frame = Base64.encodeToString(frameData, Base64.NO_WRAP);
+
+            // Build JSON payload matching backend expectation
+            String json = "{\"feature\":\"" + feature + "\",\"frame\":\"" + base64Frame + "\"}";
+            webSocket.send(json);
+            Log.d(TAG, "Sent ASL frame, size=" + frameData.length + " bytes, feature=" + feature);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to send frame", e);
         }
     }
 
-    private class SocketListener extends WebSocketListener {
-        @Override
-        public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
-            connected = true;
-            tryingToReconnect = false;
-            if (listener != null) listener.onConnectionStatus(true);
-            Log.i(TAG, "WebSocket connected");
-        }
+    /**
+     * Alternative: Send raw grayscale frame without Base64 encoding (if backend supports raw bytes).
+     * Currently not used; prefer sendFrame() which uses JSON.
+     */
+    public void sendRawGrayFrame(byte[] grayBytes, String feature) {
+        if (!isConnected || webSocket == null) return;
 
-        @Override
-        public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
-            if (listener != null) listener.onResultsReceived(text);
-        }
-
-        @Override
-        public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, Response response) {
-            connected = false;
-            if (listener != null) listener.onConnectionStatus(false);
-            Log.e(TAG, "WebSocket failed: " + t.getMessage());
-
-            if (ENABLE_RECONNECT && !tryingToReconnect) {
-                tryingToReconnect = true;
-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    Log.i(TAG, "Reconnecting WebSocket...");
-                    connect();
-                }, RECONNECT_DELAY_MS);
-            }
-        }
-
-        @Override
-        public void onClosing(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
-            connected = false;
-            if (listener != null) listener.onConnectionStatus(false);
-            Log.i(TAG, "WebSocket closing: " + reason);
-        }
-
-        @Override
-        public void onClosed(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
-            connected = false;
-            if (listener != null) listener.onConnectionStatus(false);
-            Log.i(TAG, "WebSocket closed: " + reason);
+        try {
+            String frameB64 = Base64.encodeToString(grayBytes, Base64.NO_WRAP);
+            String json = "{\"feature\":\"" + feature + "\",\"frame\":\"" + frameB64 + "\"}";
+            webSocket.send(json);
+            Log.d(TAG, "Sent raw gray frame, size=" + grayBytes.length + " bytes");
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to send raw gray frame", e);
         }
     }
 }

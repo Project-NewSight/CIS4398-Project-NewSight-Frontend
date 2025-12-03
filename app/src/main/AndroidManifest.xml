@@ -22,9 +22,11 @@
     <!-- Vibration -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Optional Bluetooth permissions (future features) -->
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" tools:ignore="BluetoothPermission" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" tools:ignore="BluetoothPermission" />
+    <!-- Optional Bluetooth -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"
+        tools:ignore="BluetoothPermission" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+        tools:ignore="BluetoothPermission" />
 
     <!-- ===== Application Section ===== -->
     <application
@@ -74,6 +76,7 @@
         <!-- Observe / Detection -->
         <activity android:name=".ObserveActivity" android:exported="true" />
         <activity android:name=".DetectionActivity" android:exported="true" />
+
         <activity
             android:name=".ObstacleActivity"
             android:exported="true"

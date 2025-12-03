@@ -23,9 +23,6 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
     private byte[] nv21Buffer = null; // reuse buffer
     private long lastLogTime = 0;
 
-    public interface FeatureProvider {
-        String getActiveFeature();
-    }
 
     public FrameAnalyzer(WebSocketManager manager, FeatureProvider provider) {
         this.wsManager = manager;
@@ -45,23 +42,23 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
             int width = image.getWidth();
             int height = image.getHeight();
 
-            // Reuse buffer
-            int requiredLength = width * height * 3 / 2; // NV21 size
+            // Reuse buffer for NV21
+            int requiredLength = width * height * 3 / 2;
             if (nv21Buffer == null || nv21Buffer.length < requiredLength) {
                 nv21Buffer = new byte[requiredLength];
             }
 
             yuv420ToNv21(image, nv21Buffer);
 
-            jpegStream.reset(); // reuse ByteArrayOutputStream
+            jpegStream.reset();
             YuvImage yuvImage = new YuvImage(nv21Buffer, ImageFormat.NV21, width, height, null);
-            yuvImage.compressToJpeg(new Rect(0, 0, width, height), 40, jpegStream);
+            yuvImage.compressToJpeg(new Rect(0, 0, width, height), 85, jpegStream);
 
             byte[] jpegBytes = jpegStream.toByteArray();
-
             String activeFeature = featureProvider.getActiveFeature();
 
             if (wsManager != null && wsManager.isConnected() && activeFeature != null) {
+                // Send frames as JSON + Base64
                 wsManager.sendFrame(jpegBytes, activeFeature);
             } else {
                 long now = System.currentTimeMillis();
@@ -70,6 +67,7 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
                     lastLogTime = now;
                 }
             }
+
         } catch (Exception e) {
             Log.e(TAG, "Frame conversion failed", e);
         } finally {
@@ -79,21 +77,51 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
     private void yuv420ToNv21(Image image, byte[] out) {
         Image.Plane[] planes = image.getPlanes();
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        int offset = 0;
+
+        // Copy Y plane
         ByteBuffer yBuffer = planes[0].getBuffer();
-        ByteBuffer uBuffer = planes[1].getBuffer();
-        ByteBuffer vBuffer = planes[2].getBuffer();
+        int rowStrideY = planes[0].getRowStride();
+        int pixelStrideY = planes[0].getPixelStride();
 
-        yBuffer.rewind();
-        uBuffer.rewind();
-        vBuffer.rewind();
+        for (int row = 0; row < height; row++) {
+            int length = width;
+            yBuffer.position(row * rowStrideY);
+            if (pixelStrideY == 1) {
+                yBuffer.get(out, offset, length);
+                offset += length;
+            } else {
+                for (int col = 0; col < width; col++) {
+                    out[offset++] = yBuffer.get(row * rowStrideY + col * pixelStrideY);
+                }
+            }
+        }
 
-        int ySize = yBuffer.remaining();
-        yBuffer.get(out, 0, ySize);
+        // Copy UV planes into NV21 format (V then U)
+        int chromaHeight = height / 2;
 
-        int uvPos = ySize;
-        while (vBuffer.hasRemaining() && uBuffer.hasRemaining()) {
-            out[uvPos++] = vBuffer.get();
-            out[uvPos++] = uBuffer.get();
+        for (int planeIndex = 1; planeIndex <= 2; planeIndex++) {
+            ByteBuffer buffer = planes[planeIndex].getBuffer();
+            int rowStride = planes[planeIndex].getRowStride();
+            int pixelStride = planes[planeIndex].getPixelStride();
+
+            for (int row = 0; row < chromaHeight; row++) {
+                for (int col = 0; col < width / 2; col++) {
+                    int bufferIndex = row * rowStride + col * pixelStride;
+                    byte value = buffer.get(bufferIndex);
+
+                    // Plane 1 = U, Plane 2 = V → NV21 = V first, then U
+                    if (planeIndex == 2) {
+                        out[offset++] = value; // V
+                    } else {
+                        out[offset++] = value; // U
+                    }
+                }
+            }
         }
     }
+
 }

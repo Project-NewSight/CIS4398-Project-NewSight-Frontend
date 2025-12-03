@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -31,12 +30,15 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     private ExecutorService cameraExecutor;
     private WebSocketManager wsManager;
 
+    // Feature
+    private String activeFeature = "familiar_face";   // default behavior from repo
+    private FeatureProvider featureProvider;
+
+    // Backend control
     private boolean backendEnabled = true;
-    private String activeFeature = null;
 
-    private final String SERVER_WS_URL = "wss://your-backend-url";
-
-    private Button btnNavigation, btnASL, btnObjectDetection, btnStopFeature;
+    // Server URL can now come from config file (local enhancement)
+    private final String SERVER_WS_URL = config.WEBSOCKET_URL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,43 +48,75 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
         previewView = findViewById(R.id.previewView);
         cameraExecutor = Executors.newSingleThreadExecutor();
 
+        // Provide the feature to analyzers
+        featureProvider = () -> activeFeature;
 
-        btnNavigation.setOnClickListener(v -> setActiveFeature("navigation"));
-        btnASL.setOnClickListener(v -> setActiveFeature("asl_detection"));
-        btnObjectDetection.setOnClickListener(v -> setActiveFeature("object_detection"));
-        btnStopFeature.setOnClickListener(v -> setActiveFeature(null));
-
+        // Camera permission check
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
+
+            ActivityCompat.requestPermissions(
+                    this,
                     new String[]{Manifest.permission.CAMERA},
-                    REQUEST_CAMERA_PERMISSION);
-        } else {
-            initCameraAndBackend();
+                    REQUEST_CAMERA_PERMISSION
+            );
+            return;
         }
-        // Check if an initial feature was passed
+
+        initializeFeatureFromIntent();
+        initCameraAndBackend();
+    }
+
+    /**
+     * Reads "feature" from Intent if passed and overrides the default.
+     */
+    private void initializeFeatureFromIntent() {
         String featureFromIntent = getIntent().getStringExtra("feature");
         if (featureFromIntent != null) {
-            setActiveFeature(featureFromIntent); // starts people detection automatically
+            setActiveFeature(featureFromIntent);
+        } else {
+            setActiveFeature(activeFeature); // Default from repo
         }
-
     }
 
+    /**
+     * Sets feature consistently and informs the backend if connected.
+     */
     private void setActiveFeature(String feature) {
         activeFeature = feature;
-        String message = (feature != null) ? feature + " feature active" : "Feature streaming stopped";
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+
+        Toast.makeText(
+                this,
+                feature != null ? feature + " feature active" : "Feature streaming stopped",
+                Toast.LENGTH_SHORT
+        ).show();
+
+        Log.d(TAG, "Active feature set to: " + activeFeature);
+
+        // Tell backend if connected
+        if (wsManager != null && wsManager.isConnected() && activeFeature != null) {
+            wsManager.setFeature(activeFeature);
+        }
     }
 
+    /**
+     * Initialize WebSocket + Camera.
+     */
     private void initCameraAndBackend() {
+
         if (backendEnabled) {
             wsManager = new WebSocketManager(SERVER_WS_URL, this);
             wsManager.connect();
         }
+
         startCameraSafe();
     }
 
+    /**
+     * Binds camera preview + analyzer safely.
+     */
     private void startCameraSafe() {
+
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
                 ProcessCameraProvider.getInstance(this);
 
@@ -93,19 +127,38 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
                 Preview preview = new Preview.Builder().build();
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
-                ImageAnalysis imageAnalyzer = new ImageAnalysis.Builder()
+                // Build analyzer
+                ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build();
-                imageAnalyzer.setAnalyzer(cameraExecutor, new FrameAnalyzer(wsManager, () -> activeFeature));
 
-                CameraSelector cameraSelector = new CameraSelector.Builder()
-                        .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-                        .build();
+                if ("asl_detection".equals(activeFeature)) {
+                    imageAnalysis.setAnalyzer(
+                            cameraExecutor,
+                            new ASLFrameAnalyzer(wsManager, featureProvider)
+                    );
+                } else {
+                    imageAnalysis.setAnalyzer(
+                            cameraExecutor,
+                            new FrameAnalyzer(wsManager, featureProvider)
+                    );
+                }
+
+                CameraSelector cameraSelector =
+                        new CameraSelector.Builder()
+                                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+                                .build();
 
                 cameraProvider.unbindAll();
-                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalyzer);
+                cameraProvider.bindToLifecycle(
+                        this,
+                        cameraSelector,
+                        preview,
+                        imageAnalysis
+                );
 
                 Log.i(TAG, "Camera bound successfully");
+
             } catch (Exception e) {
                 Log.e(TAG, "Camera binding failed", e);
                 Toast.makeText(this, "Camera setup failed: " + e.getMessage(),
@@ -115,39 +168,77 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
         }, ContextCompat.getMainExecutor(this));
     }
 
+    /**
+     * Handles AI output exactly like GitHub version (match, name, ok, errors).
+     */
     @Override
     public void onResultsReceived(String results) {
-        runOnUiThread(() -> Toast.makeText(this,
-                "AI result: " + results.substring(0, Math.min(results.length(), 20)) + "...",
-                Toast.LENGTH_SHORT).show());
+        Log.d(TAG, "WS msg: " + results);
+
+        try {
+            org.json.JSONObject obj = new org.json.JSONObject(results);
+
+            if (!obj.optBoolean("ok", false)) {
+                final String err = obj.optString("error", "unknown");
+                runOnUiThread(() ->
+                        Toast.makeText(this, "Backend error: " + err, Toast.LENGTH_SHORT).show());
+                return;
+            }
+
+            boolean match = obj.optBoolean("match", false);
+            if (match) {
+                final String name = obj.optString("contactName", "Unknown");
+                runOnUiThread(() ->
+                        Toast.makeText(this, "Match: " + name, Toast.LENGTH_SHORT).show());
+            } else {
+                Log.d(TAG, "No match (toast suppressed)");
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "Bad JSON", e);
+        }
     }
 
+    /**
+     * WebSocket connected/disconnected.
+     */
     @Override
     public void onConnectionStatus(boolean isConnected) {
-        runOnUiThread(() -> Toast.makeText(this,
-                isConnected ? "Connected to backend" : "Backend not available",
-                Toast.LENGTH_SHORT).show());
-    }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        cameraExecutor.shutdown();
-        if (wsManager != null) wsManager.disconnect();
+        runOnUiThread(() -> Toast.makeText(
+                this,
+                isConnected ? "Connected to backend" : "Backend unavailable",
+                Toast.LENGTH_SHORT
+        ).show());
+
+        Log.d(TAG, "WebSocket connected=" + isConnected);
+
+        if (isConnected && wsManager != null && activeFeature != null) {
+            wsManager.setFeature(activeFeature);
+        }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
         if (requestCode == REQUEST_CAMERA_PERMISSION &&
                 grantResults.length > 0 &&
                 grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+            initializeFeatureFromIntent();
             initCameraAndBackend();
         } else {
             Toast.makeText(this, "Camera permission required", Toast.LENGTH_LONG).show();
             finish();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (cameraExecutor != null) cameraExecutor.shutdown();
+        if (wsManager != null) wsManager.disconnect();
     }
 }
