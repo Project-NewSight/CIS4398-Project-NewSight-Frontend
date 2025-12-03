@@ -1,9 +1,12 @@
 package com.example.newsight;
 
 import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
+import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.util.Log;
 
@@ -58,6 +61,12 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
             yuvImage.compressToJpeg(new Rect(0, 0, width, height), 80, jpegStream);
 
             byte[] jpegBytes = jpegStream.toByteArray();
+            
+            // Handle rotation - mobile cameras are typically rotated
+            int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
+            if (rotationDegrees != 0) {
+                jpegBytes = rotateJpeg(jpegBytes, rotationDegrees);
+            }
 
             String activeFeature = featureProvider.getActiveFeature();
 
@@ -107,6 +116,39 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
                 out[uvPos++] = vBuffer.get(uvIndex);
                 out[uvPos++] = uBuffer.get(uvIndex);
             }
+        }
+    }
+    
+    private byte[] rotateJpeg(byte[] jpegData, int degrees) {
+        try {
+            // Decode JPEG to Bitmap
+            Bitmap bitmap = BitmapFactory.decodeByteArray(jpegData, 0, jpegData.length);
+            if (bitmap == null) {
+                Log.w(TAG, "Failed to decode JPEG for rotation");
+                return jpegData;
+            }
+            
+            // Create rotation matrix
+            Matrix matrix = new Matrix();
+            matrix.postRotate(degrees);
+            
+            // Rotate bitmap
+            Bitmap rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            
+            // Compress back to JPEG
+            ByteArrayOutputStream rotatedStream = new ByteArrayOutputStream();
+            rotated.compress(Bitmap.CompressFormat.JPEG, 80, rotatedStream);
+            byte[] result = rotatedStream.toByteArray();
+            
+            // Clean up
+            bitmap.recycle();
+            rotated.recycle();
+            
+            Log.d(TAG, "Rotated frame by " + degrees + " degrees");
+            return result;
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to rotate JPEG", e);
+            return jpegData; // Return original on error
         }
     }
 }
