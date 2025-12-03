@@ -20,6 +20,8 @@
     <!-- Vibration -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- INTERNET Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- Optional Bluetooth permissions (future features) -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" tools:ignore="BluetoothPermission" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" tools:ignore="BluetoothPermission" />
@@ -33,19 +35,8 @@
         android:label="NewSight"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.NewSight"
-        android:usesCleartextTraffic="true">
-
-        <!-- Secure File Provider -->
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.provider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
-        </provider>
+        android:usesCleartextTraffic="true"
+        android:theme="@style/Theme.NewSight">
 
         <!-- Launcher Activity -->
         <!-- ===== Launcher Activity ===== -->
