@@ -243,7 +243,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             // Start location tracking
             startBackgroundLocation();
 
-            String wsUrl = "wss://cis4398-project-newsight-backend.onrender.com/ws/verify";
+            String wsUrl = "ws://100.19.30.133/ws/verify";
             wsManager = new WebSocketManager(wsUrl, this);
             wsManager.setFeature(currentFeature);
             wsManager.connect();
@@ -336,12 +336,10 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
                             Intent intent = new Intent(MainActivity.this, LoadingActivity.class);
                             startActivity(intent);
-
-
-                            //String wsUrl = "wss://cis4398-project-newsight-backend.onrender.com/ws/verify";
-                            String wsUrl = "ws://10.0.2.2:8000/ws/verify";
-
-                            wsManager = new WebSocketManager(wsUrl, MainActivity.this);
+                            // Initialize WebSocket connection
+                            String wsUrl = "ws://100.19.30.133/ws/verify";
+                            wsManager = new WebSocketManager(wsUrl, this);
+                          
                             currentFeature = "familiar_face";
                             wsManager.setFeature(currentFeature);
                             wsManager.connect();
@@ -686,6 +684,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         super.onDestroy();
         cameraExecutor.shutdown();
         if (wsManager != null) wsManager.disconnect();
+        if (ttsHelper != null) ttsHelper.shutdown();
         if (vibrationMotor != null) vibrationMotor.close();
         if (hapticHandler != null) hapticHandler.removeCallbacksAndMessages(null);
         if (voiceCommandHelper != null) {
@@ -716,6 +715,25 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         runOnUiThread(() -> {
             try {
                 JSONObject jsonObject = new JSONObject(results);
+                
+                // Handle Familiar Face Detection Results
+                if (jsonObject.has("match") && jsonObject.has("contactName")) {
+                    boolean match = jsonObject.optBoolean("match", false);
+                    if (match) {
+                        String name = jsonObject.optString("contactName", "Unknown");
+                        if (!name.equals("Unknown")) {
+                            // Announce name with TTS
+                            if (ttsHelper != null) {
+                                ttsHelper.speak(name);
+                                Log.d(TAG, "TTS: Announced " + name);
+                            }
+                            Toast.makeText(this, "Detected: " + name, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    return;
+                }
+                
+                // Handle Text Detection Results
                 String detectedText = null;
 
                 if (jsonObject.has("stable_text") && !jsonObject.isNull("stable_text")) {

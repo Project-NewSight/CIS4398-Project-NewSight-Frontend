@@ -62,6 +62,7 @@ public class ObstacleActivity extends AppCompatActivity {
         voiceCommandHelper = new VoiceCommandHelper(this);
         voiceCommandHelper.setSessionId(sessionId);
         ttsHelper = new TtsHelper(this);
+        overlayView.setTtsHelper(ttsHelper);
 
         setupVoiceCommands();
         setupBottomNavigation();
@@ -142,7 +143,7 @@ public class ObstacleActivity extends AppCompatActivity {
                 .build();
 
         try {
-            DetectorProcessor detector = new DetectorProcessor(this, overlayView);
+            CloudDetectorProcessor detector = new CloudDetectorProcessor(this, overlayView);
             imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(), detector);
         } catch (Exception e) {
             Log.e(TAG, "Could not initialize detector.", e);

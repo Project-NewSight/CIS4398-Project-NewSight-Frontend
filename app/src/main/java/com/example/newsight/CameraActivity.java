@@ -30,12 +30,17 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
     private PreviewView previewView;
     private ExecutorService cameraExecutor;
     private WebSocketManager wsManager;
+    private TtsHelper ttsHelper;
 
     private boolean backendEnabled = true;
     private String activeFeature = "familiar_face";
 
-    private final String SERVER_WS_URL = "ws://192.168.1.254:8000/ws/verify";
+    private final String SERVER_WS_URL = "ws://100.19.30.133/ws/verify";
 
+    // TTS state tracking
+    private String lastAnnouncedName = "";
+    private long lastAnnouncedTime = 0;
+    private static final long TTS_COOLDOWN_MS = 3000; // Announce same person every 3 seconds max
 
     private Button btnNavigation, btnASL, btnObjectDetection, btnStopFeature;
 
@@ -49,7 +54,8 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
         previewView = findViewById(R.id.previewView);
         cameraExecutor = Executors.newSingleThreadExecutor();
 
-
+        // Initialize TTS for announcing detected faces
+        ttsHelper = new TtsHelper(this);
 
         setActiveFeature("familiar_face");
 
@@ -154,6 +160,20 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
             boolean match = obj.optBoolean("match", false);
             if (match) {
                 final String name = obj.optString("contactName", "Unknown");
+                
+                // Announce name with TTS (with cooldown to avoid spam)
+                long now = System.currentTimeMillis();
+                boolean shouldAnnounce = !name.equals("Unknown") && 
+                    (!name.equals(lastAnnouncedName) || (now - lastAnnouncedTime) > TTS_COOLDOWN_MS);
+                
+                if (shouldAnnounce) {
+                    lastAnnouncedName = name;
+                    lastAnnouncedTime = now;
+                    // Announce the name
+                    ttsHelper.speak(name);
+                    Log.d(TAG, "TTS: Announced " + name);
+                }
+                
                 runOnUiThread(() ->
                         Toast.makeText(this, "Match: " + name, Toast.LENGTH_SHORT).show());
             } else {
@@ -201,6 +221,7 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
         super.onDestroy();
         if (cameraExecutor != null) cameraExecutor.shutdown();
         if (wsManager != null) wsManager.disconnect();
+        if (ttsHelper != null) ttsHelper.shutdown();
     }
 
 }

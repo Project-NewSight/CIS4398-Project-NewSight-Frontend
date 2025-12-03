@@ -83,13 +83,37 @@ public class WebSocketManager {
 
     /** Preferred: control JSON then binary JPEG */
     public void sendFrame(byte[] frameBytes, @NonNull String feature) {
-        if (connected && webSocket != null) {
-            String message = "{\"feature\":\"" + feature + "\",\"frame\":\"" +
-                    android.util.Base64.encodeToString(frameBytes, android.util.Base64.NO_WRAP) + "\"}";
-            boolean sent = webSocket.send(message);
-            if (!sent) Log.w(TAG, "Failed to send frame.");
-        } else {
+        if (!connected || webSocket == null) {
             Log.d(TAG, "Skipping frame — not connected.");
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        if (now - lastSend < MIN_FRAME_INTERVAL_MS) return;
+        lastSend = now;
+
+        try {
+            if (currentFeature == null || !currentFeature.equals(feature)) {
+                currentFeature = feature;
+            }
+            // Android Base64
+            String b64 = Base64.encodeToString(frameBytes, Base64.NO_WRAP);
+
+            JSONObject obj = new JSONObject();
+            obj.put("type", "frame");
+            obj.put("feature", feature);
+            obj.put("image_b64", b64);
+            obj.put("len", frameBytes.length);
+
+            boolean sent = webSocket.send(obj.toString());
+            if (!sent) {
+                Log.w(TAG, "Failed to send frame.");
+            } else {
+                framesSent.incrementAndGet();
+                Log.d(TAG, "Sent frame: feature=" + feature + " (" + frameBytes.length + " bytes)");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error sending frame: " + e.getMessage(), e);
         }
     }
 
@@ -165,16 +189,9 @@ public class WebSocketManager {
             if (listener != null) listener.onConnectionStatus(true);
         }
 
-        /*@Override
-        public void onMessage(@NonNull WebSocket ws, @NonNull String text) {
-            Log.d(TAG, "recv(text): " + text);
-            if (listener != null) listener.onResultsReceived(text);
-        }
-        */
-
-
         @Override
         public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
+            Log.d(TAG, "recv(text): " + text);
             if (listener != null) listener.onResultsReceived(text);
         }
 
