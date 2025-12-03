@@ -31,7 +31,7 @@ public class CloudDetectorProcessor implements ImageAnalysis.Analyzer {
     private static final String TAG = "CloudDetectorProcessor";
 
     // TODO: set this to your machine’s IP
-    private static final String BASE_URL = "http://192.168.1.153:8000";
+    private static final String BASE_URL = "http://100.19.30.133/object-detection";
     private static final String DETECT_URL = BASE_URL + "/detect";
     private static final String HEALTH_URL = BASE_URL + "/health";
 
