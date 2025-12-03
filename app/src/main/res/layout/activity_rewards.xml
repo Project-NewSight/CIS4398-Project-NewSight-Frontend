@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -26,8 +27,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
         android:background="@android:color/white"
+        android:padding="16dp"
         android:elevation="2dp"
         android:layout_marginTop="16dp"
         app:layout_constraintTop_toBottomOf="@id/textRewardsTitle"
@@ -48,9 +49,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="1,250"
-            android:layout_marginTop="4dp"
-            android:textSize="32sp"
             android:textStyle="bold"
+            android:textSize="32sp"
+            android:layout_marginTop="4dp"
             android:textColor="@color/primary" />
 
         <TextView
@@ -58,8 +59,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Current value: $1.25"
-            android:layout_marginTop="8dp"
             android:textSize="14sp"
+            android:layout_marginTop="8dp"
             android:textColor="@color/muted_foreground" />
 
         <TextView
@@ -67,151 +68,93 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="8,750 points away from a $10 gift card"
-            android:layout_marginTop="4dp"
             android:textSize="14sp"
+            android:layout_marginTop="4dp"
             android:textColor="@color/muted_foreground" />
     </LinearLayout>
 
     <!-- How you earn points -->
-    <LinearLayout
-        android:id="@+id/layoutHowEarn"
-        android:layout_width="0dp"
+    <TextView
+        android:id="@+id/textHowEarnHeader"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:text="How you earn points"
+        android:textStyle="bold"
+        android:textSize="16sp"
         android:layout_marginTop="24dp"
         app:layout_constraintTop_toBottomOf="@id/layoutSummaryCard"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent" />
 
-        <TextView
-            android:id="@+id/textHowEarnHeader"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="How you earn points"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:textColor="@android:color/black" />
-
-        <!-- Clean bullet list in its own card -->
-        <LinearLayout
-            android:id="@+id/layoutHowEarnCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="8dp"
-            android:padding="12dp"
-            android:background="@android:color/white"
-            android:elevation="2dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="• Start and finish a navigation session: +50 pts"
-                android:textSize="14sp"
-                android:textColor="@color/muted_foreground" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="• Use object detection during your walk: +40 pts"
-                android:textSize="14sp"
-                android:textColor="@color/muted_foreground" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="• Use transit assist for a full trip: +60 pts"
-                android:textSize="14sp"
-                android:textColor="@color/muted_foreground" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="• Daily check-in with the app: +10 pts"
-                android:textSize="14sp"
-                android:textColor="@color/muted_foreground" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="• Maintain a 5-day weekly streak: +100 pts"
-                android:textSize="14sp"
-                android:textColor="@color/muted_foreground" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="• Send feedback or report an issue: +20 pts"
-                android:textSize="14sp"
-                android:textColor="@color/muted_foreground" />
-        </LinearLayout>
-    </LinearLayout>
+    <TextView
+        android:id="@+id/textHowEarnList"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="- Start and finish a navigation session: +50 pts\n- Use object detection during your walk: +40 pts\n- Use transit assist for a full trip: +60 pts\n- Daily check-in with the app: +10 pts\n- Maintain a 5-day weekly streak: +100 pts\n- Send feedback or report an issue: +20 pts"
+        android:textSize="14sp"
+        android:textColor="@color/muted_foreground"
+        app:layout_constraintTop_toBottomOf="@id/textHowEarnHeader"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Gift card tiers -->
+    <TextView
+        android:id="@+id/textGiftCardHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gift card reward tiers"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginTop="24dp"
+        app:layout_constraintTop_toBottomOf="@id/textHowEarnList"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <LinearLayout
-        android:id="@+id/layoutTiers"
+        android:id="@+id/layoutGiftCardCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginTop="24dp"
-        app:layout_constraintTop_toBottomOf="@id/layoutHowEarn"
+        android:background="@android:color/white"
+        android:padding="16dp"
+        android:elevation="2dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/textGiftCardHeader"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
-            android:id="@+id/textTiersHeader"
+            android:id="@+id/textTier10"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Gift card reward tiers"
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:textColor="@android:color/black" />
+            android:text="• $10 gift card (10,000 pts)"
+            android:textSize="14sp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/textTier50"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:layout_marginTop="4dp"
+            android:text="• $50 gift card (50,000 pts)"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/textTier100"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="• $100 gift card (100,000 pts)"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/textConversionNote"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:padding="12dp"
-            android:background="@android:color/white"
-            android:elevation="2dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="• $10 gift card (10,000 pts)"
-                android:textSize="14sp"
-                android:textColor="@color/muted_foreground" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="• $50 gift card (50,000 pts)"
-                android:textSize="14sp"
-                android:textColor="@color/muted_foreground" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="• $100 gift card (100,000 pts)"
-                android:textSize="14sp"
-                android:textColor="@color/muted_foreground" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Conversion: 1,000 points = $1.00"
-                android:textSize="12sp"
-                android:textColor="@color/muted_foreground" />
-        </LinearLayout>
+            android:text="Conversion: 1,000 points = $1.00"
+            android:textSize="13sp"
+            android:textColor="@color/muted_foreground" />
     </LinearLayout>
 
     <!-- Redeem button -->
@@ -222,10 +165,9 @@
         android:text="Redeem Points"
         android:layout_marginTop="24dp"
         android:layout_marginBottom="16dp"
-        android:backgroundTint="@color/primary"
-        android:textColor="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layoutGiftCardCard"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
