@@ -16,10 +16,10 @@
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="@color/primary"
-        android:gravity="center"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        android:gravity="center" />
 
     <!-- Summary card -->
     <LinearLayout
@@ -27,14 +27,15 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@android:color/white"
         android:padding="16dp"
+        android:background="@android:color/white"
         android:elevation="2dp"
         android:layout_marginTop="16dp"
         app:layout_constraintTop_toBottomOf="@id/textRewardsTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Header -->
         <TextView
             android:id="@+id/textSummaryHeader"
             android:layout_width="wrap_content"
@@ -44,16 +45,18 @@
             android:textSize="14sp"
             android:textColor="@color/muted_foreground" />
 
+        <!-- Total points -->
         <TextView
             android:id="@+id/textTotalPoints"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="1,250"
-            android:textStyle="bold"
             android:textSize="32sp"
+            android:textStyle="bold"
             android:layout_marginTop="4dp"
             android:textColor="@color/primary" />
 
+        <!-- Current dollar value -->
         <TextView
             android:id="@+id/textCurrentValue"
             android:layout_width="wrap_content"
@@ -63,6 +66,7 @@
             android:layout_marginTop="8dp"
             android:textColor="@color/muted_foreground" />
 
+        <!-- Points away from next reward -->
         <TextView
             android:id="@+id/textAwayFromNext"
             android:layout_width="wrap_content"
@@ -73,88 +77,67 @@
             android:textColor="@color/muted_foreground" />
     </LinearLayout>
 
-    <!-- How you earn points -->
-    <TextView
-        android:id="@+id/textHowEarnHeader"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="How you earn points"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:layout_marginTop="24dp"
-        app:layout_constraintTop_toBottomOf="@id/layoutSummaryCard"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <TextView
-        android:id="@+id/textHowEarnList"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="- Start and finish a navigation session: +50 pts\n- Use object detection during your walk: +40 pts\n- Use transit assist for a full trip: +60 pts\n- Daily check-in with the app: +10 pts\n- Maintain a 5-day weekly streak: +100 pts\n- Send feedback or report an issue: +20 pts"
-        android:textSize="14sp"
-        android:textColor="@color/muted_foreground"
-        app:layout_constraintTop_toBottomOf="@id/textHowEarnHeader"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Gift card tiers -->
-    <TextView
-        android:id="@+id/textGiftCardHeader"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Gift card reward tiers"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:layout_marginTop="24dp"
-        app:layout_constraintTop_toBottomOf="@id/textHowEarnList"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
+    <!-- How you earn points section -->
     <LinearLayout
-        android:id="@+id/layoutGiftCardCard"
+        android:id="@+id/layoutHowYouEarn"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@android:color/white"
-        android:padding="16dp"
-        android:elevation="2dp"
-        android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/textGiftCardHeader"
+        android:layout_marginTop="24dp"
+        app:layout_constraintTop_toBottomOf="@id/layoutSummaryCard"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
-            android:id="@+id/textTier10"
+            android:id="@+id/textHowYouEarnHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="• $10 gift card (10,000 pts)"
-            android:textSize="14sp" />
+            android:text="How you earn points"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@android:color/black" />
 
         <TextView
-            android:id="@+id/textTier50"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="• $50 gift card (50,000 pts)"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/textTier100"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="• $100 gift card (100,000 pts)"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/textConversionNote"
+            android:id="@+id/textHowYouEarnBody"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Conversion: 1,000 points = $1.00"
-            android:textSize="13sp"
-            android:textColor="@color/muted_foreground" />
+            android:textSize="14sp"
+            android:textColor="@color/muted_foreground"
+            android:text="• Start and finish a navigation session: +50 pts\n• Use object detection during your walk: +40 pts\n• Use transit assist for a full trip: +60 pts\n• Daily check-in with the app: +10 pts\n• Maintain a 5-day weekly streak: +100 pts\n• Send feedback or report an issue: +20 pts" />
+    </LinearLayout>
+
+    <!-- Gift card tiers -->
+    <LinearLayout
+        android:id="@+id/layoutGiftCardTiers"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@android:color/white"
+        android:elevation="2dp"
+        android:layout_marginTop="24dp"
+        app:layout_constraintTop_toBottomOf="@id/layoutHowYouEarn"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/textGiftCardHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gift card reward tiers"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@android:color/black" />
+
+        <TextView
+            android:id="@+id/textGiftCardBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="14sp"
+            android:textColor="@color/muted_foreground"
+            android:text="• $10 gift card (10,000 pts)\n• $50 gift card (50,000 pts)\n• $100 gift card (100,000 pts)\n\nConversion: 1,000 points = $1.00" />
     </LinearLayout>
 
     <!-- Redeem button -->
@@ -163,9 +146,10 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Redeem Points"
-        android:layout_marginTop="24dp"
+        android:textAllCaps="false"
+        android:layout_marginTop="32dp"
         android:layout_marginBottom="16dp"
-        app:layout_constraintTop_toBottomOf="@id/layoutGiftCardCard"
+        app:layout_constraintTop_toBottomOf="@id/layoutGiftCardTiers"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
