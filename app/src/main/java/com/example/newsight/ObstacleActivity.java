@@ -44,6 +44,14 @@ public class ObstacleActivity extends AppCompatActivity {
     private com.example.newsight.helpers.LocationHelper locationHelper;
     private com.example.newsight.helpers.LocationWebSocketHelper locationWebSocketHelper;
 
+    //Haptic Feedback Components
+    private VibrationMotor vibrationMotor;
+    private PatternGenerator patternGenerator;
+    private boolean hapticInitialized = false;
+    private long lastHapticTime = 0;
+    private static final long HAPTIC_COOLDOWN_MS = 1500;
+    private String lastDetectedObstacle = "";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,6 +71,9 @@ public class ObstacleActivity extends AppCompatActivity {
         voiceCommandHelper.setSessionId(sessionId);
         ttsHelper = new TtsHelper(this);
 
+        // Initialize haptic feedback system
+        initializeHapticFeedback();
+
         setupVoiceCommands();
         setupBottomNavigation();
 
@@ -81,6 +92,117 @@ public class ObstacleActivity extends AppCompatActivity {
         if (checkMicrophonePermission()) {
             voiceCommandHelper.startWakeWordDetection();
         }
+    }
+
+    // ==================== Haptic Feedback System ====================
+
+    /**
+     * Initialize haptic feedback system
+     */
+    private void initializeHapticFeedback() {
+        try {
+            vibrationMotor = new VibrationMotor(this);
+            vibrationMotor.initialize();
+
+            patternGenerator = new PatternGenerator();
+
+            hapticInitialized = true;
+            Log.d(TAG, "✅ Haptic feedback system initialized");
+
+        } catch (VibrationMotor.VibrationException e) {
+            Log.e(TAG, "❌ Failed to initialize haptic feedback: " + e.getMessage());
+            hapticInitialized = false;
+            Toast.makeText(this, "Haptic feedback unavailable", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Callback from DetectorProcessor when obstacles are detected
+     */
+    public void onObstaclesDetected(int obstacleCount, float largestObstacleSize, String closestObstacleType) {
+        if (!hapticInitialized || vibrationMotor == null || patternGenerator == null) {
+            return;
+        }
+
+        // Cooldown check - don't spam haptic warnings
+        long currentTime = System.currentTimeMillis();
+        if ((currentTime - lastHapticTime) < HAPTIC_COOLDOWN_MS) {
+            return;
+        }
+
+        // Only trigger haptic if obstacles are detected
+        if (obstacleCount == 0) {
+            return;
+        }
+
+        try {
+            VibrationPattern pattern;
+            int intensity;
+
+            // Determine urgency based on obstacle size (larger = closer = more urgent)
+            if (largestObstacleSize > 0.6f) {
+                // Very close obstacle (>60% of screen) - maximum alert
+                pattern = patternGenerator.generateObstacleWarningPattern();
+                intensity = 100;
+                Log.d(TAG, "🚨 CRITICAL: Very close obstacle detected - " + closestObstacleType);
+
+            } else if (largestObstacleSize > 0.4f) {
+                // Close obstacle (40-60% of screen) - high alert
+                pattern = patternGenerator.generateProximityPattern(5.0f); // ~5m estimated
+                intensity = 85;
+                Log.d(TAG, "⚠️ WARNING: Close obstacle detected - " + closestObstacleType);
+
+            } else if (largestObstacleSize > 0.2f) {
+                // Medium distance (20-40% of screen) - medium alert
+                pattern = patternGenerator.generateProximityPattern(10.0f); // ~10m estimated
+                intensity = 70;
+                Log.d(TAG, "⚡ CAUTION: Obstacle detected - " + closestObstacleType);
+
+            } else {
+                // Far obstacle (<20% of screen) - low alert
+                pattern = patternGenerator.generateProximityPattern(20.0f); // ~20m estimated
+                intensity = 55;
+                Log.d(TAG, "ℹ️ NOTICE: Distant obstacle - " + closestObstacleType);
+            }
+
+            // Trigger the vibration
+            if (pattern != null && pattern.validate()) {
+                vibrationMotor.triggerVibration(pattern, (int) pattern.getDuration(), intensity);
+
+                lastDetectedObstacle = closestObstacleType;
+                lastHapticTime = currentTime;
+
+                Log.d(TAG, String.format("✅ Haptic triggered - count: %d, size: %.2f, type: %s, intensity: %d%%",
+                        obstacleCount, largestObstacleSize, closestObstacleType, intensity));
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Error triggering obstacle haptic: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Stop all haptic feedback
+     */
+    private void stopHapticFeedback() {
+        if (vibrationMotor != null) {
+            vibrationMotor.stopVibration();
+        }
+    }
+
+    /**
+     * Cleanup haptic system
+     */
+    private void cleanupHapticFeedback() {
+        if (vibrationMotor != null) {
+            vibrationMotor.close();
+            vibrationMotor = null;
+        }
+
+        patternGenerator = null;
+        hapticInitialized = false;
+
+        Log.d(TAG, "✅ Haptic feedback system cleaned up");
     }
 
     private void startBackgroundLocation() {
@@ -142,7 +264,21 @@ public class ObstacleActivity extends AppCompatActivity {
                 .build();
 
         try {
-            DetectorProcessor detector = new DetectorProcessor(this, overlayView);
+            // Create detector with haptic callback
+            DetectorProcessor detector = new DetectorProcessor(
+                    this,  // Context
+                    overlayView,  // OverlayView
+                    new DetectorProcessor.ObstacleDetectionCallback() {  // Callback
+                        @Override
+                        public void onObstaclesDetected(int count, float largestSize, String closestType) {
+                            // Trigger haptic feedback on main thread
+                            runOnUiThread(() ->
+                                    ObstacleActivity.this.onObstaclesDetected(count, largestSize, closestType)
+                            );
+                        }
+                    }
+            );
+
             imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(), detector);
         } catch (Exception e) {
             Log.e(TAG, "Could not initialize detector.", e);
@@ -265,6 +401,8 @@ public class ObstacleActivity extends AppCompatActivity {
         if (voiceCommandHelper != null) {
             voiceCommandHelper.stopListening();
         }
+
+        stopHapticFeedback();
     }
 
     @Override
@@ -278,6 +416,9 @@ public class ObstacleActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        cleanupHapticFeedback();
+
         if (voiceCommandHelper != null) {
             voiceCommandHelper.cleanup();
         }
