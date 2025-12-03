@@ -304,6 +304,10 @@ public class ReadTextActivity extends AppCompatActivity implements WebSocketMana
     private void initializeCameraAndBackend() {
         // Initialize WebSocket connection
         wsManager = new WebSocketManager(SERVER_WS_URL, this);
+        
+        // Set feature to text_detection BEFORE connecting
+        wsManager.setFeature(FEATURE_TEXT_DETECTION);
+        
         wsManager.connect();
 
         // Start camera
