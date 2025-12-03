@@ -79,21 +79,34 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
     private void yuv420ToNv21(Image image, byte[] out) {
         Image.Plane[] planes = image.getPlanes();
+        
+        int width = image.getWidth();
+        int height = image.getHeight();
+        
+        // Y plane
         ByteBuffer yBuffer = planes[0].getBuffer();
-        ByteBuffer uBuffer = planes[1].getBuffer();
-        ByteBuffer vBuffer = planes[2].getBuffer();
-
-        yBuffer.rewind();
-        uBuffer.rewind();
-        vBuffer.rewind();
-
         int ySize = yBuffer.remaining();
         yBuffer.get(out, 0, ySize);
-
+        
+        // U and V planes (interleaved for NV21)
+        ByteBuffer uBuffer = planes[1].getBuffer();
+        ByteBuffer vBuffer = planes[2].getBuffer();
+        
+        int uvWidth = width / 2;
+        int uvHeight = height / 2;
+        
+        int uvPixelStride = planes[1].getPixelStride(); // typically 1 or 2
+        int uvRowStride = planes[1].getRowStride();
+        
         int uvPos = ySize;
-        while (vBuffer.hasRemaining() && uBuffer.hasRemaining()) {
-            out[uvPos++] = vBuffer.get();
-            out[uvPos++] = uBuffer.get();
+        
+        for (int row = 0; row < uvHeight; row++) {
+            for (int col = 0; col < uvWidth; col++) {
+                int uvIndex = row * uvRowStride + col * uvPixelStride;
+                // NV21 format: VUVUVU... (V first, then U)
+                out[uvPos++] = vBuffer.get(uvIndex);
+                out[uvPos++] = uBuffer.get(uvIndex);
+            }
         }
     }
 }
