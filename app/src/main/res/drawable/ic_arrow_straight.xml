@@ -1,0 +1,18 @@
+<!-- ic_arrow_straight.xml - Straight arrow for navigation -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#00D4FF"
+        android:pathData="M12,2 L12,18 M12,2 L8,6 M12,2 L16,6"
+        android:strokeWidth="3"
+        android:strokeColor="#00D4FF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+    <path
+        android:fillColor="#00D4FF"
+        android:pathData="M8,22 L16,22 L12,18 Z"/>
+</vector>
+
