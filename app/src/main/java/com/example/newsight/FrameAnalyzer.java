@@ -1,9 +1,12 @@
 package com.example.newsight;
 
 import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
+import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.util.Log;
 
@@ -58,6 +61,12 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
             yuvImage.compressToJpeg(new Rect(0, 0, width, height), 80, jpegStream);
 
             byte[] jpegBytes = jpegStream.toByteArray();
+            
+            // Handle rotation - mobile cameras are typically rotated
+            int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
+            if (rotationDegrees != 0) {
+                jpegBytes = rotateJpeg(jpegBytes, rotationDegrees);
+            }
 
             String activeFeature = featureProvider.getActiveFeature();
 
@@ -79,21 +88,67 @@ public class FrameAnalyzer implements ImageAnalysis.Analyzer {
 
     private void yuv420ToNv21(Image image, byte[] out) {
         Image.Plane[] planes = image.getPlanes();
+        
+        int width = image.getWidth();
+        int height = image.getHeight();
+        
+        // Y plane
         ByteBuffer yBuffer = planes[0].getBuffer();
-        ByteBuffer uBuffer = planes[1].getBuffer();
-        ByteBuffer vBuffer = planes[2].getBuffer();
-
-        yBuffer.rewind();
-        uBuffer.rewind();
-        vBuffer.rewind();
-
         int ySize = yBuffer.remaining();
         yBuffer.get(out, 0, ySize);
-
+        
+        // U and V planes (interleaved for NV21)
+        ByteBuffer uBuffer = planes[1].getBuffer();
+        ByteBuffer vBuffer = planes[2].getBuffer();
+        
+        int uvWidth = width / 2;
+        int uvHeight = height / 2;
+        
+        int uvPixelStride = planes[1].getPixelStride(); // typically 1 or 2
+        int uvRowStride = planes[1].getRowStride();
+        
         int uvPos = ySize;
-        while (vBuffer.hasRemaining() && uBuffer.hasRemaining()) {
-            out[uvPos++] = vBuffer.get();
-            out[uvPos++] = uBuffer.get();
+        
+        for (int row = 0; row < uvHeight; row++) {
+            for (int col = 0; col < uvWidth; col++) {
+                int uvIndex = row * uvRowStride + col * uvPixelStride;
+                // NV21 format: VUVUVU... (V first, then U)
+                out[uvPos++] = vBuffer.get(uvIndex);
+                out[uvPos++] = uBuffer.get(uvIndex);
+            }
+        }
+    }
+    
+    private byte[] rotateJpeg(byte[] jpegData, int degrees) {
+        try {
+            // Decode JPEG to Bitmap
+            Bitmap bitmap = BitmapFactory.decodeByteArray(jpegData, 0, jpegData.length);
+            if (bitmap == null) {
+                Log.w(TAG, "Failed to decode JPEG for rotation");
+                return jpegData;
+            }
+            
+            // Create rotation matrix
+            Matrix matrix = new Matrix();
+            matrix.postRotate(degrees);
+            
+            // Rotate bitmap
+            Bitmap rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            
+            // Compress back to JPEG
+            ByteArrayOutputStream rotatedStream = new ByteArrayOutputStream();
+            rotated.compress(Bitmap.CompressFormat.JPEG, 80, rotatedStream);
+            byte[] result = rotatedStream.toByteArray();
+            
+            // Clean up
+            bitmap.recycle();
+            rotated.recycle();
+            
+            Log.d(TAG, "Rotated frame by " + degrees + " degrees");
+            return result;
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to rotate JPEG", e);
+            return jpegData; // Return original on error
         }
     }
 }

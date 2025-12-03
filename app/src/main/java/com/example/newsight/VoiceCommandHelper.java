@@ -66,8 +66,8 @@ public class VoiceCommandHelper {
     private AcousticEchoCanceler echoCanceler;
     private Handler mainHandler;
 
-    private static final String BACKEND_URL = "https://cis4398-project-newsight-backend.onrender.com/voice/transcribe";
-    private static final String WAKE_WORD_URL = "https://cis4398-project-newsight-backend.onrender.com/voice/wake-word";
+    private static final String BACKEND_URL = "http://192.168.1.254:8000/voice/transcribe";
+    private static final String WAKE_WORD_URL = "http://192.168.1.254:8000/voice/wake-word";
 
     private String sessionId; // Session ID for navigation tracking
 

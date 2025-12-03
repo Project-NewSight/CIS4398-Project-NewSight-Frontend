@@ -32,6 +32,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity implements WebSocketManager.WsListener {
@@ -49,6 +50,14 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     private TtsHelper ttsHelper;
     private static final int PERMISSION_REQUEST_CODE = 200;
 
+    // Session and location tracking
+    private String sessionId;
+    private com.example.newsight.helpers.LocationHelper locationHelper;
+    private com.example.newsight.helpers.LocationWebSocketHelper locationWebSocketHelper;
+
+    // State variables for text display
+    private String lastDisplayedText = null;
+
     //Haptic Feedback Components
     private VibrationMotor vibrationMotor;
     private PatternGenerator patternGenerator;
@@ -65,6 +74,9 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         setContentView(R.layout.activity_main);
 
         Toast.makeText(this, "MainActivity started", Toast.LENGTH_SHORT).show();
+
+        // Generate session ID
+        sessionId = java.util.UUID.randomUUID().toString();
 
         // Apply window insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -108,8 +120,9 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
         initializeHapticSystem();
 
-        // Initialize voice command helper
+        // Initialize voice command helper with session ID
         voiceCommandHelper = new VoiceCommandHelper(this);
+        voiceCommandHelper.setSessionId(sessionId);
         ttsHelper = new TtsHelper(this);
 
         // Set up voice command callbacks
@@ -137,9 +150,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             @Override
             public void onNavigateToFeature(String feature, JSONObject extractedParams) {
                 Log.d(TAG, "Navigating to feature: " + feature);
-                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
+                navigateToOtherFeature(feature, extractedParams);
             }
 
             @Override
@@ -216,7 +227,10 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             btnLogin.setVisibility(android.view.View.VISIBLE);
             btnOpenCamera.setVisibility(View.GONE);
 
-            String wsUrl = "wss://cis4398-project-newsight-backend.onrender.com/ws/verify";
+            // Start location tracking
+            startBackgroundLocation();
+
+            String wsUrl = "ws://100.19.30.133/ws/verify";
             wsManager = new WebSocketManager(wsUrl, this);
             wsManager.setFeature(currentFeature);
             wsManager.connect();
@@ -224,6 +238,40 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             Log.i(TAG, "Launching feature: " + currentFeature);
             checkCameraPermission();
         }
+    }
+
+    private void startBackgroundLocation() {
+        if (!checkLocationPermission()) {
+            return;
+        }
+
+        // Start GPS tracking
+        locationHelper = new com.example.newsight.helpers.LocationHelper(this);
+        locationHelper.setLocationCallback(new com.example.newsight.helpers.LocationHelper.LocationUpdateCallback() {
+            @Override
+            public void onLocationUpdate(double latitude, double longitude, float accuracy) {
+                // Send to backend location WebSocket
+                if (locationWebSocketHelper != null && locationWebSocketHelper.isConnected()) {
+                    locationWebSocketHelper.sendLocation(latitude, longitude);
+                }
+            }
+
+            @Override
+            public void onLocationError(String error) {
+                Log.e(TAG, "Location error: " + error);
+            }
+        });
+        locationHelper.startLocationUpdates();
+
+        // Connect location WebSocket
+        locationWebSocketHelper = new com.example.newsight.helpers.LocationWebSocketHelper(
+                "ws://192.168.1.254:8000/location/ws", sessionId);
+        locationWebSocketHelper.connect();
+    }
+
+    private boolean checkLocationPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     private void handleLogin() {
@@ -259,13 +307,16 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         etPassword.setText("");
 
         // Initialize WebSocket connection
-        String wsUrl = "wss://cis4398-project-newsight-backend.onrender.com/ws/verify";
+        String wsUrl = "ws://100.19.30.133/ws/verify";
         wsManager = new WebSocketManager(wsUrl, this);
 
         currentFeature = "familiar_face";
         wsManager.setFeature(currentFeature);
 
         wsManager.connect();
+
+        // Start location tracking after login
+        startBackgroundLocation();
     }
 
     private void checkCameraPermission() {
@@ -300,14 +351,14 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         etEmail.setVisibility(android.view.View.GONE);
         etPassword.setVisibility(android.view.View.GONE);
         btnLogin.setVisibility(android.view.View.GONE);
-        
+
         // Show and setup bottom navigation for face detection mode
         android.view.View bottomNav = findViewById(R.id.floatingBottomNav);
         if (bottomNav != null) {
             bottomNav.setVisibility(android.view.View.VISIBLE);
         }
         setupBottomNavigation();
-        
+
         startCamera();
     }
 
@@ -552,7 +603,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     @Override
     protected void onResume() {
         super.onResume();
-        
+
         // Safety check: If login UI is visible, we are in login mode, so disable voice
         if (etEmail != null && etEmail.getVisibility() == View.VISIBLE) {
             isLoggedIn = false; // Ensure state matches UI
@@ -576,10 +627,17 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         super.onDestroy();
         cameraExecutor.shutdown();
         if (wsManager != null) wsManager.disconnect();
+        if (ttsHelper != null) ttsHelper.shutdown();
         if (vibrationMotor != null) vibrationMotor.close();
         if (hapticHandler != null) hapticHandler.removeCallbacksAndMessages(null);
         if (voiceCommandHelper != null) {
             voiceCommandHelper.cleanup();
+        }
+        if (locationHelper != null) {
+            locationHelper.cleanup();
+        }
+        if (locationWebSocketHelper != null) {
+            locationWebSocketHelper.cleanup();
         }
     }
 
@@ -598,8 +656,51 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
     @Override
     public void onResultsReceived(String results) {
         runOnUiThread(() -> {
-            Log.d(TAG, "Backend results: " + results);
-            Toast.makeText(this, "Backend: " + results, Toast.LENGTH_SHORT).show();
+            try {
+                JSONObject jsonObject = new JSONObject(results);
+                
+                // Handle Familiar Face Detection Results
+                if (jsonObject.has("match") && jsonObject.has("contactName")) {
+                    boolean match = jsonObject.optBoolean("match", false);
+                    if (match) {
+                        String name = jsonObject.optString("contactName", "Unknown");
+                        if (!name.equals("Unknown")) {
+                            // Announce name with TTS
+                            if (ttsHelper != null) {
+                                ttsHelper.speak(name);
+                                Log.d(TAG, "TTS: Announced " + name);
+                            }
+                            Toast.makeText(this, "Detected: " + name, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    return;
+                }
+                
+                // Handle Text Detection Results
+                String detectedText = null;
+
+                if (jsonObject.has("stable_text") && !jsonObject.isNull("stable_text")) {
+                    detectedText = jsonObject.getString("stable_text").trim();
+                }
+
+                // If new, valid text is found and it's different from the last one shown
+                if (detectedText != null && !detectedText.isEmpty() && !detectedText.equals(lastDisplayedText)) {
+                    lastDisplayedText = detectedText; // Update the state
+                    Toast.makeText(this, lastDisplayedText, Toast.LENGTH_SHORT).show();
+                }
+                // If no valid text is found, AND we have never shown any text before
+                else if ((detectedText == null || detectedText.isEmpty()) && lastDisplayedText == null) {
+                    Toast.makeText(this, "Reading...", Toast.LENGTH_SHORT).show();
+                }
+                // Otherwise, do nothing to avoid overwriting a valid result with "Reading..."
+
+            } catch (JSONException e) {
+                Log.e(TAG, "Failed to parse backend JSON: " + results, e);
+                // Only show "Reading..." on error if we haven't found any text yet.
+                if (lastDisplayedText == null) {
+                    Toast.makeText(this, "Reading...", Toast.LENGTH_SHORT).show();
+                }
+            }
         });
     }
 
@@ -610,5 +711,102 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             Log.i(TAG, status);
             Toast.makeText(this, status, Toast.LENGTH_SHORT).show();
         });
+    }
+
+    private void navigateToOtherFeature(String feature, JSONObject extractedParams) {
+        if (feature == null || feature.isEmpty()) {
+            return;
+        }
+
+        Intent intent = null;
+        String ttsMessage = null;
+
+        switch (feature.toUpperCase()) {
+            case "NAVIGATION":
+                intent = new Intent(this, NavigateActivity.class);
+
+                // Pass the FULL extracted_params JSON so NavigateActivity can parse everything
+                intent.putExtra("auto_start_navigation", true);
+                intent.putExtra("full_navigation_response", extractedParams.toString());
+                intent.putExtra("session_id", sessionId);
+
+                // Check navigation type for appropriate TTS message
+                String navType = extractedParams.optString("navigation_type", "walking");
+                boolean isTransit = extractedParams.optBoolean("is_transit_navigation", false);
+
+                if (isTransit || "transit".equals(navType)) {
+                    ttsMessage = "Starting transit navigation";
+                    Log.d(TAG, "✅ Passing TRANSIT navigation to NavigateActivity");
+                } else {
+                    ttsMessage = "Starting walking navigation";
+                    Log.d(TAG, "✅ Passing WALKING navigation to NavigateActivity");
+                }
+                break;
+
+            case "OBJECT_DETECTION":
+                intent = new Intent(this, ObstacleActivity.class);
+                ttsMessage = "Activating Object Detection";
+                break;
+
+            case "FACIAL_RECOGNITION":
+                // Already here
+                ttsHelper.speak("You are already in Facial Recognition mode");
+                return;
+
+            case "TEXT_DETECTION":
+                intent = new Intent(this, ReadTextActivity.class);
+                intent.putExtra("feature", "text_detection");
+                ttsMessage = "Activating Text Detection";
+                break;
+
+            case "COLOR_CUE":
+                intent = new Intent(this, ColorCueActivity.class);
+                ttsMessage = "Activating Color Cue";
+                break;
+
+            case "ASL_DETECTOR":
+                intent = new Intent(this, CommunicateActivity.class);
+                ttsMessage = "Activating ASL Detector";
+                break;
+
+            case "EMERGENCY_CONTACT":
+                intent = new Intent(this, EmergencyActivity.class);
+                ttsMessage = "Activating Emergency Contact";
+                break;
+
+            case "HOME":
+                intent = new Intent(this, HomeActivity.class);
+                ttsMessage = "Going to Home";
+                break;
+
+            case "SETTINGS":
+                intent = new Intent(this, SettingsActivity.class);
+                ttsMessage = "Opening Settings";
+                break;
+
+            case "NONE":
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                return;
+
+            default:
+                Log.w(TAG, "Unknown feature: " + feature);
+                ttsHelper.speak("I am sorry, I am not able to detect the feature");
+                return;
+        }
+
+        if (intent != null && ttsMessage != null) {
+            ttsHelper.speak(ttsMessage);
+            final Intent finalIntent = intent;
+            if (feature.equalsIgnoreCase("HOME")) {
+                finalIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            }
+
+            new Handler(getMainLooper()).postDelayed(() -> {
+                startActivity(finalIntent);
+                if (!feature.equalsIgnoreCase("SETTINGS")) {
+                    finish();
+                }
+            }, 900); // Changed to 900ms to match HomeActivity
+        }
     }
 }
