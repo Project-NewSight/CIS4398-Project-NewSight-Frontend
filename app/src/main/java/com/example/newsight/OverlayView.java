@@ -5,13 +5,19 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.os.Build;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class OverlayView extends View {
+
+    private static final String TAG = "OverlayView";
 
     private static class Box {
         RectF rect;     // in "backend image" coordinates
@@ -42,6 +48,11 @@ public class OverlayView extends View {
     private float hudFps = 0f;
 
     private TtsHelper ttsHelper; // TTS helper for speaking summary messages
+
+    // Haptic feedback components
+    private Vibrator vibrator;
+    private long lastVibrationTime = 0;
+    private static final long VIBRATION_COOLDOWN_MS = 500; // 500ms cooldown between vibrations
 
     public OverlayView(Context context) {
         super(context);
@@ -81,6 +92,15 @@ public class OverlayView extends View {
      */
     public void setTtsHelper(TtsHelper ttsHelper) {
         this.ttsHelper = ttsHelper;
+    }
+
+    /**
+     * Set the Vibrator service for haptic feedback.
+     * This should be called from the Activity that creates this OverlayView.
+     */
+    public void setVibrator(Vibrator vibrator) {
+        this.vibrator = vibrator;
+        Log.d(TAG, "Vibrator service set for haptic feedback");
     }
 
     /**
@@ -130,6 +150,11 @@ public class OverlayView extends View {
             }
         }
 
+        // Trigger haptic feedback if detections are present
+        if (!boxes.isEmpty()) {
+            triggerHapticFeedback();
+        }
+
         // Simple exponential smoothing to reduce jitter when box counts match
         if (!lastBoxes.isEmpty() && lastBoxes.size() == boxes.size()) {
             float alpha = 0.4f; // 0..1, lower = smoother
@@ -145,6 +170,95 @@ public class OverlayView extends View {
         }
 
         invalidate();
+    }
+
+    /**
+     * Trigger haptic feedback based on detected obstacles.
+     * Vibration intensity varies based on the size of the largest obstacle.
+     */
+    private void triggerHapticFeedback() {
+        if (vibrator == null || !vibrator.hasVibrator()) {
+            return;
+        }
+
+        // Check cooldown to prevent overwhelming vibrations
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastVibrationTime < VIBRATION_COOLDOWN_MS) {
+            return;
+        }
+
+        // Calculate the maximum relative area of all detected boxes
+        float maxRelativeArea = calculateMaxRelativeArea();
+
+        if (maxRelativeArea > 0) {
+            // Determine proximity zone and trigger appropriate vibration pattern
+            if (maxRelativeArea > 0.60f) {
+                // CRITICAL: Very close obstacle (>60% of view)
+                vibratePattern(new long[]{0, 100, 100, 100, 100, 100}, new int[]{0, 255, 0, 255, 0, 255});
+                Log.d(TAG, "CRITICAL proximity: " + String.format("%.1f%%", maxRelativeArea * 100));
+            } else if (maxRelativeArea > 0.40f) {
+                // WARNING: Close obstacle (40-60% of view)
+                vibratePattern(new long[]{0, 300}, new int[]{0, 220});
+                Log.d(TAG, "WARNING proximity: " + String.format("%.1f%%", maxRelativeArea * 100));
+            } else if (maxRelativeArea > 0.20f) {
+                // CAUTION: Medium distance obstacle (20-40% of view)
+                vibratePattern(new long[]{0, 250}, new int[]{0, 180});
+                Log.d(TAG, "CAUTION proximity: " + String.format("%.1f%%", maxRelativeArea * 100));
+            } else {
+                // NOTICE: Far obstacle (<20% of view)
+                vibratePattern(new long[]{0, 200}, new int[]{0, 120});
+                Log.d(TAG, "NOTICE proximity: " + String.format("%.1f%%", maxRelativeArea * 100));
+            }
+
+            lastVibrationTime = currentTime;
+        }
+    }
+
+    /**
+     * Calculate the maximum relative area of all detected bounding boxes.
+     * Returns a value between 0.0 and 1.0 representing the percentage of the view covered.
+     */
+    private float calculateMaxRelativeArea() {
+        if (boxes.isEmpty() || imageWidth == 0 || imageHeight == 0) {
+            return 0f;
+        }
+
+        float totalImageArea = imageWidth * imageHeight;
+        float maxArea = 0f;
+
+        for (Box box : boxes) {
+            float boxWidth = box.rect.right - box.rect.left;
+            float boxHeight = box.rect.bottom - box.rect.top;
+            float boxArea = boxWidth * boxHeight;
+            float relativeArea = boxArea / totalImageArea;
+
+            if (relativeArea > maxArea) {
+                maxArea = relativeArea;
+            }
+        }
+
+        return maxArea;
+    }
+
+    /**
+     * Trigger a vibration pattern with specified timings and amplitudes.
+     * Supports both modern VibrationEffect (API 26+) and legacy vibration.
+     */
+    private void vibratePattern(long[] timings, int[] amplitudes) {
+        if (vibrator == null) return;
+
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // Modern API (API 26+) with amplitude control
+                VibrationEffect effect = VibrationEffect.createWaveform(timings, amplitudes, -1);
+                vibrator.vibrate(effect);
+            } else {
+                // Legacy API (no amplitude control)
+                vibrator.vibrate(timings, -1);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error triggering vibration", e);
+        }
     }
 
     @Override
