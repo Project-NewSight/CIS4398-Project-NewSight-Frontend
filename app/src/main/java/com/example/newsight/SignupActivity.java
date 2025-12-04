@@ -121,11 +121,32 @@ public class SignupActivity extends AppCompatActivity {
             return;
         }
 
-        // TODO: Implement actual signup logic here
+        // FAKE AUTHENTICATION LOGIC
+        android.content.SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+
+        // Check if email already exists (simple check against the single stored user)
+        String storedEmail = prefs.getString("user_email", "");
+        if (!storedEmail.isEmpty() && storedEmail.equalsIgnoreCase(email)) {
+            tvError.setText("Email already exists");
+            tvError.setVisibility(android.view.View.VISIBLE);
+            etName.setText("");
+            etEmail.setText("");
+            etPassword.setText("");
+            etConfirmPassword.setText("");
+            return;
+        }
+
+        // Save user data
+        prefs.edit()
+                .putString("user_name", name)
+                .putString("user_email", email)
+                .putString("user_password", password)
+                .apply();
+
         Toast.makeText(this, "Account created for " + name, Toast.LENGTH_SHORT).show();
 
         // Navigate to loading screen
-        Intent intent = new Intent(SignupActivity.this, LoadingActivity.class);
+        Intent intent = new Intent(SignupActivity.this, MainActivity.class);
         startActivity(intent);
         finish();
     }

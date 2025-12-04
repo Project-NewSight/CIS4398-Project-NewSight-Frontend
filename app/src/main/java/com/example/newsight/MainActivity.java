@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
         // Connect location WebSocket
         locationWebSocketHelper = new com.example.newsight.helpers.LocationWebSocketHelper(
-                "ws://192.168.1.254:8000/location/ws", sessionId);
+                "wss://cis4398-project-newsight-backend.onrender.com/location/ws", sessionId);
         locationWebSocketHelper.connect();
     }
 
@@ -283,14 +283,26 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
             return;
         }
 
+        // FAKE AUTHENTICATION LOGIC
+        android.content.SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String storedEmail = prefs.getString("user_email", "");
+        String storedPassword = prefs.getString("user_password", "");
+
+        if (storedEmail.isEmpty() || !storedEmail.equalsIgnoreCase(email)) {
+            Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show();
+            etEmail.setText("");
+            etPassword.setText("");
+            return;
+        }
+
+        if (!storedPassword.equals(password)) {
+            Toast.makeText(this, "Invalid password", Toast.LENGTH_SHORT).show();
+            etPassword.setText("");
+            return;
+        }
+
         isLoggedIn = true;
         Toast.makeText(this, "Logged in as " + email, Toast.LENGTH_SHORT).show();
-
-        // Save email to SharedPreferences
-        getSharedPreferences("UserPrefs", MODE_PRIVATE)
-                .edit()
-                .putString("user_email", email)
-                .apply();
 
         // Hide login UI
         etEmail.setVisibility(android.view.View.VISIBLE);

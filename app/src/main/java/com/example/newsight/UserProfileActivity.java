@@ -120,6 +120,12 @@ public class UserProfileActivity extends AppCompatActivity {
             // Hide form
             isEditing = false;
             formEditProfile.setVisibility(View.GONE);
+
+            // Hide keyboard
+            android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+            }
         });
 
         // Load User Data
