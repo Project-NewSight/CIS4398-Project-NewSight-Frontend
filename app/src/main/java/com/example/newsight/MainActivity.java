@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
         // Connect location WebSocket
         locationWebSocketHelper = new com.example.newsight.helpers.LocationWebSocketHelper(
-                "ws://192.168.1.254:8000/location/ws", sessionId);
+                "wss://cis4398-project-newsight-backend.onrender.com/location/ws", sessionId);
         locationWebSocketHelper.connect();
     }
 

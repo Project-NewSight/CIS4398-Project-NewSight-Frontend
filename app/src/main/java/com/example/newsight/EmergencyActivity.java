@@ -44,7 +44,7 @@ import okhttp3.Response;
 public class EmergencyActivity extends AppCompatActivity {
 
     private static final String TAG = "EmergencyActivity";
-    private static final String BACKEND_URL = "http://192.168.1.254:8000/emergency_alert/7";
+    private static final String BACKEND_URL = "https://cis4398-project-newsight-backend.onrender.com/emergency_alert/7";
 
     // Increased delays for camera stabilization
     private static final long CAMERA_STABILIZATION_DELAY_MS = 2000; // 2 seconds for camera to focus
