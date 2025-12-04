@@ -22,7 +22,6 @@ public class WebSocketManager {
 
     private final String serverUrl;
     private final WsListener listener;
-
     private WebSocket webSocket;
     private boolean isConnected = false;
 
@@ -99,6 +98,7 @@ public class WebSocketManager {
 
             // Build JSON payload matching backend expectation
             String json = "{\"feature\":\"" + feature + "\",\"frame\":\"" + base64Frame + "\"}";
+
             webSocket.send(json);
             Log.d(TAG, "Sent ASL frame, size=" + frameData.length + " bytes, feature=" + feature);
         } catch (Exception e) {
@@ -122,4 +122,5 @@ public class WebSocketManager {
             Log.e(TAG, "Failed to send raw gray frame", e);
         }
     }
+
 }

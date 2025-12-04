@@ -10,7 +10,6 @@ import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.LifecycleOwner;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -19,17 +18,11 @@ import java.util.concurrent.ExecutionException;
 
 public class CameraHandler {
 
-    private static final String TAG = "CameraHandler";
-
-    /**
-     * Updated FeatureProvider interface
-     * (supports both old `.getFeature()` and new `.getActiveFeature()`)
-     */
     public interface FeatureProvider {
         String getActiveFeature();
     }
 
-    public static void stopCamera() { /* Reserved for future use */ }
+    private static final String TAG = "CameraHandler";
 
     public static void startCamera(Context context,
                                    FrameLayout container,
@@ -38,13 +31,11 @@ public class CameraHandler {
                                    FeatureProvider featureProvider) {
 
         PreviewView previewView = new PreviewView(context);
-
         container.removeAllViews();
-        container.addView(previewView,
-                new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.MATCH_PARENT
-                ));
+        container.addView(previewView, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+        ));
 
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
                 ProcessCameraProvider.getInstance(context);
@@ -58,43 +49,35 @@ public class CameraHandler {
 
                 CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
 
-                // Get the current feature
                 String feature = featureProvider.getActiveFeature();
-                Log.i(TAG, "Selected feature: " + feature);
 
-                // Create ImageAnalysis pipeline
                 ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build();
 
-                // --- Analyzer selection (merged logic) ---
+                // ⚡ Choose analyzer based on feature
                 if ("asl_detection".equals(feature)) {
-                    imageAnalysis.setAnalyzer(
-                            executor,
-                            new ASLFrameAnalyzer(wsManager, featureProvider::getActiveFeature)
-                    );
-                    Log.i(TAG, "Using ASLFrameAnalyzer");
+                    imageAnalysis.setAnalyzer(executor,
+                            new ASLFrameAnalyzer(wsManager, featureProvider::getActiveFeature));
+                    Log.i(TAG, "Using ASLFrameAnalyzer for feature: " + feature);
                 } else {
-                    imageAnalysis.setAnalyzer(
-                            executor,
-                            new FrameAnalyzer(wsManager, featureProvider::getActiveFeature)
-                    );
-                    Log.i(TAG, "Using FrameAnalyzer");
+                    imageAnalysis.setAnalyzer(executor,
+                            new FrameAnalyzer(wsManager, featureProvider::getActiveFeature));
+                    Log.i(TAG, "Using FrameAnalyzer for feature: " + feature);
                 }
 
                 cameraProvider.unbindAll();
                 cameraProvider.bindToLifecycle(
-                        (LifecycleOwner) context,
+                        (androidx.lifecycle.LifecycleOwner) context,
                         cameraSelector,
                         preview,
                         imageAnalysis
                 );
 
-                Log.i(TAG, "Camera bound successfully for feature: " + feature);
-
             } catch (ExecutionException | InterruptedException e) {
-                Log.e(TAG, "Camera initialization failed", e);
+                Log.e(TAG, "Failed to start camera", e);
             }
         }, ContextCompat.getMainExecutor(context));
     }
+
 }

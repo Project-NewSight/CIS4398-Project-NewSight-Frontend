@@ -65,6 +65,7 @@
         <!-- REAL Main Screens -->
         <activity android:name=".MainActivity" android:exported="true" />
         <activity android:name=".HomeActivity" android:exported="true" />
+        <activity android:name=".CameraActivity" android:exported="false" />
 
         <!-- Navigation -->
         <activity android:name=".NavigateActivity" android:exported="true" />
