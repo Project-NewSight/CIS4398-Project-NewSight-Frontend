@@ -86,6 +86,14 @@ public class NavigateActivity extends AppCompatActivity {
     private Gson gson;
     private Handler mainHandler;
 
+    // Haptic Feedback Components
+    private VibrationMotor vibrationMotor;
+    private PatternGenerator patternGenerator;
+    private boolean hapticInitialized = false;
+    private String lastHapticInstruction = "";
+    private long lastHapticTime = 0;
+    private static final long HAPTIC_COOLDOWN_MS = 3000;
+
     // State
     private String sessionId;
     private boolean isNavigating = false;
@@ -549,6 +557,150 @@ public class NavigateActivity extends AppCompatActivity {
         }
     }
 
+    // ==================== Haptic Feedback System ====================
+
+    /**
+     * Initialize haptic feedback system
+     */
+    private void initializeHapticFeedback() {
+        try {
+            vibrationMotor = new VibrationMotor(this);
+            vibrationMotor.initialize();
+
+            patternGenerator = new PatternGenerator();
+
+            hapticInitialized = true;
+            Log.d(TAG, "✅ Haptic feedback system initialized");
+
+        } catch (VibrationMotor.VibrationException e) {
+            Log.e(TAG, "❌ Failed to initialize haptic feedback: " + e.getMessage());
+            hapticInitialized = false;
+            Toast.makeText(this, "Haptic feedback unavailable", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Trigger haptic feedback based on navigation update
+     */
+    private void triggerHapticForNavigation(NavigationUpdate update) {
+        if (!hapticInitialized || vibrationMotor == null || patternGenerator == null) {
+            return;
+        }
+
+        String instruction = update.getInstruction();
+        if (instruction == null || instruction.isEmpty()) {
+            return;
+        }
+
+        // Cooldown check - don't spam same haptic pattern
+        long currentTime = System.currentTimeMillis();
+        if (instruction.equals(lastHapticInstruction) &&
+                (currentTime - lastHapticTime) < HAPTIC_COOLDOWN_MS) {
+            return;
+        }
+
+        try {
+            VibrationPattern pattern = null;
+            int intensity = 70; // Default intensity
+
+            // Distance-based proximity feedback
+            double distanceMeters = update.getDistanceToNext();
+
+            if (distanceMeters < 10) {
+                // Very close to turn - high intensity proximity alert
+                pattern = patternGenerator.generateProximityPattern((float) distanceMeters);
+                intensity = 90;
+                Log.d(TAG, "🔊 Proximity alert - very close (" + distanceMeters + "m)");
+
+            } else if (distanceMeters < 30) {
+                // Approaching turn - medium intensity
+                pattern = patternGenerator.generateProximityPattern((float) distanceMeters);
+                intensity = 75;
+                Log.d(TAG, "🔊 Proximity alert - approaching (" + distanceMeters + "m)");
+
+            } else if (distanceMeters < 100) {
+                // Determine directional pattern based on instruction
+                String lower = instruction.toLowerCase();
+
+                if (lower.contains("left")) {
+                    pattern = patternGenerator.generateDirectionalPattern(
+                            PatternGenerator.Direction.LEFT, intensity);
+                    Log.d(TAG, "⬅️ Haptic: Turn LEFT");
+
+                } else if (lower.contains("right")) {
+                    pattern = patternGenerator.generateDirectionalPattern(
+                            PatternGenerator.Direction.RIGHT, intensity);
+                    Log.d(TAG, "➡️ Haptic: Turn RIGHT");
+
+                } else {
+                    pattern = patternGenerator.generateDirectionalPattern(
+                            PatternGenerator.Direction.FORWARD, intensity);
+                    Log.d(TAG, "⬆️ Haptic: Continue FORWARD");
+                }
+            }
+
+            // Trigger the vibration if we have a pattern
+            if (pattern != null && pattern.validate()) {
+                vibrationMotor.triggerVibration(pattern, (int) pattern.getDuration(), intensity);
+
+                lastHapticInstruction = instruction;
+                lastHapticTime = currentTime;
+
+                Log.d(TAG, "✅ Haptic triggered - distance: " + distanceMeters + "m, intensity: " + intensity + "%");
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Error triggering haptic feedback: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Trigger celebration haptic pattern when arriving at destination
+     */
+    private void triggerArrivalCelebration() {
+        if (!hapticInitialized || vibrationMotor == null || patternGenerator == null) {
+            return;
+        }
+
+        try {
+            VibrationPattern celebrationPattern = patternGenerator.generateArrivalCelebrationPattern();
+
+            if (celebrationPattern != null && celebrationPattern.validate()) {
+                vibrationMotor.triggerVibration(celebrationPattern,
+                        (int) celebrationPattern.getDuration(), 80);
+
+                Log.d(TAG, "🎉 Arrival celebration haptic triggered!");
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Error triggering celebration haptic: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Stop all haptic feedback
+     */
+    private void stopHapticFeedback() {
+        if (vibrationMotor != null) {
+            vibrationMotor.stopVibration();
+        }
+    }
+
+    /**
+     * Cleanup haptic system
+     */
+    private void cleanupHapticFeedback() {
+        if (vibrationMotor != null) {
+            vibrationMotor.close();
+            vibrationMotor = null;
+        }
+
+        patternGenerator = null;
+        hapticInitialized = false;
+
+        Log.d(TAG, "✅ Haptic feedback system cleaned up");
+    }
+
     // ==================== Navigation ====================
 
     private void startNavigation(DirectionsResponse directions) {
@@ -556,6 +708,9 @@ public class NavigateActivity extends AppCompatActivity {
 
         isNavigating = true;
         currentDirections = directions;
+
+        // Initialize haptic feedback system
+        initializeHapticFeedback();
 
         // Show AR overlay
         arOverlay.setVisibility(View.VISIBLE);
@@ -592,6 +747,7 @@ public class NavigateActivity extends AppCompatActivity {
             public void onNavigationComplete() {
                 Log.d(TAG, "✅ Navigation complete!");
                 ttsHelper.speak("You have arrived at your destination");
+                triggerArrivalCelebration();
                 stopNavigation();
             }
 
@@ -649,6 +805,9 @@ public class NavigateActivity extends AppCompatActivity {
             if (update.isShouldAnnounce() && update.getAnnouncement() != null) {
                 ttsHelper.speak(update.getAnnouncement());
             }
+
+            // Trigger haptic feedback for navigation cues
+            triggerHapticForNavigation(update);
 
             // FOR TRANSIT NAVIGATION: Check if close to bus stop
             if (isTransitNavigation && !transitOptionsShown && nearestStop != null) {
@@ -900,6 +1059,9 @@ public class NavigateActivity extends AppCompatActivity {
     private void stopNavigation() {
         isNavigating = false;
 
+        stopHapticFeedback();
+        cleanupHapticFeedback();
+
         // Reset transit state
         isTransitNavigation = false;
         transitInfo = null;
@@ -1036,7 +1198,8 @@ public class NavigateActivity extends AppCompatActivity {
                         Manifest.permission.CAMERA,
                         Manifest.permission.ACCESS_FINE_LOCATION,
                         Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.RECORD_AUDIO
+                        Manifest.permission.RECORD_AUDIO,
+                        Manifest.permission.VIBRATE
                 },
                 PERMISSION_REQUEST_CODE);
     }
@@ -1065,6 +1228,8 @@ public class NavigateActivity extends AppCompatActivity {
         if (voiceCommandHelper != null) {
             voiceCommandHelper.stopListening();
         }
+
+        stopHapticFeedback();
     }
 
     @Override
@@ -1080,6 +1245,9 @@ public class NavigateActivity extends AppCompatActivity {
         super.onDestroy();
 
         // Clean up
+
+        cleanupHapticFeedback();
+
         if (voiceCommandHelper != null) {
             voiceCommandHelper.cleanup();
         }
