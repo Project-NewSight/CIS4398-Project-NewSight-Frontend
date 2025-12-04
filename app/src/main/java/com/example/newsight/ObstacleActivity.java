@@ -1,11 +1,13 @@
 package com.example.newsight;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -64,6 +66,9 @@ public class ObstacleActivity extends AppCompatActivity {
         ttsHelper = new TtsHelper(this);
         overlayView.setTtsHelper(ttsHelper);
 
+        // Initialize haptic feedback
+        initializeHapticFeedback();
+
         setupVoiceCommands();
         setupBottomNavigation();
 
@@ -81,6 +86,24 @@ public class ObstacleActivity extends AppCompatActivity {
         // Auto-start wake word detection if permission granted
         if (checkMicrophonePermission()) {
             voiceCommandHelper.startWakeWordDetection();
+        }
+    }
+
+    /**
+     * Initialize haptic feedback by getting Vibrator service and passing to OverlayView
+     */
+    private void initializeHapticFeedback() {
+        try {
+            Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+            if (vibrator != null && vibrator.hasVibrator()) {
+                overlayView.setVibrator(vibrator);
+                Log.d(TAG, "✅ Haptic feedback initialized successfully");
+            } else {
+                Log.w(TAG, "⚠️ Vibrator not available on this device");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Failed to initialize haptic feedback: " + e.getMessage());
         }
     }
 
@@ -388,7 +411,7 @@ public class ObstacleActivity extends AppCompatActivity {
                 if (!feature.equalsIgnoreCase("SETTINGS")) {
                     finish();
                 }
-            }, 900); // Changed to 900ms to match HomeActivity
+            }, 900);
         }
     }
 }
