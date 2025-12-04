@@ -116,7 +116,7 @@
             android:layout_marginTop="8dp"
             android:textSize="14sp"
             android:textColor="@color/muted_foreground"
-            android:text="• Start and finish a navigation session: +50 pts\n• Use object detection during your walk: +40 pts\n• Use transit assist for a full trip: +60 pts\n• Daily check-in with the app: +10 pts\n• Maintain a 5-day weekly streak: +100 pts\n• Send feedback or report an issue: +20 pts.\n• Every 2000 you unlock new level" />
+            android:text="• Start and finish a navigation session: +50 pts\n• Use object detection during your walk: +40 pts\n• Use transit assist for a full trip: +60 pts\n• Daily check-in with the app: +10 pts\n• Maintain a 5-day weekly streak: +100 pts\n• Send feedback or report an issue: +20 pts.\n• Use Familiar Face Detection: +50 pts \n• Use Text Detection: +50 pts \n• Using ASL Detection: +50 pts \n Using COlor Cue: +50 pts \n• Every 2000 you unlock new level" />
     </LinearLayout>
 
     <!-- Gift card tiers -->

@@ -15,7 +15,7 @@ public class RewardsActivity extends AppCompatActivity {
     private static final int POINTS_PER_DOLLAR = 1000;
     private static final int TIER_10_POINTS = 10000;
 
-    private int currentPoints = 1250;
+    private com.example.newsight.helpers.RewardsHelper rewardsHelper;
 
     private TextView textTotalPoints;
     private TextView textCurrentValue;
@@ -28,10 +28,8 @@ public class RewardsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rewards);
 
-        // Get points from HomeActivity if sent
-        if (getIntent() != null && getIntent().hasExtra("current_points")) {
-            currentPoints = getIntent().getIntExtra("current_points", currentPoints);
-        }
+        // Initialize RewardsHelper
+        rewardsHelper = new com.example.newsight.helpers.RewardsHelper(this);
 
         // Hook up views
         textTotalPoints = findViewById(R.id.textTotalPoints);
@@ -53,12 +51,14 @@ public class RewardsActivity extends AppCompatActivity {
         // When user taps "Redeem Points"
         buttonRedeemPoints.setOnClickListener(view -> {
             Intent intent = new Intent(RewardsActivity.this, RedeemActivity.class);
-            intent.putExtra("current_points", currentPoints);
+            intent.putExtra("current_points", rewardsHelper.getPoints());
             startActivity(intent);
         });
     }
 
     private void updateSummaryUI() {
+        int currentPoints = rewardsHelper.getPoints();
+
         // Show total points
         textTotalPoints.setText(String.format(Locale.US, "%,d", currentPoints));
 

@@ -25,15 +25,19 @@ public class HomeActivity extends AppCompatActivity {
     private String sessionId;
     private com.example.newsight.helpers.LocationHelper locationHelper;
     private com.example.newsight.helpers.LocationWebSocketHelper locationWebSocketHelper;
+    private com.example.newsight.helpers.RewardsHelper rewardsHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        // Initialize RewardsHelper
+        rewardsHelper = new com.example.newsight.helpers.RewardsHelper(this);
+        rewardsHelper.checkDailyLogin();
+
         FrameLayout rewardCard = findViewById(R.id.cardRewards);
         rewardCard.setOnClickListener((v) -> {
             Intent intent = new Intent(HomeActivity.this, RewardsActivity.class);
-            intent.putExtra("current_points", 1250);
             startActivity(intent);
         });
 
@@ -124,16 +128,23 @@ public class HomeActivity extends AppCompatActivity {
             tvDate.setText(currentDate);
         }
 
-        if (textPoints != null) textPoints.setText("1,250");
-        if (textLevel != null) textLevel.setText("1");
-        if (textStreak != null) textStreak.setText("5 day streak!");
+        // Load rewards data from RewardsHelper
+        int points = rewardsHelper.getPoints();
+        int level = rewardsHelper.getLevel();
+        int progress = rewardsHelper.getProgress();
+        int streakDays = rewardsHelper.getStreakDays();
 
-        // Initialize progress bar to 62.5% (1,250/2,000)
+        if (textPoints != null) textPoints.setText(String.format(java.util.Locale.US, "%,d", points));
+        if (textLevel != null) textLevel.setText(String.valueOf(level));
+        if (textStreak != null) textStreak.setText(streakDays + " day streak!");
+
+        // Initialize progress bar based on current progress (out of 2000)
         if (progressLevel != null) {
             android.view.View progressContainer = (android.view.View) progressLevel.getParent();
             progressContainer.post(() -> {
                 int parentWidth = progressContainer.getWidth();
-                int progressWidth = (int) (parentWidth * 0.625); // 1,250/2,000 = 62.5%
+                double progressPercentage = progress / 2000.0;
+                int progressWidth = (int) (parentWidth * progressPercentage);
                 android.widget.FrameLayout.LayoutParams params = (android.widget.FrameLayout.LayoutParams) progressLevel.getLayoutParams();
                 params.width = progressWidth;
                 progressLevel.setLayoutParams(params);
