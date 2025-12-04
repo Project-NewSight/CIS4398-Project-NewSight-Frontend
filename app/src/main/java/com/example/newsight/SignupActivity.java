@@ -129,6 +129,10 @@ public class SignupActivity extends AppCompatActivity {
         if (!storedEmail.isEmpty() && storedEmail.equalsIgnoreCase(email)) {
             tvError.setText("Email already exists");
             tvError.setVisibility(android.view.View.VISIBLE);
+            etName.setText("");
+            etEmail.setText("");
+            etPassword.setText("");
+            etConfirmPassword.setText("");
             return;
         }
 
@@ -142,7 +146,7 @@ public class SignupActivity extends AppCompatActivity {
         Toast.makeText(this, "Account created for " + name, Toast.LENGTH_SHORT).show();
 
         // Navigate to loading screen
-        Intent intent = new Intent(SignupActivity.this, LoadingActivity.class);
+        Intent intent = new Intent(SignupActivity.this, MainActivity.class);
         startActivity(intent);
         finish();
     }

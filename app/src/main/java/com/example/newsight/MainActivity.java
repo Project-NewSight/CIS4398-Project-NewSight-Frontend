@@ -290,11 +290,14 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
 
         if (storedEmail.isEmpty() || !storedEmail.equalsIgnoreCase(email)) {
             Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show();
+            etEmail.setText("");
+            etPassword.setText("");
             return;
         }
 
         if (!storedPassword.equals(password)) {
             Toast.makeText(this, "Invalid password", Toast.LENGTH_SHORT).show();
+            etPassword.setText("");
             return;
         }
 

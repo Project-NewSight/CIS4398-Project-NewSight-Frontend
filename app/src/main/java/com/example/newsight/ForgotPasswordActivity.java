@@ -57,6 +57,8 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
         if (storedEmail.isEmpty() || !storedEmail.equalsIgnoreCase(email)) {
             Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show();
+            // Clear field on error
+            etEmail.setText("");
             return;
         }
 
