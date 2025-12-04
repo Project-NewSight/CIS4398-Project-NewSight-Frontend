@@ -1,11 +1,13 @@
 package com.example.newsight;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -30,6 +32,14 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
+/**
+ * ObstacleActivity - Object Detection with Haptic Feedback
+ *
+ * Features:
+ * - Real-time object detection
+ * - Proximity-based haptic feedback via OverlayView
+ * - Voice command integration
+ */
 public class ObstacleActivity extends AppCompatActivity {
 
     private static final int REQUEST_CAMERA_PERMISSION = 100;
@@ -63,6 +73,9 @@ public class ObstacleActivity extends AppCompatActivity {
         voiceCommandHelper.setSessionId(sessionId);
         ttsHelper = new TtsHelper(this);
 
+        // Initialize haptic feedback - Get Vibrator service and pass to OverlayView
+        initializeHapticFeedback();
+
         setupVoiceCommands();
         setupBottomNavigation();
 
@@ -80,6 +93,24 @@ public class ObstacleActivity extends AppCompatActivity {
         // Auto-start wake word detection if permission granted
         if (checkMicrophonePermission()) {
             voiceCommandHelper.startWakeWordDetection();
+        }
+    }
+
+    /**
+     * Initialize haptic feedback by getting Vibrator service and passing to OverlayView
+     */
+    private void initializeHapticFeedback() {
+        try {
+            Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+            if (vibrator != null && vibrator.hasVibrator()) {
+                overlayView.setVibrator(vibrator);
+                Log.d(TAG, "✅ Haptic feedback initialized");
+            } else {
+                Log.w(TAG, "⚠️ Vibrator not available on this device");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "❌ Failed to initialize haptic feedback: " + e.getMessage());
         }
     }
 
@@ -387,7 +418,7 @@ public class ObstacleActivity extends AppCompatActivity {
                 if (!feature.equalsIgnoreCase("SETTINGS")) {
                     finish();
                 }
-            }, 900); // Changed to 900ms to match HomeActivity
+            }, 900);
         }
     }
 }
