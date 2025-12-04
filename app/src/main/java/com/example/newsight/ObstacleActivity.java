@@ -64,10 +64,6 @@ public class ObstacleActivity extends AppCompatActivity {
         ttsHelper = new TtsHelper(this);
         overlayView.setTtsHelper(ttsHelper);
 
-        // Award points for using object detection
-        com.example.newsight.helpers.RewardsHelper rewardsHelper = new com.example.newsight.helpers.RewardsHelper(this);
-        rewardsHelper.addPoints(40);
-
         setupVoiceCommands();
         setupBottomNavigation();
 
