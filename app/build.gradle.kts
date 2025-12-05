@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("jacoco")
 }
 
 android {
@@ -40,6 +41,7 @@ dependencies {
     implementation(libs.constraintlayout)
 
     // Google location services
+    implementation("com.google.android.gms:play-services-location:21.0.1")
     // CameraX
     implementation(libs.camera.core)
     implementation(libs.camera.camera2)
@@ -50,15 +52,17 @@ dependencies {
     // OkHttp (not in TOML)
     implementation("com.squareup.okhttp3:okhttp:5.2.1")
 
-    // Testing
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.ext.junit)
-    androidTestImplementation(libs.espresso.core)
-    implementation("com.google.android.gms:play-services-location:21.0.1")
-
-    // OkHttp
+    // OkHttp (Explicit)
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Testing
+    testImplementation(libs.junit)
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
+    testImplementation("org.robolectric:robolectric:4.11.1")
+    androidTestImplementation(libs.ext.junit)
+    androidTestImplementation(libs.espresso.core)
 
     // CameraX (REQUIRED)
     val cameraXVersion = "1.3.1"
@@ -74,4 +78,23 @@ dependencies {
     // Gson dependencies
     implementation("com.google.code.gson:gson:2.11.0")
 
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    val fileFilter = listOf(
+        "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*", "**/*Test*.*", "android/**/*"
+    )
+    val debugTree = fileTree("${project.layout.buildDirectory.get()}/intermediates/javac/debug/classes").exclude(fileFilter)
+    val mainSrc = "${project.projectDir}/src/main/java"
+
+    sourceDirectories.setFrom(files(mainSrc))
+    classDirectories.setFrom(files(debugTree))
+    executionData.setFrom(files("${project.layout.buildDirectory.get()}/jacoco/testDebugUnitTest.exec"))
 }
