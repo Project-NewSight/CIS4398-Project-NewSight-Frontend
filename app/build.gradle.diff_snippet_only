@@ -1,0 +1,10 @@
+tasks.withType<Test> {
+    configure<JacocoTaskExtension> {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.11" // Use a newer version
+}

@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    id("jacoco")
 }
 
 android {
@@ -30,6 +29,16 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    sourceSets {
+        getByName("test") {
+            res.srcDirs("src/test/res")
+        }
+    }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
     }
 }
 
@@ -78,23 +87,4 @@ dependencies {
     // Gson dependencies
     implementation("com.google.code.gson:gson:2.11.0")
 
-}
-
-tasks.register<JacocoReport>("jacocoTestReport") {
-    dependsOn("testDebugUnitTest")
-
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
-
-    val fileFilter = listOf(
-        "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*", "**/*Test*.*", "android/**/*"
-    )
-    val debugTree = fileTree("${project.layout.buildDirectory.get()}/intermediates/javac/debug/classes").exclude(fileFilter)
-    val mainSrc = "${project.projectDir}/src/main/java"
-
-    sourceDirectories.setFrom(files(mainSrc))
-    classDirectories.setFrom(files(debugTree))
-    executionData.setFrom(files("${project.layout.buildDirectory.get()}/jacoco/testDebugUnitTest.exec"))
 }
