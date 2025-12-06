@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center"
+    android:background="#FFFFFF">
+
+    <EditText
+        android:id="@+id/etEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Email or Username"
+        android:inputType="textEmailAddress"
+        android:drawableLeft="@android:drawable/ic_dialog_email"
+        android:padding="12dp"
+        android:background="@android:drawable/edit_text"
+        android:layout_marginBottom="16dp" />
+
+    <EditText
+        android:id="@+id/etPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Password"
+        android:inputType="textPassword"
+        android:drawableLeft="@android:drawable/ic_lock_idle_lock"
+        android:padding="12dp"
+        android:background="@android:drawable/edit_text"
+        android:layout_marginBottom="24dp" />
+
+    <Button
+        android:id="@+id/btnLogin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sign In"
+        android:backgroundTint="@android:color/holo_blue_light"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btnOpenCamera"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Open Camera"
+        android:backgroundTint="@android:color/holo_green_light"
+        android:textColor="#FFFFFF"
+        android:visibility="gone"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Haptic Feedback Pattern Test -->
+    <Button
+        android:id="@+id/btnTestHaptic"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Test Haptic Patterns"
+        android:backgroundTint="@android:color/holo_orange_light"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Camera container for live preview -->
+    <FrameLayout
+        android:id="@+id/cameraContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:visibility="gone" />
+
+</LinearLayout>
