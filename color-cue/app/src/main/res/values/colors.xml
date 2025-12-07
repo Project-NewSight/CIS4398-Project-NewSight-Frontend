@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="Cyan">#00CFFF</color>
+
+    <color name="Grey">#546168</color>
+    <color name="Red">#ef4042</color>
+    <color name="Green">#3bd8ad</color>
+    <color name="Yellow">#e8dd72</color>
+    <color name="DeepBlue">#6cace4</color>
+    <color name="LightBlue">#4497c4</color>
+    <color name="Orange">#ffac75</color>
+    <color name="Pink">#e098e0</color>
+    <color name="PaleGreen">#c7f5ac</color>
+    <color name="Taupe">#a47b56</color>
+
+    <!-- Light Mode Theme Colors -->
+    <color name="background">#f8f9fa</color>
+    <color name="foreground">#15181d</color>
+    <color name="card">#ffffff</color>
+    <color name="surface_1">#f2f4f6</color>
+    <color name="surface_2">#e6eaee</color>
+    <color name="primary">#0b61da</color>
+    <color name="primary_variant">#2563eb</color>
+    <color name="secondary">#d3d7de</color>
+    <color name="accent">#14b79c</color>
+    <color name="muted">#eeeff1</color>
+    <color name="muted_foreground">#5b6470</color>
+    <color name="border">#e2e4e8</color>
+    <color name="input_bg">#0D000000</color> <!-- 5% black for light mode -->
+    <color name="input_border">#1A000000</color> <!-- 10% black for light mode -->
+    <color name="glass_background">#CCFFFFFF</color>
+    <color name="glass_border">#1A000000</color>
+
+    <color name="Black">#000000</color>
+    <color name="White">#FFFFFF</color>
+
+    <color name="Grey700">#424242</color>
+    <color name="Grey300">#D6D6D6</color>
+
+    <!-- Core brand blues -->
+    <color name="PrimaryBlue">#2A34C0</color>
+    <color name="PrimaryBlueLight">#E5E8FF</color>
+    <color name="DodgerBlue">#3098f4</color>
+    <color name="TropicalBlue">#c3dbf4</color>
+    <color name="CornflowerBlue">#98c4ec</color>
+    <color name="AccentCyan">#00CFFF</color>
+    <color name="BlackSqueeze">#E1F5F8</color>
+
+    <!-- System status colors -->
+    <color name="SuccessGreen">#1DBF75</color>
+    <color name="ErrorRed">#D32F2F</color>
+    <color name="WarningYellow">#F2C94C</color>
+    <!-- Needed by drawable & layout files -->
+    <color name="Charlotte">#b7f8fb</color>
+    <color name="DesatDodgerBlue">#1E2A40</color>
+    <color name="Malibu">#74e0fb</color>
+    <color name="MorningGlory">#8cd4dc</color>
+
+</resources>

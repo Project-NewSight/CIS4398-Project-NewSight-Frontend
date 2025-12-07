@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Eye shape -->
+    <path
+        android:pathData="M54,34 a32,20 0 1,1 0,40 a32,20 0 1,1 0,-40"
+        android:fillColor="#ffffff"
+        android:fillAlpha="0.95"/>
+
+    <!-- Iris -->
+    <path
+        android:pathData="M54,54m-12,0a12,12 0,1,1 24,0a12,12 0,1,1 -24,0"
+        android:fillColor="#764ba2"
+        android:fillAlpha="0.85"/>
+
+    <!-- Pupil -->
+    <path
+        android:pathData="M54,54m-6,0a6,6 0,1,1 12,0a6,6 0,1,1 -12,0"
+        android:fillColor="#1e1b4b"/>
+
+    <!-- Light reflection -->
+    <path
+        android:pathData="M51,51m-2.5,0a2.5,2.5 0,1,1 5,0a2.5,2.5 0,1,1 -5,0"
+        android:fillColor="#ffffff"
+        android:fillAlpha="0.9"/>
+
+    <!-- Top light ray -->
+    <path
+        android:pathData="M54,18 L54,26"
+        android:strokeColor="#ffffff"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.8"/>
+
+    <!-- Left diagonal ray -->
+    <path
+        android:pathData="M32,36 L26,30"
+        android:strokeColor="#ffffff"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.7"/>
+
+    <!-- Right diagonal ray -->
+    <path
+        android:pathData="M76,36 L82,30"
+        android:strokeColor="#ffffff"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.7"/>
+</vector>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#000000">
+
+    <!-- 🔵 Top Home Bar -->
+    <FrameLayout
+        android:id="@+id/btnHome"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            style="@style/ShadowText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Closet"
+            android:textColor="@color/white"
+            android:textSize="45sp"
+            android:textStyle="bold"/>
+    </FrameLayout>
+
+    <!-- 🎨 Filter Options -->
+    <LinearLayout
+        android:id="@+id/filterLayout"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:gravity="center"
+        android:background="#111">
+
+        <Spinner
+            android:id="@+id/spinnerColor"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_green"
+            android:padding="8dp"
+            android:spinnerMode="dropdown"/>
+
+        <View
+            android:layout_width="12dp"
+            android:layout_height="match_parent"/>
+
+        <Spinner
+            android:id="@+id/spinnerCategory"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_yellow"
+            android:padding="8dp"
+            android:spinnerMode="dropdown"/>
+    </LinearLayout>
+
+    <!-- 🧺 Grid of Clothing Items -->
+    <GridView
+        android:id="@+id/gridCloset"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:numColumns="2"
+        android:verticalSpacing="14dp"
+        android:horizontalSpacing="14dp"
+        android:padding="16dp"
+        android:background="#000"/>
+
+    <!-- 🎤 Bottom Mic Bar -->
+    <FrameLayout
+        android:id="@+id/btnMic"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            style="@style/MicIconStyle"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_mic"
+            android:contentDescription="Microphone Icon"/>
+    </FrameLayout>
+
+</LinearLayout>

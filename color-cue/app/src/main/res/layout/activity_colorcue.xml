@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:background="#2B2B2B"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 🔵 Top Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:orientation="horizontal"
+        android:background="@color/DodgerBlue">
+
+        <FrameLayout
+            android:id="@+id/btnBack"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@color/DesatDodgerBlue"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                style="@style/ShadowText"
+                android:text="Back"
+                android:textColor="@color/White"
+                android:textSize="36sp"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/btnHome"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@color/DodgerBlue"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                style="@style/ShadowText"
+                android:text="Home"
+                android:textColor="@color/White"
+                android:textSize="36sp"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!--  GRID  -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="4dp">
+
+        <!-- Row 1 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <!-- Match Outfit -->
+            <FrameLayout
+                android:id="@+id/btnMatchOutfit"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"
+                android:background="@drawable/rectangle_deep_blue"
+                android:clickable="true">
+
+                <TextView
+                    style="@style/ShadowText"
+                    android:text="Match\nOutfit"
+                    android:textColor="@color/White"
+                    android:textSize="34sp"
+                    android:gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+            </FrameLayout>
+
+            <!-- Add Item (correct ID!) -->
+            <FrameLayout
+                android:id="@+id/btnAddItem"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:layout_height="match_parent"
+                android:background="@color/BlackSqueeze"
+                android:clickable="true">
+
+                <TextView
+                    style="@style/WhiteShadowText"
+                    android:text="Add\nItem"
+                    android:textColor="@color/DodgerBlue"
+                    android:textSize="34sp"
+                    android:gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+            </FrameLayout>
+
+        </LinearLayout>
+
+        <!-- Row 2 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <!-- Identify Item (correct ID!) -->
+            <FrameLayout
+                android:id="@+id/btnIdentifyItem"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:background="@color/BlackSqueeze"
+                android:layout_height="match_parent"
+                android:clickable="true">
+
+                <TextView
+                    style="@style/WhiteShadowText"
+                    android:text="Identify\nItem"
+                    android:textColor="@color/DodgerBlue"
+                    android:textSize="34sp"
+                    android:gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+            </FrameLayout>
+
+            <!-- View Closet -->
+            <FrameLayout
+                android:id="@+id/btnViewCloset"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/rectangle_deep_blue"
+                android:layout_marginStart="4dp"
+                android:layout_height="match_parent"
+                android:clickable="true">
+
+                <TextView
+                    style="@style/ShadowText"
+                    android:text="View\nCloset"
+                    android:textColor="@color/White"
+                    android:textSize="34sp"
+                    android:gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Bottom Mic -->
+    <FrameLayout
+        android:id="@+id/btnMic"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@color/DodgerBlue"
+        android:clickable="true">
+
+        <ImageView
+            style="@style/MicIconStyle"
+            android:src="@drawable/ic_mic"
+            android:layout_gravity="center"/>
+    </FrameLayout>
+
+</LinearLayout>

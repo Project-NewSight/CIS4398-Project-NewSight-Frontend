@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="Cyan">#00CFFF</color>
+
+    <color name="Grey">#546168</color>
+    <color name="Red">#ef4042</color>
+    <color name="Green">#3bd8ad</color>
+    <color name="Yellow">#e8dd72</color>
+    <color name="DeepBlue">#4042b3</color>
+    <color name="LightBlue">#4497c4</color>
+    <color name="Orange">#ffac75</color>
+    <color name="Pink">#e098e0</color>
+    <color name="PaleGreen">#c7f5ac</color>
+    <color name="Taupe">#a47b56</color>
+
+    <!-- Dark Mode Theme Colors -->
+    <color name="background">#111317</color>
+    <color name="foreground">#f0f1f3</color>
+    <color name="card">#1a1d23</color>
+    <color name="surface_1">#1e2129</color>
+    <color name="surface_2">#3E4552</color>
+    <color name="primary">#5598f6</color>
+    <color name="primary_variant">#2563eb</color>
+    <color name="secondary">#2b303a</color>
+    <color name="accent">#19e5c3</color>
+    <color name="muted">#22262e</color>
+    <color name="muted_foreground">#94a3b8</color>
+    <color name="border">#2b303a</color>
+    <color name="input_bg">#0DFFFFFF</color> <!-- 5% white for dark mode -->
+    <color name="input_border">#1AFFFFFF</color> <!-- 10% white for dark mode -->
+    <color name="glass_background">#111317</color>
+    <color name="glass_border">#4DFFFFFF</color>
+</resources>

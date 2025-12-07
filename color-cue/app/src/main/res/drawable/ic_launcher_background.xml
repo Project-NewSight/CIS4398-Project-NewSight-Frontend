@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- White neutral backdrop -->
+    <path
+        android:pathData="M0,0h1024v1024h-1024z"
+        android:fillColor="#ffffff" />
+
+    <!-- Big rounded rectangle -->
+    <path
+        android:pathData="M256,96 h512 a160,160 0 0 1 160,160 v512 a160,160 0 0 1 -160,160 h-512 a160,160 0 0 1 -160,-160 v-512 a160,160 0 0 1 160,-160 z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="0"
+                android:endX="108"
+                android:endY="108">
+                <item android:offset="0.0" android:color="#f8f8f8" />
+                <item android:offset="0.5" android:color="#eeeeee" />
+                <item android:offset="1.0" android:color="#e6e6e6" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Glass highlight -->
+    <path
+        android:pathData="M300,140 h420 c32,0 58,26 58,58 v22 c0,32 -26,58 -58,58 h-420 c-32,0 -58,-26 -58,-58 v-22 c0,-32 26,-58 58,-58 z"
+        android:fillColor="#ffffff"
+        android:fillAlpha="0.12" />
+</vector>
