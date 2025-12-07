@@ -42,23 +42,23 @@ public class SignupActivity extends AppCompatActivity {
 
         // Focus listeners for label highlighting
         etName.setOnFocusChangeListener((v, hasFocus) -> {
-            tvNameLabel.setTextColor(ContextCompat.getColor(this, 
-                hasFocus ? R.color.primary : R.color.muted_foreground));
+            tvNameLabel.setTextColor(ContextCompat.getColor(this,
+                    hasFocus ? R.color.primary : R.color.muted_foreground));
         });
 
         etEmail.setOnFocusChangeListener((v, hasFocus) -> {
-            tvEmailLabel.setTextColor(ContextCompat.getColor(this, 
-                hasFocus ? R.color.primary : R.color.muted_foreground));
+            tvEmailLabel.setTextColor(ContextCompat.getColor(this,
+                    hasFocus ? R.color.primary : R.color.muted_foreground));
         });
 
         etPassword.setOnFocusChangeListener((v, hasFocus) -> {
-            tvPasswordLabel.setTextColor(ContextCompat.getColor(this, 
-                hasFocus ? R.color.primary : R.color.muted_foreground));
+            tvPasswordLabel.setTextColor(ContextCompat.getColor(this,
+                    hasFocus ? R.color.primary : R.color.muted_foreground));
         });
 
         etConfirmPassword.setOnFocusChangeListener((v, hasFocus) -> {
-            tvConfirmPasswordLabel.setTextColor(ContextCompat.getColor(this, 
-                hasFocus ? R.color.primary : R.color.muted_foreground));
+            tvConfirmPasswordLabel.setTextColor(ContextCompat.getColor(this,
+                    hasFocus ? R.color.primary : R.color.muted_foreground));
         });
 
         // Setup password toggles

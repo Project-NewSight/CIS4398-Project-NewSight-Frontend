@@ -658,7 +658,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
         runOnUiThread(() -> {
             try {
                 JSONObject jsonObject = new JSONObject(results);
-                
+
                 // Handle Familiar Face Detection Results
                 if (jsonObject.has("match") && jsonObject.has("contactName")) {
                     boolean match = jsonObject.optBoolean("match", false);
@@ -675,7 +675,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
                     }
                     return;
                 }
-                
+
                 // Handle Text Detection Results
                 String detectedText = null;
 

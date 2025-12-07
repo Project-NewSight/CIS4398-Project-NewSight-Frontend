@@ -107,8 +107,11 @@
                         android:layout_marginStart="12dp">
 
                         <TextView
+                            android:id="@+id/textRewardsPoints"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:clickable="true"
+                            android:focusableInTouchMode="true"
                             android:text="Rewards Points"
                             android:textColor="@color/muted_foreground"
                             android:textSize="14sp"
