@@ -1,0 +1,1799 @@
+diff --git a/.idea/deploymentTargetSelector.xml b/.idea/deploymentTargetSelector.xml
+index cb90634..075b0d3 100644
+--- a/.idea/deploymentTargetSelector.xml
++++ b/.idea/deploymentTargetSelector.xml
+@@ -4,10 +4,10 @@
+     <selectionStates>
+       <SelectionState runConfigName="app">
+         <option name="selectionMode" value="DROPDOWN" />
+-        <DropdownSelection timestamp="2025-10-14T14:44:51.754772300Z">
++        <DropdownSelection timestamp="2025-10-28T15:18:48.728482Z">
+           <Target type="DEFAULT_BOOT">
+             <handle>
+-              <DeviceId pluginId="PhysicalDevice" identifier="serial=R5CT82JBBMY" />
++              <DeviceId pluginId="LocalEmulator" identifier="path=/Users/kevinto/.android/avd/Medium_Phone.avd" />
+             </handle>
+           </Target>
+         </DropdownSelection>
+diff --git a/app/build.gradle.kts b/app/build.gradle.kts
+index 2296aeb..6948095 100644
+--- a/app/build.gradle.kts
++++ b/app/build.gradle.kts
+@@ -39,7 +39,6 @@ dependencies {
+     implementation(libs.activity)
+     implementation(libs.constraintlayout)
+ 
+-    // Google location services
+     // CameraX
+     implementation(libs.camera.core)
+     implementation(libs.camera.camera2)
+@@ -54,18 +53,14 @@ dependencies {
+     testImplementation(libs.junit)
+     androidTestImplementation(libs.ext.junit)
+     androidTestImplementation(libs.espresso.core)
+-    implementation("com.google.android.gms:play-services-location:21.0.1")
+ 
+-    // OkHttp
+-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+ 
+-    // CameraX (REQUIRED)
+-    val cameraXVersion = "1.3.1"
+-    implementation("androidx.camera:camera-core:$cameraXVersion")
+-    implementation("androidx.camera:camera-camera2:$cameraXVersion")
+-    implementation("androidx.camera:camera-lifecycle:$cameraXVersion")
+-    implementation("androidx.camera:camera-view:$cameraXVersion")
++    // CameraX dependencies for camera stream
++    val cameraxVersion = "1.3.1"
++    implementation("androidx.camera:camera-core:" + cameraxVersion)
++    implementation("androidx.camera:camera-camera2:" + cameraxVersion)
++    implementation("androidx.camera:camera-lifecycle:" + cameraxVersion)
++    implementation("androidx.camera:camera-view:" + cameraxVersion)
+ 
+     // TensorFlow Lite dependencies for object detection
+     implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.4")
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+index 7935584..222c845 100644
+--- a/app/src/main/AndroidManifest.xml
++++ b/app/src/main/AndroidManifest.xml
+@@ -2,55 +2,34 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:tools="http://schemas.android.com/tools">
+ 
+-    <!-- ===== Permissions ===== -->
+-    <!-- Camera & Media -->
++    <uses-permission android:name="android.permission.INTERNET"/>
+     <uses-permission android:name="android.permission.CAMERA" />
++    <uses-feature
++        android:name="android.hardware.camera"
++        android:required="true" />
+ 
+-    <!-- Audio (for voice commands or speech recognition) -->
+-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+-
+-    <!-- Location -->
+-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+-
+-    <!-- Network & Internet -->
+-    <uses-permission android:name="android.permission.INTERNET" />
+-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
++    <!-- Camera permission -->
++    <uses-permission android:name="android.permission.CAMERA" />
+ 
+-    <!-- Camera support -->
++    <!-- Optional: declare camera feature (not required for install on devices without camera) -->
+     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+-    <!-- Vibration -->
++
++    <!-- Vibrations Permissions -->
+     <uses-permission android:name="android.permission.VIBRATE" />
+ 
+-    <!-- Optional Bluetooth permissions (future features) -->
+-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" tools:ignore="BluetoothPermission" />
+-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" tools:ignore="BluetoothPermission" />
+ 
+-    <!-- ===== Application Section ===== -->
+     <application
++        android:usesCleartextTraffic="true"
+         android:allowBackup="true"
+         android:dataExtractionRules="@xml/data_extraction_rules"
+         android:fullBackupContent="@xml/backup_rules"
+         android:icon="@mipmap/ic_launcher"
+-        android:label="NewSight"
++        android:label="@string/app_name"
+         android:roundIcon="@mipmap/ic_launcher_round"
+         android:supportsRtl="true"
+-        android:theme="@style/Theme.NewSight"
+-        android:usesCleartextTraffic="true">
+-
+-        <!-- Secure File Provider -->
+-        <provider
+-            android:name="androidx.core.content.FileProvider"
+-            android:authorities="${applicationId}.provider"
+-            android:exported="false"
+-            android:grantUriPermissions="true">
+-            <meta-data
+-                android:name="android.support.FILE_PROVIDER_PATHS"
+-                android:resource="@xml/file_paths" />
+-        </provider>
++        android:theme="@style/Theme.NewSight">
+ 
+         <!-- Launcher Activity -->
+-        <!-- ===== Launcher Activity ===== -->
+         <activity
+             android:name=".splash"
+             android:exported="true">
+@@ -60,34 +39,37 @@
+             </intent-filter>
+         </activity>
+ 
+-        <!-- REAL Main Screens -->
++        <!-- Main Activities -->
+         <activity android:name=".MainActivity" android:exported="true" />
+         <activity android:name=".HomeActivity" android:exported="true" />
+ 
+-        <!-- Navigation -->
++        <!-- Navigation Activities -->
+         <activity android:name=".NavigateActivity" android:exported="true" />
+         <activity android:name=".GetDirectionsActivity" android:exported="true" />
+ 
+-        <!-- ===== Communication ===== -->
++        <!-- Communication Activities -->
+         <activity android:name=".CommunicateActivity" android:exported="true" />
+ 
+-        <!-- Observe / Detection -->
++        <!-- Observation / Detection -->
+         <activity android:name=".ObserveActivity" android:exported="true" />
+         <activity android:name=".DetectionActivity" android:exported="true" />
+-        <activity
+-            android:name=".ObstacleActivity"
++        <activity android:name=".DetectPeopleActivity" />
++
++
++        <activity android:name=".ObstacleActivity" 
+             android:exported="true"
+             android:screenOrientation="landscape"
+             tools:ignore="DiscouragedApi" />
+ 
+-        <!-- ===== Color Cue ===== -->
++
++        <!-- Color Cue -->
+         <activity android:name=".ColorCueActivity" android:exported="true" />
+ 
+-        <!-- ===== Emergency Features ===== -->
++        <!-- Emergency -->
+         <activity android:name=".EmergencyActivity" android:exported="true" />
+         <activity android:name=".EmergencySetupActivity" android:exported="true" />
+ 
+-        <!-- ===== Settings & Profile ===== -->
++        <!-- Settings & Profile -->
+         <activity android:name=".SettingsActivity" android:exported="true" />
+         <activity android:name=".UserProfileActivity" android:exported="true" />
+         <activity android:name=".TrustedContactsActivity" android:exported="true" />
+@@ -95,11 +77,12 @@
+         <activity android:name=".VoiceAndHapticsActivity" android:exported="true" />
+         <activity android:name=".HelpAndSupportActivity" android:exported="true" />
+ 
+-        <!-- Optional future activities
++        <!-- Optional / commented activities
+         <activity android:name=".RemoveContactActivity" android:exported="true" />
+         <activity android:name=".EditProfileActivity" android:exported="true" />
+         <activity android:name=".PrivacyAndDataActivity" android:exported="true" />
+         <activity android:name=".LogoutActivity" android:exported="true" />
++        <activity android:name=".ObstacleActivity" android:exported="true" />
+         -->
+     </application>
+ </manifest>
+diff --git a/app/src/main/java/com/example/newsight/CameraActivity.java b/app/src/main/java/com/example/newsight/CameraActivity.java
+index 5c1ce5a..d603033 100644
+--- a/app/src/main/java/com/example/newsight/CameraActivity.java
++++ b/app/src/main/java/com/example/newsight/CameraActivity.java
+@@ -32,9 +32,10 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
+     private WebSocketManager wsManager;
+ 
+     private boolean backendEnabled = true;
+-    private String activeFeature = null;
++    private String activeFeature = "familiar_face";
++
++    private final String SERVER_WS_URL = "ws://10.0.2.2:8000/ws/verify";
+ 
+-    private final String SERVER_WS_URL = "wss://your-backend-url";
+ 
+     private Button btnNavigation, btnASL, btnObjectDetection, btnStopFeature;
+ 
+@@ -43,14 +44,14 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
+         super.onCreate(savedInstanceState);
+         setContentView(R.layout.activity_camera);
+ 
++
++
+         previewView = findViewById(R.id.previewView);
+         cameraExecutor = Executors.newSingleThreadExecutor();
+ 
+ 
+-        btnNavigation.setOnClickListener(v -> setActiveFeature("navigation"));
+-        btnASL.setOnClickListener(v -> setActiveFeature("asl_detection"));
+-        btnObjectDetection.setOnClickListener(v -> setActiveFeature("object_detection"));
+-        btnStopFeature.setOnClickListener(v -> setActiveFeature(null));
++
++        setActiveFeature("familiar_face");
+ 
+         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                 != PackageManager.PERMISSION_GRANTED) {
+@@ -69,19 +70,40 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
+     }
+ 
+     private void setActiveFeature(String feature) {
+-        activeFeature = feature;
+-        String message = (feature != null) ? feature + " feature active" : "Feature streaming stopped";
+-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
++        // write to the FIELD, not a shadowed local
++        this.activeFeature = feature;
++
++        Toast.makeText(this,
++                (feature != null) ? feature + " feature active" : "Feature streaming stopped",
++                Toast.LENGTH_SHORT).show();
++        Log.d(TAG, "Active feature set to: " + this.activeFeature);
++
++        // If WS is already connected, notify backend immediately
++        if (wsManager != null && wsManager.isConnected() && feature != null) {
++            // pick ONE name and use it consistently. If your WS manager method is setFeature(...), use that:
++            wsManager.setFeature(feature);
++            // If your method is actually named setActiveFeature(...), then call that instead:
++            // wsManager.setActiveFeature(feature);
++        }
+     }
+ 
++
++
+     private void initCameraAndBackend() {
+         if (backendEnabled) {
+             wsManager = new WebSocketManager(SERVER_WS_URL, this);
++
++
++            if (activeFeature != null) {
++                wsManager.setFeature(activeFeature);
++            }
++
+             wsManager.connect();
+         }
+         startCameraSafe();
+     }
+ 
++
+     private void startCameraSafe() {
+         ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
+                 ProcessCameraProvider.getInstance(this);
+@@ -117,23 +139,46 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
+ 
+     @Override
+     public void onResultsReceived(String results) {
+-        runOnUiThread(() -> Toast.makeText(this,
+-                "AI result: " + results.substring(0, Math.min(results.length(), 20)) + "...",
+-                Toast.LENGTH_SHORT).show());
++        Log.d(TAG, "WS msg: " + results);
++        try {
++            org.json.JSONObject obj = new org.json.JSONObject(results);
++
++            // If backend signaled an error, you can still surface it
++            if (!obj.optBoolean("ok", false)) {
++                final String err = obj.optString("error", "unknown");
++                runOnUiThread(() ->
++                        Toast.makeText(this, "Backend error: " + err, Toast.LENGTH_SHORT).show());
++                return;
++            }
++
++            boolean match = obj.optBoolean("match", false);
++            if (match) {
++                final String name = obj.optString("contactName", "Unknown");
++                runOnUiThread(() ->
++                        Toast.makeText(this, "Match: " + name, Toast.LENGTH_SHORT).show());
++            } else {
++                // Suppress noisy "Ack"/no-match toasts; just log
++                Log.d(TAG, "No match (toast suppressed)");
++            }
++        } catch (Exception e) {
++            Log.e(TAG, "Bad JSON", e);
++        }
+     }
+ 
++
++
+     @Override
+     public void onConnectionStatus(boolean isConnected) {
+         runOnUiThread(() -> Toast.makeText(this,
+                 isConnected ? "Connected to backend" : "Backend not available",
+                 Toast.LENGTH_SHORT).show());
+-    }
++        Log.d(TAG, "WebSocket connected=" + isConnected);
+ 
+-    @Override
+-    protected void onDestroy() {
+-        super.onDestroy();
+-        cameraExecutor.shutdown();
+-        if (wsManager != null) wsManager.disconnect();
++        if (isConnected && wsManager != null && activeFeature != null) {
++            // keep method name consistent with what you implement in WebSocketManager
++            wsManager.setFeature(activeFeature);
++            // or: wsManager.setActiveFeature(activeFeature);
++        }
+     }
+ 
+     @Override
+@@ -150,4 +195,12 @@ public class CameraActivity extends AppCompatActivity implements WebSocketManage
+             finish();
+         }
+     }
++
++    @Override
++    protected void onDestroy() {
++        super.onDestroy();
++        if (cameraExecutor != null) cameraExecutor.shutdown();
++        if (wsManager != null) wsManager.disconnect();
++    }
++
+ }
+diff --git a/app/src/main/java/com/example/newsight/DetectPeopleActivity.java b/app/src/main/java/com/example/newsight/DetectPeopleActivity.java
+index 3e0bd81..6377cf6 100644
+--- a/app/src/main/java/com/example/newsight/DetectPeopleActivity.java
++++ b/app/src/main/java/com/example/newsight/DetectPeopleActivity.java
+@@ -1,6 +1,20 @@
+ package com.example.newsight;
+ 
++import android.content.Intent;
++import android.os.Bundle;
++import android.widget.Button;
++import androidx.appcompat.app.AppCompatActivity;
+ 
+-public class DetectPeopleActivity {
++public class DetectPeopleActivity extends AppCompatActivity {
++    @Override protected void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++        setContentView(R.layout.activity_detect_people);
+ 
++        Button openCam = findViewById(R.id.btnOpenCamera);
++        openCam.setOnClickListener(v -> {
++            Intent i = new Intent(this, CameraActivity.class);
++            i.putExtra("feature", "familiar_face"); // <-- the key your CameraActivity reads
++            startActivity(i);
++        });
++    }
+ }
+diff --git a/app/src/main/java/com/example/newsight/EmergencyActivity.java b/app/src/main/java/com/example/newsight/EmergencyActivity.java
+index 8142797..431067e 100644
+--- a/app/src/main/java/com/example/newsight/EmergencyActivity.java
++++ b/app/src/main/java/com/example/newsight/EmergencyActivity.java
+@@ -1,222 +1,51 @@
+ package com.example.newsight;
+ 
+-import android.Manifest;
+-import android.content.pm.PackageManager;
+-import android.graphics.Bitmap;
+-import android.graphics.BitmapFactory;
+-import android.location.Location;
+-import android.net.Uri;
+ import android.os.Bundle;
+-import android.provider.MediaStore;
+-import android.widget.Toast;
+-
+-import androidx.activity.result.ActivityResultLauncher;
+-import androidx.activity.result.contract.ActivityResultContracts;
+-import androidx.annotation.NonNull;
++import android.widget.FrameLayout;
++import android.content.Intent;
+ import androidx.appcompat.app.AppCompatActivity;
+-import androidx.camera.core.CameraSelector;
+-import androidx.camera.core.ImageCapture;
+-import androidx.camera.core.ImageCaptureException;
+-import androidx.camera.core.Preview;
+-import androidx.camera.lifecycle.ProcessCameraProvider;
+-import androidx.camera.view.PreviewView;
+-import androidx.core.content.ContextCompat;
+-
+-import com.google.android.gms.location.FusedLocationProviderClient;
+-import com.google.android.gms.location.LocationServices;
+-import com.google.common.util.concurrent.ListenableFuture;
+-
+-import java.io.ByteArrayOutputStream;
+-import java.io.File;
+-import java.io.IOException;
+-import java.util.concurrent.ExecutionException;
+-
+-import okhttp3.Call;
+-import okhttp3.Callback;
+-import okhttp3.MediaType;
+-import okhttp3.MultipartBody;
+-import okhttp3.OkHttpClient;
+-import okhttp3.Request;
+-import okhttp3.RequestBody;
+-import okhttp3.Response;
+ 
+ public class EmergencyActivity extends AppCompatActivity {
+-
+-    private PreviewView previewView;
+-    private ImageCapture imageCapture;
+-
+-    private FusedLocationProviderClient fusedLocationClient;
+-
+-    private final ActivityResultLauncher<String> requestCameraPermission =
+-            registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+-                    granted -> {
+-                        if (granted) startCamera();
+-                        else {
+-                            Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
+-                            finish();
+-                        }
+-                    });
+-
+-    private final ActivityResultLauncher<String> requestLocationPermission =
+-            registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+-                    granted -> {
+-                        if (!granted) {
+-                            Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+-                        }
+-                        // Still continue capturing — location just won't be attached
+-                    });
+-
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+         setContentView(R.layout.activity_emergency);
+ 
+-        previewView = findViewById(R.id.cameraPreview);
+-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+-
+-        // Ask for camera immediately
+-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+-                == PackageManager.PERMISSION_GRANTED) {
+-            startCamera();
+-        } else {
+-            requestCameraPermission.launch(Manifest.permission.CAMERA);
+-        }
+-
+-        // Request location permission in background
+-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+-                != PackageManager.PERMISSION_GRANTED) {
+-            requestLocationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+-        }
+-    }
+-
+-    private void startCamera() {
+-        ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
+-                ProcessCameraProvider.getInstance(this);
+-
+-        cameraProviderFuture.addListener(() -> {
+-            try {
+-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+-
+-                Preview preview = new Preview.Builder().build();
+-                imageCapture = new ImageCapture.Builder()
+-                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+-                        .build();
+-
+-                preview.setSurfaceProvider(previewView.getSurfaceProvider());
+-
+-                CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
+-
+-                cameraProvider.unbindAll();
+-                cameraProvider.bindToLifecycle(
+-                        this,
+-                        cameraSelector,
+-                        preview,
+-                        imageCapture
+-                );
+-
+-                // 📸 Capture automatically after preview starts
+-                previewView.postDelayed(this::takePhoto, 500);
+-
+-            } catch (ExecutionException | InterruptedException e) {
+-                e.printStackTrace();
+-                Toast.makeText(this, "Camera error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+-                finish();
+-            }
+-        }, ContextCompat.getMainExecutor(this));
+-    }
+-
+-    private void takePhoto() {
+-        if (imageCapture == null) return;
+-
+-        File photoFile = new File(
+-                getExternalFilesDir(null),
+-                "photo_" + System.currentTimeMillis() + ".jpg"
+-        );
+-
+-        ImageCapture.OutputFileOptions options =
+-                new ImageCapture.OutputFileOptions.Builder(photoFile).build();
+-
+-        imageCapture.takePicture(
+-                options,
+-                ContextCompat.getMainExecutor(this),
+-                new ImageCapture.OnImageSavedCallback() {
+-                    @Override
+-                    public void onError(@NonNull ImageCaptureException exc) {
+-                        Toast.makeText(EmergencyActivity.this,
+-                                "Capture failed: " + exc.getMessage(),
+-                                Toast.LENGTH_SHORT).show();
+-                        finish();
+-                    }
+-
+-                    @Override
+-                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults output) {
+-                        Bitmap bitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
+-                        getLocationAndSend(bitmap);
+-                    }
+-                }
+-        );
+-    }
+-
+-    private void getLocationAndSend(Bitmap bitmap) {
+-        if (bitmap == null) {
+-            Toast.makeText(this, "Photo missing", Toast.LENGTH_SHORT).show();
+-            finish();
+-            return;
+-        }
+-
+-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+-                != PackageManager.PERMISSION_GRANTED) {
+-            sendAlert(bitmap, null);
+-            return;
+-        }
+-
+-        fusedLocationClient.getLastLocation()
+-                .addOnSuccessListener(location -> sendAlert(bitmap, location))
+-                .addOnFailureListener(e -> sendAlert(bitmap, null));
+-    }
+-
+-    private void sendAlert(Bitmap bitmap, Location location) {
+-        Toast.makeText(this, "Sending emergency alert...", Toast.LENGTH_SHORT).show();
+-
+-        OkHttpClient client = new OkHttpClient();
+-
+-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+-        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream);
+-        byte[] imageBytes = stream.toByteArray();
+-
+-        MultipartBody.Builder form = new MultipartBody.Builder()
+-                .setType(MultipartBody.FORM)
+-                .addFormDataPart("photo", "photo.jpg",
+-                        RequestBody.create(MediaType.parse("image/jpeg"), imageBytes));
++        //Home
++        FrameLayout btnHome = findViewById(R.id.btnHome);
++        btnHome.setOnClickListener(v -> {
++            Intent intent = new Intent(this, HomeActivity.class);
++            startActivity(intent);
++        });
+ 
+-        if (location != null) {
+-            form.addFormDataPart("latitude", String.valueOf(location.getLatitude()));
+-            form.addFormDataPart("longitude", String.valueOf(location.getLongitude()));
+-        }
++        // Mic
++        FrameLayout btnMic = findViewById(R.id.btnMic);
++        btnMic.setOnClickListener(v -> {
++            Intent intent = new Intent(this, VoiceCommandActivity.class);
++            startActivity(intent);
++        });
+ 
+-        Request request = new Request.Builder()
+-                .url("https://cis4398-project-newsight-backend.onrender.com/emergency_alert/7")
+-                .post(form.build())
+-                .build();
++        // Ping Location
++        FrameLayout btnPingLocation = findViewById(R.id.btnPingLocation);
++        btnPingLocation.setOnClickListener(v -> {
++            Intent intent = new Intent(this, FindLocationActivity.class);
++            startActivity(intent);
++        });
+ 
+-        client.newCall(request).enqueue(new Callback() {
+-            @Override public void onFailure(@NonNull Call call, @NonNull IOException e) {
+-                runOnUiThread(() -> {
+-                    Toast.makeText(EmergencyActivity.this, "Send failed", Toast.LENGTH_SHORT).show();
+-                    finish();
+-                });
+-            }
++        // Send Text Alert
++        FrameLayout btnSendAlert = findViewById(R.id.btnSendAlert);
++        btnSendAlert.setOnClickListener(v -> {
++            Intent intent = new Intent(this, SendTextAlertActivity.class);
++            startActivity(intent);
++        });
+ 
+-            @Override public void onResponse(@NonNull Call call, @NonNull Response response) {
+-                runOnUiThread(() -> {
+-                    Toast.makeText(EmergencyActivity.this,
+-                            response.isSuccessful() ? "Alert sent!" : "Error sending alert",
+-                            Toast.LENGTH_SHORT).show();
+-                    finish();
+-                });
+-            }
++        // Open Camera (new)
++        FrameLayout btnOpenCamera = findViewById(R.id.btnOpenCamera);
++        btnOpenCamera.setOnClickListener(v -> {
++            // Launch MainActivity and open camera directly
++            Intent intent = new Intent(this, MainActivity.class);
++            intent.putExtra("feature", "emergency"); // signal MainActivity to open camera immediately
++            startActivity(intent);
+         });
+     }
+ }
+-
+-
+diff --git a/app/src/main/java/com/example/newsight/HomeActivity.java b/app/src/main/java/com/example/newsight/HomeActivity.java
+index 4719661..fd713c8 100644
+--- a/app/src/main/java/com/example/newsight/HomeActivity.java
++++ b/app/src/main/java/com/example/newsight/HomeActivity.java
+@@ -1,77 +1,16 @@
+ package com.example.newsight;
+ 
+ import androidx.appcompat.app.AppCompatActivity;
+-import androidx.annotation.NonNull;
+-import androidx.core.app.ActivityCompat;
+-import androidx.core.content.ContextCompat;
+-import android.Manifest;
+-import android.content.pm.PackageManager;
+ import android.os.Bundle;
+-import android.util.Log;
+ import android.widget.FrameLayout;
+ import android.content.Intent;
+-import android.widget.Toast;
+ 
+ public class HomeActivity extends AppCompatActivity {
+-    private static final String TAG = "HomeActivity";
+-    private static final int PERMISSION_REQUEST_CODE = 200;
+-    private VoiceCommandHelper voiceCommandHelper;
+-
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+         setContentView(R.layout.activity_home);
+ 
+-        // Initialize voice command helper
+-        voiceCommandHelper = new VoiceCommandHelper(this);
+-
+-        // Set up voice command callbacks
+-        voiceCommandHelper.setCallback(new VoiceCommandHelper.VoiceCommandCallback() {
+-            @Override
+-            public void onWakeWordDetected() {
+-                Log.d(TAG, "Wake word detected");
+-                // Optional: Visual feedback when wake word detected
+-            }
+-
+-            @Override
+-            public void onCommandStarted() {
+-                Log.d(TAG, "Command recording started");
+-                // Optional: Show recording indicator
+-            }
+-
+-            @Override
+-            public void onCommandProcessing() {
+-                Log.d(TAG, "Processing command");
+-                // Optional: Show processing state
+-            }
+-
+-            @Override
+-            public void onResponseReceived(String jsonResponse) {
+-                Log.d(TAG, "Response received: " + jsonResponse);
+-
+-                // TODO: Pass jsonResponse to TTS helper class when ready
+-                // ttsHelper.handleResponse(jsonResponse);
+-
+-                // For now, just log it
+-                // The JSON contains:
+-                // - confidence
+-                // - extracted_params (feature, query, destination, sub_features)
+-                // - TTS_Output (message)
+-            }
+-
+-            @Override
+-            public void onError(String error) {
+-                Log.e(TAG, "Error: " + error);
+-                // Optional: Handle error UI
+-            }
+-
+-            @Override
+-            public void onComplete() {
+-                Log.d(TAG, "Voice command completed");
+-                // Optional: Reset UI state
+-            }
+-        });
+-
+         // Navigate
+         FrameLayout btnNavigate = findViewById(R.id.btnNavigate);
+         btnNavigate.setOnClickListener(v -> {
+@@ -110,71 +49,6 @@ public class HomeActivity extends AppCompatActivity {
+         // Read and Ask
+         FrameLayout btnMic = findViewById(R.id.btnMic);
+         btnMic.setOnClickListener(v -> {
+-            if (checkMicrophonePermission()) {
+-                // Start voice recording directly in this activity
+-                voiceCommandHelper.startDirectRecording();
+-            } else {
+-                requestMicrophonePermission();
+-            }
+         });
+-
+-        // Auto-start wake word detection when activity starts
+-        if (checkMicrophonePermission()) {
+-            voiceCommandHelper.startWakeWordDetection();
+-        }
+-    }
+-
+-    private boolean checkMicrophonePermission() {
+-        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+-                == PackageManager.PERMISSION_GRANTED;
+-    }
+-
+-    private void requestMicrophonePermission() {
+-        ActivityCompat.requestPermissions(this,
+-                new String[]{Manifest.permission.RECORD_AUDIO},
+-                PERMISSION_REQUEST_CODE);
+-    }
+-
+-    @Override
+-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+-                                           @NonNull int[] grantResults) {
+-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+-        if (requestCode == PERMISSION_REQUEST_CODE) {
+-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+-                Toast.makeText(this, "Voice commands ready", Toast.LENGTH_SHORT).show();
+-                // Start wake word detection after permission granted
+-                voiceCommandHelper.startWakeWordDetection();
+-            } else {
+-                Toast.makeText(this, "Microphone permission is required for voice commands",
+-                        Toast.LENGTH_LONG).show();
+-            }
+-        }
+-    }
+-
+-    @Override
+-    protected void onPause() {
+-        super.onPause();
+-        // Stop listening when user leaves this screen
+-        if (voiceCommandHelper != null) {
+-            voiceCommandHelper.stopListening();
+-        }
+-    }
+-
+-    @Override
+-    protected void onResume() {
+-        super.onResume();
+-        // Restart wake word detection when returning to this screen
+-        if (voiceCommandHelper != null && checkMicrophonePermission()) {
+-            voiceCommandHelper.startWakeWordDetection();
+-        }
+-    }
+-
+-    @Override
+-    protected void onDestroy() {
+-        super.onDestroy();
+-        // Clean up resources
+-        if (voiceCommandHelper != null) {
+-            voiceCommandHelper.cleanup();
+-        }
+     }
+ }
+diff --git a/app/src/main/java/com/example/newsight/MainActivity.java b/app/src/main/java/com/example/newsight/MainActivity.java
+index a92ea1d..2ad2130 100644
+--- a/app/src/main/java/com/example/newsight/MainActivity.java
++++ b/app/src/main/java/com/example/newsight/MainActivity.java
+@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
+         btnOpenCamera.setOnClickListener(v -> checkCameraPermission());
+         btnTestHaptic.setOnClickListener(v -> testAllHapticPatterns());
+ 
+-        // ✅ Dynamic feature handling
++
+         String featureFromIntent = getIntent().getStringExtra("feature");
+         if (featureFromIntent != null && !featureFromIntent.isEmpty()) {
+             currentFeature = featureFromIntent;
+@@ -99,6 +99,11 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
+             btnLogin.setVisibility(android.view.View.GONE);
+             btnOpenCamera.setVisibility(android.view.View.VISIBLE);
+ 
++            String wsUrl = "ws://10.0.2.2:8000/ws/verify";
++            wsManager = new WebSocketManager(wsUrl, this);
++            wsManager.setFeature(currentFeature);
++            wsManager.connect();
++
+             Log.i(TAG, "Launching feature: " + currentFeature);
+             checkCameraPermission();
+         }
+@@ -127,8 +132,12 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
+         startActivity(intent);
+ 
+         // Initialize WebSocket connection
+-        String wsUrl = "wss://your-backend-url/ws"; // TODO: replace with your actual backend URL
++        String wsUrl = "ws://10.0.2.2:8000/ws/verify"; // TODO: replace with your actual backend URL
+         wsManager = new WebSocketManager(wsUrl, this);
++
++        currentFeature = "familiar_face";
++        wsManager.setFeature(currentFeature);
++
+         wsManager.connect();
+     }
+ 
+@@ -149,6 +158,10 @@ public class MainActivity extends AppCompatActivity implements WebSocketManager.
+ 
+     private void openCamera() {
+         cameraContainer.setVisibility(android.view.View.VISIBLE);
++        if (currentFeature == null || "none".equals(currentFeature)) {
++            currentFeature = "familiar_face";          // ✅ ensure a real feature
++            if (wsManager != null) wsManager.setFeature(currentFeature); // ✅ tell backend
++        }
+ 
+         if (previewView == null) {
+             previewView = new PreviewView(this);
+diff --git a/app/src/main/java/com/example/newsight/VoiceCommandHelper.java b/app/src/main/java/com/example/newsight/VoiceCommandHelper.java
+deleted file mode 100644
+index 786e53d..0000000
+--- a/app/src/main/java/com/example/newsight/VoiceCommandHelper.java
++++ /dev/null
+@@ -1,541 +0,0 @@
+-package com.example.newsight;
+-
+-import android.Manifest;
+-import android.content.Context;
+-import android.content.pm.PackageManager;
+-import android.media.AudioFormat;
+-import android.media.AudioRecord;
+-import android.media.MediaRecorder;
+-import android.media.audiofx.AcousticEchoCanceler;
+-import android.media.audiofx.NoiseSuppressor;
+-import android.os.Handler;
+-import android.os.Looper;
+-import android.util.Log;
+-import android.widget.Toast;
+-
+-import androidx.core.app.ActivityCompat;
+-
+-import org.json.JSONException;
+-import org.json.JSONObject;
+-
+-import java.io.ByteArrayOutputStream;
+-import java.io.File;
+-import java.io.FileOutputStream;
+-import java.io.IOException;
+-import java.util.concurrent.ExecutorService;
+-import java.util.concurrent.Executors;
+-import java.util.concurrent.atomic.AtomicBoolean;
+-
+-import okhttp3.Call;
+-import okhttp3.Callback;
+-import okhttp3.MediaType;
+-import okhttp3.MultipartBody;
+-import okhttp3.OkHttpClient;
+-import okhttp3.Request;
+-import okhttp3.RequestBody;
+-import okhttp3.Response;
+-
+-public class VoiceCommandHelper {
+-
+-    private static final String TAG = "VoiceCommandHelper";
+-
+-    // Audio recording parameters
+-    private static final int RECORDING_SAMPLE_RATE = 16000;
+-    private static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO;
+-    private static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+-
+-    // Voice Activity Detection parameters
+-    private static final double SILENCE_THRESHOLD = 1500.0;
+-    private static final long SILENCE_DURATION_MS = 2000;
+-    private static final long MAX_RECORDING_DURATION_MS = 15000;
+-    private static final long MIN_RECORDING_DURATION_MS = 500;
+-
+-    // Wake word detection parameters
+-    private static final double WAKE_WORD_ENERGY_THRESHOLD = 2000.0;
+-    private static final long WAKE_WORD_CHECK_INTERVAL_MS = 5000;
+-
+-    private Context context;
+-    private AudioRecord audioRecord;
+-    private AtomicBoolean isRecording = new AtomicBoolean(false);
+-    private AtomicBoolean isListeningForWakeWord = new AtomicBoolean(false);
+-    private ExecutorService executorService;
+-    private OkHttpClient httpClient;
+-    private NoiseSuppressor noiseSuppressor;
+-    private AcousticEchoCanceler echoCanceler;
+-    private Handler mainHandler;
+-
+-    private static final String BACKEND_URL = "http://192.168.1.254:8000/voice/transcribe";
+-    private static final String WAKE_WORD_URL = "http://192.168.1.254:8000/voice/wake-word";
+-
+-    public interface VoiceCommandCallback {
+-        void onWakeWordDetected();
+-        void onCommandStarted();
+-        void onCommandProcessing();
+-        void onResponseReceived(String jsonResponse);
+-        void onError(String error);
+-        void onComplete();
+-    }
+-
+-    private VoiceCommandCallback callback;
+-
+-    public VoiceCommandHelper(Context context) {
+-        this.context = context;
+-        this.executorService = Executors.newFixedThreadPool(2);
+-        this.httpClient = new OkHttpClient.Builder()
+-                .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+-                .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+-                .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+-                .build();
+-        this.mainHandler = new Handler(Looper.getMainLooper());
+-    }
+-
+-    public void setCallback(VoiceCommandCallback callback) {
+-        this.callback = callback;
+-    }
+-
+-    public void startWakeWordDetection() {
+-        if (isListeningForWakeWord.get() || isRecording.get()) {
+-            Log.w(TAG, "Already listening, skipping wake word start");
+-            return;
+-        }
+-
+-        Log.d(TAG, "👂 Starting wake word detection...");
+-        showToast("Listening for 'Hey Guide'");
+-        isListeningForWakeWord.set(true);
+-
+-        executorService.execute(() -> {
+-            try {
+-                listenForWakeWord();
+-            } catch (Exception e) {
+-                Log.e(TAG, "Error in wake word detection: " + e.getMessage(), e);
+-                notifyError("Wake word detection error");
+-                isListeningForWakeWord.set(false);
+-            }
+-        });
+-    }
+-
+-    public void startDirectRecording() {
+-        // For manual button press - skip wake word detection
+-        // First stop any existing wake word detection
+-        if (isListeningForWakeWord.get()) {
+-            stopListening();
+-        }
+-
+-        executorService.execute(() -> {
+-            try {
+-                recordCommandWithVAD();
+-            } catch (Exception e) {
+-                Log.e(TAG, "Error in recording: " + e.getMessage(), e);
+-                notifyError("Recording error");
+-
+-                // Restart wake word detection even on error
+-                mainHandler.postDelayed(() -> {
+-                    try {
+-                        startWakeWordDetection();
+-                    } catch (Exception ex) {
+-                        Log.e(TAG, "Error restarting wake word detection: " + ex.getMessage());
+-                    }
+-                }, 1000);
+-            }
+-        });
+-    }
+-
+-    public void stopListening() {
+-        isListeningForWakeWord.set(false);
+-        isRecording.set(false);
+-        cleanupAudioRecord();
+-    }
+-
+-    private void listenForWakeWord() throws IOException {
+-        int bufferSize = AudioRecord.getMinBufferSize(RECORDING_SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
+-        bufferSize = Math.max(bufferSize, RECORDING_SAMPLE_RATE * 2);
+-
+-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
+-                != PackageManager.PERMISSION_GRANTED) {
+-            notifyError("Microphone permission required");
+-            return;
+-        }
+-
+-        audioRecord = new AudioRecord(
+-                MediaRecorder.AudioSource.VOICE_RECOGNITION,
+-                RECORDING_SAMPLE_RATE,
+-                CHANNEL_CONFIG,
+-                AUDIO_FORMAT,
+-                bufferSize
+-        );
+-
+-        if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+-            Log.e(TAG, "AudioRecord initialization failed");
+-            notifyError("Failed to initialize microphone");
+-            return;
+-        }
+-
+-        setupAudioProcessing();
+-        audioRecord.startRecording();
+-        isRecording.set(true);
+-
+-        ByteArrayOutputStream bufferStream = new ByteArrayOutputStream();
+-        byte[] buffer = new byte[bufferSize / 4];
+-        long lastCheckTime = System.currentTimeMillis();
+-        double maxEnergyInWindow = 0;
+-
+-        Log.d(TAG, "👂 Listening for wake word...");
+-
+-        while (isRecording.get() && isListeningForWakeWord.get()) {
+-            int bytesRead = audioRecord.read(buffer, 0, buffer.length);
+-            if (bytesRead > 0) {
+-                bufferStream.write(buffer, 0, bytesRead);
+-
+-                double rms = calculateRMS(buffer, bytesRead);
+-                maxEnergyInWindow = Math.max(maxEnergyInWindow, rms);
+-
+-                long currentTime = System.currentTimeMillis();
+-
+-                if (currentTime - lastCheckTime >= WAKE_WORD_CHECK_INTERVAL_MS &&
+-                        maxEnergyInWindow > WAKE_WORD_ENERGY_THRESHOLD) {
+-
+-                    byte[] audioData = bufferStream.toByteArray();
+-                    int bytesToCheck = Math.min(audioData.length, RECORDING_SAMPLE_RATE * 2 * 5);
+-                    byte[] checkData = new byte[bytesToCheck];
+-                    System.arraycopy(audioData, audioData.length - bytesToCheck, checkData, 0, bytesToCheck);
+-
+-                    File tempFile = createWavFile(checkData, RECORDING_SAMPLE_RATE);
+-                    checkForWakeWordAsync(tempFile);
+-
+-                    lastCheckTime = currentTime;
+-                    maxEnergyInWindow = 0;
+-
+-                    bufferStream.reset();
+-                    int keepBytes = RECORDING_SAMPLE_RATE * 2 * 2;
+-                    if (audioData.length > keepBytes) {
+-                        bufferStream.write(audioData, audioData.length - keepBytes, keepBytes);
+-                    }
+-                }
+-            }
+-        }
+-
+-        cleanupAudioRecord();
+-    }
+-
+-    private void checkForWakeWordAsync(File audioFile) {
+-        executorService.execute(() -> {
+-            RequestBody requestBody = new MultipartBody.Builder()
+-                    .setType(MultipartBody.FORM)
+-                    .addFormDataPart("audio", audioFile.getName(),
+-                            RequestBody.create(audioFile, MediaType.parse("audio/wav")))
+-                    .build();
+-
+-            Request request = new Request.Builder()
+-                    .url(WAKE_WORD_URL)
+-                    .post(requestBody)
+-                    .build();
+-
+-            try {
+-                Response response = httpClient.newCall(request).execute();
+-                if (response.isSuccessful() && response.body() != null) {
+-                    String responseBody = response.body().string();
+-
+-                    try {
+-                        JSONObject json = new JSONObject(responseBody);
+-                        boolean wakeWordDetected = json.optBoolean("wake_word_detected", false);
+-                        String text = json.optString("text", "");
+-
+-                        Log.d(TAG, "Wake word check: '" + text + "' -> " + wakeWordDetected);
+-
+-                        if (wakeWordDetected) {
+-                            Log.d(TAG, "✅ Wake word 'Hey Guide' detected!");
+-                            isListeningForWakeWord.set(false);
+-                            cleanupAudioRecord();
+-
+-                            if (callback != null) {
+-                                mainHandler.post(() -> callback.onWakeWordDetected());
+-                            }
+-                            showToast("Listening for command...");
+-
+-                            Thread.sleep(300);
+-                            recordCommandWithVAD();
+-                        }
+-                    } catch (JSONException e) {
+-                        Log.e(TAG, "JSON parse error: " + e.getMessage());
+-                    }
+-                }
+-                response.close();
+-            } catch (Exception e) {
+-                Log.d(TAG, "Wake word check error: " + e.getMessage());
+-            } finally {
+-                audioFile.delete();
+-            }
+-        });
+-    }
+-
+-    private void recordCommandWithVAD() throws IOException {
+-        int bufferSize = AudioRecord.getMinBufferSize(RECORDING_SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
+-
+-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO)
+-                != PackageManager.PERMISSION_GRANTED) {
+-            notifyError("Microphone permission required");
+-            return;
+-        }
+-
+-        audioRecord = new AudioRecord(
+-                MediaRecorder.AudioSource.VOICE_RECOGNITION,
+-                RECORDING_SAMPLE_RATE,
+-                CHANNEL_CONFIG,
+-                AUDIO_FORMAT,
+-                bufferSize * 2
+-        );
+-
+-        if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+-            notifyError("Failed to initialize microphone");
+-            return;
+-        }
+-
+-        setupAudioProcessing();
+-        audioRecord.startRecording();
+-        isRecording.set(true);
+-
+-        if (callback != null) {
+-            mainHandler.post(() -> callback.onCommandStarted());
+-        }
+-        showToast("Speak now");
+-
+-        ByteArrayOutputStream recordingStream = new ByteArrayOutputStream();
+-        byte[] buffer = new byte[bufferSize / 4];
+-
+-        long recordingStartTime = System.currentTimeMillis();
+-        long lastSpeechTime = System.currentTimeMillis();
+-        boolean speechDetected = false;
+-
+-        Log.d(TAG, "🎙️ Recording command...");
+-
+-        while (isRecording.get()) {
+-            long currentTime = System.currentTimeMillis();
+-            long recordingDuration = currentTime - recordingStartTime;
+-
+-            if (recordingDuration > MAX_RECORDING_DURATION_MS) {
+-                Log.d(TAG, "⏱️ Max duration reached");
+-                break;
+-            }
+-
+-            int bytesRead = audioRecord.read(buffer, 0, buffer.length);
+-            if (bytesRead > 0) {
+-                recordingStream.write(buffer, 0, bytesRead);
+-
+-                double rms = calculateRMS(buffer, bytesRead);
+-
+-                if (rms > SILENCE_THRESHOLD) {
+-                    lastSpeechTime = currentTime;
+-                    speechDetected = true;
+-                } else if (speechDetected) {
+-                    long silenceDuration = currentTime - lastSpeechTime;
+-
+-                    if (silenceDuration > SILENCE_DURATION_MS &&
+-                            recordingDuration > MIN_RECORDING_DURATION_MS) {
+-                        Log.d(TAG, "🔇 Silence detected");
+-                        break;
+-                    }
+-                }
+-            }
+-        }
+-
+-        isRecording.set(false);
+-        cleanupAudioRecord();
+-
+-        byte[] audioData = recordingStream.toByteArray();
+-        Log.d(TAG, "📊 Recorded " + audioData.length + " bytes");
+-
+-        if (callback != null) {
+-            mainHandler.post(() -> callback.onCommandProcessing());
+-        }
+-        showToast("Processing...");
+-
+-        File wavFile = createWavFile(audioData, RECORDING_SAMPLE_RATE);
+-        sendAudioToBackend(wavFile);
+-    }
+-
+-    private void sendAudioToBackend(File audioFile) {
+-        RequestBody requestBody = new MultipartBody.Builder()
+-                .setType(MultipartBody.FORM)
+-                .addFormDataPart("audio", audioFile.getName(),
+-                        RequestBody.create(audioFile, MediaType.parse("audio/wav")))
+-                .build();
+-
+-        Request request = new Request.Builder()
+-                .url(BACKEND_URL)
+-                .post(requestBody)
+-                .build();
+-
+-        httpClient.newCall(request).enqueue(new Callback() {
+-            @Override
+-            public void onFailure(Call call, IOException e) {
+-                Log.e(TAG, "❌ Network error: " + e.getMessage());
+-                notifyError("Connection error: " + e.getMessage());
+-
+-                // Restart wake word detection after error
+-                mainHandler.postDelayed(() -> {
+-                    try {
+-                        startWakeWordDetection();
+-                    } catch (Exception ex) {
+-                        Log.e(TAG, "Error restarting wake word detection: " + ex.getMessage());
+-                    }
+-                }, 1000);
+-            }
+-
+-            @Override
+-            public void onResponse(Call call, Response response) throws IOException {
+-                audioFile.delete(); // Clean up the audio file
+-
+-                if (response.isSuccessful() && response.body() != null) {
+-                    String responseBody = response.body().string();
+-                    Log.d(TAG, "📦 Response received: " + responseBody);
+-
+-                    if (callback != null) {
+-                        mainHandler.post(() -> {
+-                            callback.onResponseReceived(responseBody);
+-                            callback.onComplete();
+-                        });
+-                    }
+-
+-                    // Restart wake word detection after processing
+-                    mainHandler.postDelayed(() -> {
+-                        try {
+-                            startWakeWordDetection();
+-                        } catch (Exception e) {
+-                            Log.e(TAG, "Error restarting wake word detection: " + e.getMessage());
+-                        }
+-                    }, 1000);
+-
+-                } else {
+-                    notifyError("Server error: " + response.code());
+-
+-                    // Restart wake word detection after error
+-                    mainHandler.postDelayed(() -> {
+-                        try {
+-                            startWakeWordDetection();
+-                        } catch (Exception e) {
+-                            Log.e(TAG, "Error restarting wake word detection: " + e.getMessage());
+-                        }
+-                    }, 1000);
+-                }
+-            }
+-        });
+-    }
+-
+-    private double calculateRMS(byte[] audioData, int length) {
+-        long sum = 0;
+-        int samples = 0;
+-
+-        for (int i = 0; i < length - 1; i += 2) {
+-            short sample = (short) ((audioData[i + 1] << 8) | (audioData[i] & 0xFF));
+-            sum += sample * sample;
+-            samples++;
+-        }
+-
+-        return samples == 0 ? 0 : Math.sqrt((double) sum / samples);
+-    }
+-
+-    private void setupAudioProcessing() {
+-        if (audioRecord == null) return;
+-
+-        if (NoiseSuppressor.isAvailable()) {
+-            noiseSuppressor = NoiseSuppressor.create(audioRecord.getAudioSessionId());
+-            if (noiseSuppressor != null) {
+-                noiseSuppressor.setEnabled(true);
+-                Log.d(TAG, "🔇 Noise suppressor enabled");
+-            }
+-        }
+-
+-        if (AcousticEchoCanceler.isAvailable()) {
+-            echoCanceler = AcousticEchoCanceler.create(audioRecord.getAudioSessionId());
+-            if (echoCanceler != null) {
+-                echoCanceler.setEnabled(true);
+-                Log.d(TAG, "🔊 Echo canceler enabled");
+-            }
+-        }
+-    }
+-
+-    private void cleanupAudioRecord() {
+-        if (audioRecord != null) {
+-            try {
+-                if (audioRecord.getState() == AudioRecord.STATE_INITIALIZED) {
+-                    audioRecord.stop();
+-                }
+-                audioRecord.release();
+-            } catch (Exception e) {
+-                Log.e(TAG, "Error stopping AudioRecord: " + e.getMessage());
+-            }
+-            audioRecord = null;
+-        }
+-
+-        if (noiseSuppressor != null) {
+-            noiseSuppressor.release();
+-            noiseSuppressor = null;
+-        }
+-
+-        if (echoCanceler != null) {
+-            echoCanceler.release();
+-            echoCanceler = null;
+-        }
+-    }
+-
+-    private File createWavFile(byte[] audioData, int sampleRate) throws IOException {
+-        File wavFile = new File(context.getCacheDir(), "vc_" + System.currentTimeMillis() + ".wav");
+-        FileOutputStream fos = new FileOutputStream(wavFile);
+-
+-        int totalDataLen = audioData.length + 36;
+-        int channels = 1;
+-        int byteRate = sampleRate * channels * 2;
+-
+-        byte[] header = new byte[44];
+-        header[0] = 'R'; header[1] = 'I'; header[2] = 'F'; header[3] = 'F';
+-        header[4] = (byte) (totalDataLen & 0xff);
+-        header[5] = (byte) ((totalDataLen >> 8) & 0xff);
+-        header[6] = (byte) ((totalDataLen >> 16) & 0xff);
+-        header[7] = (byte) ((totalDataLen >> 24) & 0xff);
+-        header[8] = 'W'; header[9] = 'A'; header[10] = 'V'; header[11] = 'E';
+-        header[12] = 'f'; header[13] = 'm'; header[14] = 't'; header[15] = ' ';
+-        header[16] = 16; header[17] = 0; header[18] = 0; header[19] = 0;
+-        header[20] = 1; header[21] = 0; header[22] = (byte) channels; header[23] = 0;
+-        header[24] = (byte) (sampleRate & 0xff);
+-        header[25] = (byte) ((sampleRate >> 8) & 0xff);
+-        header[26] = (byte) ((sampleRate >> 16) & 0xff);
+-        header[27] = (byte) ((sampleRate >> 24) & 0xff);
+-        header[28] = (byte) (byteRate & 0xff);
+-        header[29] = (byte) ((byteRate >> 8) & 0xff);
+-        header[30] = (byte) ((byteRate >> 16) & 0xff);
+-        header[31] = (byte) ((byteRate >> 24) & 0xff);
+-        header[32] = (byte) (channels * 2); header[33] = 0;
+-        header[34] = 16; header[35] = 0;
+-        header[36] = 'd'; header[37] = 'a'; header[38] = 't'; header[39] = 'a';
+-        header[40] = (byte) (audioData.length & 0xff);
+-        header[41] = (byte) ((audioData.length >> 8) & 0xff);
+-        header[42] = (byte) ((audioData.length >> 16) & 0xff);
+-        header[43] = (byte) ((audioData.length >> 24) & 0xff);
+-
+-        fos.write(header);
+-        fos.write(audioData);
+-        fos.close();
+-
+-        return wavFile;
+-    }
+-
+-    private void showToast(String message) {
+-        mainHandler.post(() -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show());
+-    }
+-
+-    private void notifyError(String error) {
+-        mainHandler.post(() -> {
+-            if (callback != null) {
+-                callback.onError(error);
+-            }
+-            Toast.makeText(context, error, Toast.LENGTH_SHORT).show();
+-        });
+-    }
+-
+-    public void cleanup() {
+-        stopListening();
+-        if (executorService != null) {
+-            executorService.shutdownNow();
+-        }
+-    }
+-}
+\ No newline at end of file
+diff --git a/app/src/main/java/com/example/newsight/WebSocketManager.java b/app/src/main/java/com/example/newsight/WebSocketManager.java
+index 2db1b29..6948f70 100644
+--- a/app/src/main/java/com/example/newsight/WebSocketManager.java
++++ b/app/src/main/java/com/example/newsight/WebSocketManager.java
+@@ -6,6 +6,8 @@ import android.util.Log;
+ 
+ import androidx.annotation.NonNull;
+ 
++import org.json.JSONObject;
++
+ import java.util.concurrent.TimeUnit;
+ 
+ import okhttp3.OkHttpClient;
+@@ -13,21 +15,30 @@ import okhttp3.Request;
+ import okhttp3.Response;
+ import okhttp3.WebSocket;
+ import okhttp3.WebSocketListener;
++import okio.ByteString;
++
++// IMPORTANT: use Android's Base64 for API < 26
++import android.util.Base64;
+ 
+ public class WebSocketManager {
+ 
+     private static final String TAG = "WebSocketManager";
+     private static final boolean ENABLE_RECONNECT = true;
+     private static final long RECONNECT_DELAY_MS = 5000;
++    private static final long MIN_FRAME_INTERVAL_MS = 250;
+ 
+     private final OkHttpClient client;
+     private final String serverUrl;
+     private final WsListener listener;
+ 
+     private WebSocket webSocket;
+-    private boolean connected = false;
++    private volatile boolean connected = false;
+     private boolean tryingToReconnect = false;
+ 
++    private volatile String currentFeature = null;
++    private long lastSend = 0;
++    private final java.util.concurrent.atomic.AtomicInteger framesSent = new java.util.concurrent.atomic.AtomicInteger(0);
++    public int getFramesSent() { return framesSent.get(); }
+     public interface WsListener {
+         void onResultsReceived(String results);
+         void onConnectionStatus(boolean isConnected);
+@@ -38,12 +49,16 @@ public class WebSocketManager {
+         this.listener = listener;
+ 
+         this.client = new OkHttpClient.Builder()
+-                .readTimeout(0, TimeUnit.MILLISECONDS)
++                .connectTimeout(5, TimeUnit.SECONDS)
++                .readTimeout(0, TimeUnit.MILLISECONDS) // infinite for WS
+                 .retryOnConnectionFailure(true)
+                 .build();
+     }
+ 
++    // ---------- Public API ----------
++
+     public void connect() {
++        Log.i(TAG, "Connecting to " + serverUrl);
+         Request request = new Request.Builder().url(serverUrl).build();
+         webSocket = client.newWebSocket(request, new SocketListener());
+     }
+@@ -58,55 +73,184 @@ public class WebSocketManager {
+         return connected;
+     }
+ 
+-    public void sendFrame(byte[] frameBytes, @NonNull String feature) {
++    public void setFeature(@NonNull String feature) {
++        this.currentFeature = feature;
++        Log.d(TAG, "setFeature -> " + feature);
+         if (connected && webSocket != null) {
+-            String message = "{\"feature\":\"" + feature + "\",\"frame\":\"" +
+-                    android.util.Base64.encodeToString(frameBytes, android.util.Base64.NO_WRAP) + "\"}";
+-            boolean sent = webSocket.send(message);
+-            if (!sent) Log.w(TAG, "Failed to send frame.");
+-        } else {
++            sendText(buildHello(feature));
++        }
++    }
++
++    /** Preferred: control JSON then binary JPEG */
++    public void sendFrame(@NonNull byte[] frameBytes, @NonNull String feature) {
++        if (!connected || webSocket == null) {
+             Log.d(TAG, "Skipping frame — not connected.");
++            return;
++        }
++
++        long now = System.currentTimeMillis();
++        if (now - lastSend < MIN_FRAME_INTERVAL_MS) return;
++        lastSend = now;
++
++        try {
++            if (currentFeature == null || !currentFeature.equals(feature)) {
++                currentFeature = feature;
++            }
++
++            String ctl = buildFrameControl(feature, frameBytes.length);
++            boolean okCtl = webSocket.send(ctl);
++            if (!okCtl) {
++                Log.w(TAG, "Failed to send frame control JSON");
++                return;
++            }
++
++            boolean okBin = webSocket.send(ByteString.of(frameBytes));
++            if (!okBin) {
++                Log.w(TAG, "Failed to send binary frame.");
++            } else {
++                Log.d(TAG, "Sent frame: feature=" + feature + " (" + frameBytes.length + " bytes)");
++            }
++        } catch (Exception e) {
++            Log.e(TAG, "Error sending frame: " + e.getMessage(), e);
++        }
++    }
++
++
++    public void sendFrameAsJsonBase64(@NonNull byte[] frameBytes, @NonNull String feature) {
++        if (!connected || webSocket == null) {
++            Log.d(TAG, "Skipping frame (JSON mode) — not connected.");
++            return;
++        }
++
++        long now = System.currentTimeMillis();
++        if (now - lastSend < MIN_FRAME_INTERVAL_MS) return;
++        lastSend = now;
++
++        try {
++            if (currentFeature == null || !currentFeature.equals(feature)) {
++                currentFeature = feature;
++            }
++            // Android Base64
++            String b64 = Base64.encodeToString(frameBytes, Base64.NO_WRAP);
++
++            JSONObject obj = new JSONObject();
++            obj.put("type", "frame");
++            obj.put("feature", feature);
++            obj.put("image_b64", b64);
++            obj.put("len", frameBytes.length);
++
++            boolean sent = webSocket.send(obj.toString());
++            if (!sent) {
++                Log.w(TAG, "Failed to send JSON base64 frame.");
++            } else {
++                Log.d(TAG, "Sent JSON base64 frame: feature=" + feature + " (" + frameBytes.length + " bytes)");
++            }
++        } catch (Exception e) {
++            Log.e(TAG, "Error sending JSON base64 frame: " + e.getMessage(), e);
++        }
++    }
++
++    // ---------- Internals ----------
++
++    private void sendText(String payload) {
++        if (!connected || webSocket == null) return;
++        try {
++            boolean ok = webSocket.send(payload);
++            if (!ok) Log.w(TAG, "sendText failed");
++            else Log.d(TAG, "sendText: " + payload);
++        } catch (Exception e) {
++            Log.e(TAG, "sendText error: " + e.getMessage(), e);
+         }
+     }
+ 
++    private static String buildHello(String feature) {
++        return "{\"type\":\"hello\",\"feature\":\"" + feature + "\"}";
++    }
++
++    private static String buildFrameControl(String feature, int len) {
++        return "{\"type\":\"frame\",\"feature\":\"" + feature + "\",\"len\":" + len + "}";
++    }
++
++    // ---------- Listener ----------
++
+     private class SocketListener extends WebSocketListener {
+         @Override
+-        public void onOpen(@NonNull WebSocket webSocket, @NonNull Response response) {
++        public void onOpen(@NonNull WebSocket ws, @NonNull Response r) {
+             connected = true;
+-            tryingToReconnect = false;
+-            if (listener != null) listener.onConnectionStatus(true);
+             Log.i(TAG, "WebSocket connected");
++            ws.send("ping");
++
++            if (currentFeature != null) {
++                ws.send(buildHello(currentFeature));
++            }
++
++            if (listener != null) listener.onConnectionStatus(true);
+         }
+ 
+-        @Override
+-        public void onMessage(@NonNull WebSocket webSocket, @NonNull String text) {
++        /*@Override
++        public void onMessage(@NonNull WebSocket ws, @NonNull String text) {
++            Log.d(TAG, "recv(text): " + text);
+             if (listener != null) listener.onResultsReceived(text);
+         }
++        */
++
++
++        @Override
++        public void onMessage(@NonNull WebSocket ws, @NonNull String text) {
++            try {
++                org.json.JSONObject obj = new org.json.JSONObject(text);
++
++                boolean match = obj.optBoolean("match", false);
++                String name = obj.optString("contactName",
++                        obj.optString("name", "Unknown"));
++
++
++                Log.d(TAG, "rec(text) match: " + match + ", contactName: " + name);
++
++
++                if (listener != null) listener.onResultsReceived(obj.toString());
++
++            } catch (Exception e) {
++                Log.d(TAG, "rec(text) (non-JSON)");
++            }
++        }
+ 
+         @Override
+-        public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable t, Response response) {
++        public void onFailure(@NonNull WebSocket ws, @NonNull Throwable t, Response r) {
+             connected = false;
+-            if (listener != null) listener.onConnectionStatus(false);
+-            Log.e(TAG, "WebSocket failed: " + t.getMessage());
+-
+-            if (ENABLE_RECONNECT && !tryingToReconnect) {
+-                tryingToReconnect = true;
+-                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+-                    Log.i(TAG, "Reconnecting WebSocket...");
+-                    connect();
+-                }, RECONNECT_DELAY_MS);
++            Log.e(TAG, "WebSocket failed: " + t +
++                    (r != null ? (" | code=" + r.code() + " msg=" + r.message()) : " | no HTTP response"));
++
++            // Guarded response-body logging to satisfy lint
++            if (r != null) {
++                try {
++                    if (r.body() != null) {
++                        Log.e(TAG, "resp body: " + r.body().string());
++                    }
++                } catch (Exception ignore) { }
+             }
++
++            if (listener != null) listener.onConnectionStatus(false);
++            if (ENABLE_RECONNECT && !tryingToReconnect) scheduleReconnect();
++        }
++
++        private void scheduleReconnect() {
++            tryingToReconnect = true;
++            new Handler(Looper.getMainLooper()).postDelayed(() -> {
++                tryingToReconnect = false;
++                connect();
++            }, RECONNECT_DELAY_MS);
+         }
+ 
+         @Override
+-        public void onClosing(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
++        public void onClosing(@NonNull WebSocket ws, int code, @NonNull String reason) {
+             connected = false;
+             if (listener != null) listener.onConnectionStatus(false);
+             Log.i(TAG, "WebSocket closing: " + reason);
+         }
+ 
+         @Override
+-        public void onClosed(@NonNull WebSocket webSocket, int code, @NonNull String reason) {
++        public void onClosed(@NonNull WebSocket ws, int code, @NonNull String reason) {
+             connected = false;
+             if (listener != null) listener.onConnectionStatus(false);
+             Log.i(TAG, "WebSocket closed: " + reason);
+diff --git a/app/src/main/res/layout/activity_emergency.xml b/app/src/main/res/layout/activity_emergency.xml
+index 6697d22..733909e 100644
+--- a/app/src/main/res/layout/activity_emergency.xml
++++ b/app/src/main/res/layout/activity_emergency.xml
+@@ -1,23 +1,123 @@
+ <?xml version="1.0" encoding="utf-8"?>
+-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+-    android:id="@+id/root_layout"
++<LinearLayout
++    xmlns:android="http://schemas.android.com/apk/res/android"
+     android:layout_width="match_parent"
+     android:layout_height="match_parent"
++    android:orientation="vertical"
+     android:background="#000000">
+ 
+-    <androidx.camera.view.PreviewView
+-        android:id="@+id/cameraPreview"
++    <!-- 🔵 Home Bar -->
++    <FrameLayout
++        android:id="@+id/btnHome"
+         android:layout_width="match_parent"
+-        android:layout_height="match_parent"
+-        android:keepScreenOn="true" />
+-
+-    <TextView
+-        android:id="@+id/textOverlay"
+-        android:layout_width="wrap_content"
+-        android:layout_height="wrap_content"
+-        android:text="Capturing emergency photo…"
+-        android:textSize="20sp"
+-        android:textColor="#FFFFFF"
+-        android:layout_gravity="center" />
+-</FrameLayout>
++        android:layout_height="90dp"
++        android:background="@drawable/rectangle_deep_blue"
++        android:clickable="true"
++        android:focusable="true"
++        android:contentDescription="Go to Home">
+ 
++        <TextView
++            style="@style/ShadowText"
++            android:layout_width="match_parent"
++            android:layout_height="match_parent"
++            android:gravity="center"
++            android:text="Home"
++            android:textColor="@color/white"
++            android:textSize="45sp"
++            android:textStyle="bold" />
++    </FrameLayout>
++
++    <!-- 🧱 Emergency Actions -->
++    <LinearLayout
++        android:layout_width="match_parent"
++        android:layout_height="0dp"
++        android:layout_weight="1"
++        android:orientation="vertical"
++        android:padding="0dp"
++        android:layout_margin="0dp"
++        android:gravity="top">
++
++        <!-- 📡 Ping Location -->
++        <FrameLayout
++            android:id="@+id/btnPingLocation"
++            android:layout_width="match_parent"
++            android:layout_height="0dp"
++            android:layout_weight="1"
++            android:background="@drawable/rectangle_light_blue"
++            android:clickable="true"
++            android:focusable="true"
++            android:contentDescription="Ping Current Location">
++
++            <TextView
++                style="@style/ShadowText"
++                android:layout_width="match_parent"
++                android:layout_height="match_parent"
++                android:gravity="center"
++                android:text="Ping Location"
++                android:textColor="@color/white"
++                android:textSize="50sp"
++                android:textStyle="bold" />
++        </FrameLayout>
++
++        <!-- 🟥 Send Text Alert -->
++        <FrameLayout
++            android:id="@+id/btnSendAlert"
++            android:layout_width="match_parent"
++            android:layout_height="0dp"
++            android:layout_weight="1"
++            android:background="@drawable/rectangle_red"
++            android:clickable="true"
++            android:focusable="true"
++            android:contentDescription="Send Emergency Text Alert">
++
++            <TextView
++                style="@style/ShadowText"
++                android:layout_width="match_parent"
++                android:layout_height="match_parent"
++                android:gravity="center"
++                android:text="Send Text Alert"
++                android:textColor="@color/white"
++                android:textSize="50sp"
++                android:textStyle="bold" />
++        </FrameLayout>
++
++        <!-- 📷 Open Camera Button -->
++        <FrameLayout
++            android:id="@+id/btnOpenCamera"
++            android:layout_width="match_parent"
++            android:layout_height="0dp"
++            android:layout_weight="1"
++            android:background="@drawable/rectangle_green"
++            android:clickable="true"
++            android:focusable="true"
++            android:contentDescription="Open Camera">
++
++            <TextView
++                style="@style/ShadowText"
++                android:layout_width="match_parent"
++                android:layout_height="match_parent"
++                android:gravity="center"
++                android:text="Open Camera"
++                android:textColor="@color/white"
++                android:textSize="50sp"
++                android:textStyle="bold" />
++        </FrameLayout>
++    </LinearLayout>
++
++    <!-- 🎤 Mic Bar -->
++    <FrameLayout
++        android:id="@+id/btnMic"
++        android:layout_width="match_parent"
++        android:layout_height="100dp"
++        android:background="@drawable/rectangle_deep_blue"
++        android:clickable="true"
++        android:focusable="true"
++        android:contentDescription="Activate Voice Command">
++
++        <ImageView
++            style="@style/MicIconStyle"
++            android:layout_gravity="center"
++            android:src="@drawable/ic_mic"
++            android:contentDescription="Microphone Icon" />
++    </FrameLayout>
++</LinearLayout>
+diff --git a/app/src/main/res/xml/file_paths.xml b/app/src/main/res/xml/file_paths.xml
+deleted file mode 100644
+index 566f4bb..0000000
+--- a/app/src/main/res/xml/file_paths.xml
++++ /dev/null
+@@ -1,4 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<paths xmlns:android="http://schemas.android.com/apk/res/android">
+-    <external-files-path name="my_images" path="Pictures/" />
+-</paths>

@@ -2,8 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ===== Permissions ===== -->
-    <!-- Camera & Media -->
     <uses-permission android:name="android.permission.CAMERA" />
 
     <!-- Audio (for voice commands or speech recognition) -->
@@ -35,10 +33,9 @@
         android:label="NewSight"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.NewSight"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:theme="@style/Theme.NewSight">
 
-        <!-- Secure File Provider -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
@@ -62,6 +59,9 @@
 
         <!-- REAL Main Screens -->
         <activity android:name=".MainActivity" android:exported="true" />
+        <activity android:name=".SignupActivity" android:exported="false" />
+        <activity android:name=".ForgotPasswordActivity" android:exported="false" />
+        <activity android:name=".LoadingActivity" android:exported="false" />
         <activity android:name=".HomeActivity" android:exported="true" />
 
         <!-- Navigation -->
@@ -74,6 +74,9 @@
         <!-- Observe / Detection -->
         <activity android:name=".ObserveActivity" android:exported="true" />
         <activity android:name=".DetectionActivity" android:exported="true" />
+        <activity android:name=".DetectPeopleActivity" android:exported="true"/>
+        <activity android:name=".ReadTextActivity" android:exported="true" />
+
         <activity
             android:name=".ObstacleActivity"
             android:exported="true"
@@ -86,6 +89,8 @@
         <!-- ===== Emergency Features ===== -->
         <activity android:name=".EmergencyActivity" android:exported="true" />
         <activity android:name=".EmergencySetupActivity" android:exported="true" />
+        <activity android:name=".RedeemActivity" android:exported="false" />
+        <activity android:name=".RewardsActivity" android:exported="false" />
 
         <!-- ===== Settings & Profile ===== -->
         <activity android:name=".SettingsActivity" android:exported="true" />
@@ -95,11 +100,9 @@
         <activity android:name=".VoiceAndHapticsActivity" android:exported="true" />
         <activity android:name=".HelpAndSupportActivity" android:exported="true" />
 
-        <!-- Optional future activities
         <activity android:name=".RemoveContactActivity" android:exported="true" />
         <activity android:name=".EditProfileActivity" android:exported="true" />
         <activity android:name=".PrivacyAndDataActivity" android:exported="true" />
         <activity android:name=".LogoutActivity" android:exported="true" />
-        -->
     </application>
 </manifest>

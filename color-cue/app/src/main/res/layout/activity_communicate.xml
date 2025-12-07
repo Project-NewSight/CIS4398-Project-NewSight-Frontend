@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#000000">
+
+    <!-- 🔵 Home Bar -->
+    <FrameLayout
+        android:id="@+id/btnHome"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Go to Home">
+
+        <TextView
+            style="@style/ShadowText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Home"
+            android:textColor="@color/white"
+            android:textSize="45sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <!-- 🧱 Main Buttons (stacked vertically) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="0dp"
+        android:layout_margin="0dp"
+        android:gravity="top">
+
+        <!-- 🎤 Speak to Text -->
+        <FrameLayout
+            android:id="@+id/btnSpeakToText"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_light_blue"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Speak to Text or Assistant"
+            android:padding="0dp"
+            android:layout_margin="0dp">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Speak to Text\n or Assistant"
+                android:textColor="@color/white"
+                android:textSize="50sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+
+        <!-- ✋ Translate Sign Language -->
+        <FrameLayout
+            android:id="@+id/btnSignTranslation"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/rectangle_orange"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="Translate Sign Language"
+            android:padding="0dp"
+            android:layout_margin="0dp">
+
+            <TextView
+                style="@style/ShadowText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Translate Sign Language"
+                android:textColor="@color/white"
+                android:textSize="50sp"
+                android:textStyle="bold" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- 🎤 Bottom Mic Bar -->
+    <FrameLayout
+        android:id="@+id/btnMic"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Activate Voice Command"
+        android:padding="0dp"
+        android:layout_margin="0dp">
+
+        <ImageView
+            style="@style/MicIconStyle"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_mic"
+            android:contentDescription="Microphone Icon" />
+    </FrameLayout>
+</LinearLayout>

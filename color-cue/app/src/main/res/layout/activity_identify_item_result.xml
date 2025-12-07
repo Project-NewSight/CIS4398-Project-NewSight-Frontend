@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000"
+    android:orientation="vertical">
+
+    <!-- 🔵 Top Home Bar -->
+    <FrameLayout
+        android:id="@+id/btnHome"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:background="@drawable/rectangle_deep_blue">
+
+        <TextView
+            style="@style/ShadowText"
+            android:text="Home"
+            android:textColor="@color/White"
+            android:textSize="45sp"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </FrameLayout>
+
+    <!-- 🖼️ Item Photo -->
+    <ImageView
+        android:id="@+id/imgResultPreview"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:background="#222"
+        android:scaleType="centerCrop" />
+
+    <!-- 📄 Item Information Panel -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/BlackSqueeze"
+        android:padding="24dp">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top">
+
+            <TextView
+                android:id="@+id/txtColor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Color: ---"
+                android:textColor="@color/DodgerBlue"
+                android:textSize="32sp"
+                style="@style/WhiteShadowText"
+                android:paddingBottom="16dp"/>
+
+            <TextView
+                android:id="@+id/txtCategory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Category: ---"
+                android:textColor="@color/DodgerBlue"
+                android:textSize="32sp"
+                style="@style/WhiteShadowText"
+                android:paddingBottom="16dp"/>
+
+            <TextView
+                android:id="@+id/txtMaterial"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Material: ---"
+                android:textColor="@color/DodgerBlue"
+                android:textSize="32sp"
+                style="@style/WhiteShadowText"
+                android:paddingBottom="16dp"/>
+
+            <TextView
+                android:id="@+id/txtPattern"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Pattern: ---"
+                android:textColor="@color/DodgerBlue"
+                android:textSize="32sp"
+                style="@style/WhiteShadowText"
+                android:paddingBottom="16dp"/>
+
+            <TextView
+                android:id="@+id/txtWashing"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Washing Instructions: ---"
+                android:textColor="@color/DodgerBlue"
+                android:textSize="32sp"
+                style="@style/WhiteShadowText"
+                android:paddingBottom="16dp"/>
+
+            <TextView
+                android:id="@+id/txtNotes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Notes: ---"
+                android:textColor="@color/DodgerBlue"
+                android:textSize="32sp"
+                style="@style/WhiteShadowText"
+                android:paddingBottom="12dp"/>
+        </LinearLayout>
+    </FrameLayout>
+
+</LinearLayout>

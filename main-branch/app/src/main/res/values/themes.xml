@@ -1,0 +1,13 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.NewSight" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="shapeAppearanceSmallComponent">@style/SquareButtonShape</item>
+        <item name="shapeAppearanceMediumComponent">@style/SquareButtonShape</item>
+        <item name="shapeAppearanceLargeComponent">@style/SquareButtonShape</item>
+
+    </style>
+
+    <style name="Theme.NewSight" parent="Base.Theme.NewSight" />
+</resources>

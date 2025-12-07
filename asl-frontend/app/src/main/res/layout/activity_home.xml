@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="#000000"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="0dp">
+
+    <!-- Settings Button (moved to top, full width, slightly thinner) -->
+    <FrameLayout
+        android:id="@+id/btnSettings"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:background="@drawable/rectangle_grey"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Settings">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Settings"
+            android:textColor="@color/white"
+            android:textSize="45sp"
+            style="@style/ShadowText"/>
+    </FrameLayout>
+
+    <!-- Navigate Button -->
+    <FrameLayout
+        android:id="@+id/btnNavigate"
+        android:layout_width="700dp"
+        android:layout_height="135dp"
+        android:background="@drawable/rectangle_light_blue"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Navigate">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="126dp"
+            android:gravity="center"
+            android:text="Navigate"
+            android:textColor="#FFFFFF"
+            android:textSize="55sp"
+            style="@style/ShadowText"/>
+    </FrameLayout>
+
+    <!-- Observe Button -->
+    <FrameLayout
+        android:id="@+id/btnObserve"
+        android:layout_width="700dp"
+        android:layout_height="135dp"
+        android:background="@drawable/rectangle_orange"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Observe">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Observe"
+            android:textColor="#FFFFFF"
+            android:textSize="55sp"
+            android:gravity="center"
+            style="@style/ShadowText"/>
+    </FrameLayout>
+
+    <!-- Communicate Button -->
+    <FrameLayout
+        android:id="@+id/btnCommunicate"
+        android:layout_width="700dp"
+        android:layout_height="135dp"
+        android:background="@drawable/rectangle_green"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Communicate">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Communicate"
+            android:textColor="#FFFFFF"
+            android:textSize="55sp"
+            android:gravity="center"
+            style="@style/ShadowText"/>
+    </FrameLayout>
+
+    <!-- Emergency Button -->
+    <FrameLayout
+        android:id="@+id/btnEmergency"
+        android:layout_width="700dp"
+        android:layout_height="135dp"
+        android:background="@drawable/rectangle_red"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Emergency">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Emergency"
+            android:textColor="#FFFFFF"
+            android:textSize="55sp"
+            android:gravity="center"
+            style="@style/ShadowText"/>
+    </FrameLayout>
+
+    <!-- Mic Button (bottom, full width) -->
+    <FrameLayout
+        android:id="@+id/btnMic"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="Mic">
+
+        <ImageView
+            style="@style/MicIconStyle"
+            android:layout_gravity="center"
+            android:contentDescription="Microphone Icon"
+            android:src="@drawable/ic_mic" />
+    </FrameLayout>
+
+</LinearLayout>
