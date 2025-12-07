@@ -179,6 +179,17 @@ public class HomeActivity extends AppCompatActivity {
             intent.putExtra("feature", "text_detection");
             startActivity(intent);
         });
+
+        FrameLayout btnColorCue = findViewById(R.id.btnColorCue);
+        addTouchAnimation(btnColorCue);
+        animateView(btnColorCue, 550);
+
+        btnColorCue.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeActivity.this, ColorCueActivity.class);
+            Toast.makeText(this, "Opening Color Cue", Toast.LENGTH_SHORT).show();
+            startActivity(intent);
+        });
+
         if (btnColors != null) {
             btnColors.setOnClickListener(v -> Toast.makeText(this, "Colors clicked", Toast.LENGTH_SHORT).show());
         }

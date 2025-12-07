@@ -74,7 +74,65 @@
             tools:ignore="DiscouragedApi" />
 
         <!-- ===== Color Cue ===== -->
-        <activity android:name=".ColorCueActivity" android:exported="true" />
+        <!-- ===== Color Cue Flow Screens ===== -->
+        <activity
+            android:name=".ColorCueActivity"
+            android:exported="true" />
+
+        <!-- Camera -->
+        <activity
+            android:name=".camera.CameraCaptureActivity"
+            android:exported="false" />
+
+        <!-- Add Item flow -->
+        <activity
+            android:name=".additem.AddItemFrontActivity"
+            android:exported="true" />
+
+        <activity
+            android:name=".additem.AddItemTagFrontActivity"
+            android:exported="true" />
+
+        <activity
+            android:name=".additem.AddItemTagBackActivity"
+            android:exported="true" />
+
+        <activity
+            android:name=".additem.AddItemInfoActivity"
+            android:exported="true" />
+
+        <activity
+            android:name=".additem.AddItemReviewActivity"
+            android:exported="true" />
+
+        <!-- Identify item flow -->
+        <activity
+            android:name=".IdentifyItemActivity"
+            android:exported="true" />
+
+        <activity
+            android:name=".additem.ItemDetailActivity"
+            android:exported="false" />
+
+
+        <activity
+            android:name=".IdentifyItemResultActivity"
+            android:exported="true" />
+
+        <!-- Match outfit flow -->
+        <activity
+            android:name=".MatchOutfitActivity"
+            android:exported="true" />
+
+        <activity
+            android:name=".MatchOutfitResultActivity"
+            android:exported="true" />
+
+        <!-- View Closet (if you have this screen) -->
+        <activity
+            android:name=".ViewClosetActivity"
+            android:exported="true" />
+
 
         <!-- ===== Emergency Features ===== -->
         <activity android:name=".EmergencyActivity" android:exported="true" />
@@ -88,8 +146,8 @@
         <activity android:name=".VoiceAndHapticsActivity" android:exported="true" />
         <activity android:name=".HelpAndSupportActivity" android:exported="true" />
 
-        <activity android:name=".RemoveContactActivity" android:exported="true" />
-        <activity android:name=".EditProfileActivity" android:exported="true" />
+        <!-- <activity android:name=".RemoveContactActivity" android:exported="true" />
+        <activity android:name=".EditProfileActivity" android:exported="true" /> -->
         <activity android:name=".PrivacyAndDataActivity" android:exported="true" />
         <activity android:name=".LogoutActivity" android:exported="true" />
     </application>

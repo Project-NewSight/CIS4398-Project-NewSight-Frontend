@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/White"
+    android:orientation="vertical">
+
+    <!-- 🔵 Top Bar: Back + Home -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:orientation="horizontal"
+        android:background="@color/DodgerBlue">
+
+        <!-- Back -->
+        <FrameLayout
+            android:id="@+id/btnBack"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:background="@color/DesatDodgerBlue"
+            android:clickable="false"
+            android:focusable="false">
+
+            <TextView
+                style="@style/ShadowText"
+                android:text="Back"
+                android:textColor="@color/White"
+                android:textSize="36sp"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </FrameLayout>
+
+        <!-- Home -->
+        <FrameLayout
+            android:id="@+id/btnHome"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:background="@color/DodgerBlue"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                style="@style/ShadowText"
+                android:text="Home"
+                android:textColor="@color/White"
+                android:textSize="36sp"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </FrameLayout>
+    </LinearLayout>
+
+
+    <!-- 🟦 Primary Action Tile (Deep Blue) -->
+    <FrameLayout
+        android:id="@+id/btnScanTagFront"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            style="@style/ShadowText"
+            android:gravity="center"
+            android:text="Scan Tag Front"
+            android:textColor="@color/White"
+            android:textSize="45sp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </FrameLayout>
+
+
+    <!-- 🖼 Preview (Neutral tile) -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="350dp"
+        android:background="@color/BlackSqueeze"
+        android:padding="4dp">
+
+        <ImageView
+            android:id="@+id/imgTagFrontPreview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="Tag Front Preview"/>
+    </FrameLayout>
+
+
+    <!-- Next Button (Morning Glory) -->
+    <FrameLayout
+        android:id="@+id/btnContinue"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:background="@drawable/rectangle_morning_glory"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            style="@style/ShadowText"
+            android:gravity="center"
+            android:text="Next"
+            android:textColor="@color/White"
+            android:textSize="40sp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </FrameLayout>
+
+
+    <!-- 🎤 Bottom Mic -->
+    <FrameLayout
+        android:id="@+id/btnMic"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@color/DodgerBlue"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            style="@style/MicIconStyle"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_mic"
+            android:contentDescription="Microphone Icon"/>
+    </FrameLayout>
+
+</LinearLayout>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/White"
+    android:orientation="vertical">
+
+    <!-- 🔵 Top Bar: Back + Home -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:orientation="horizontal"
+        android:background="@color/DodgerBlue">
+
+        <!-- Back -->
+        <FrameLayout
+            android:id="@+id/btnBack"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:background="@color/DesatDodgerBlue"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                style="@style/ShadowText"
+                android:text="Back"
+                android:textColor="@color/White"
+                android:textSize="36sp"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </FrameLayout>
+
+        <!-- Home -->
+        <FrameLayout
+            android:id="@+id/btnHome"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:background="@color/DodgerBlue"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                style="@style/ShadowText"
+                android:text="Home"
+                android:textColor="@color/White"
+                android:textSize="36sp"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- 📝 Genre Input Tile -->
+    <FrameLayout
+        android:id="@+id/genreBlock"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/BlackSqueeze"
+        android:padding="25dp">
+
+        <EditText
+            android:id="@+id/inputGenre"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:gravity="center"
+            android:hint="Enter Genre \n(ex: Pajamas, Gym, Casual)"
+            android:textColor="@color/DodgerBlue"
+            android:textColorHint="#7AA2C9"
+            android:textSize="28sp" />
+    </FrameLayout>
+
+    <!-- 📝 Notes Input Tile -->
+    <FrameLayout
+        android:id="@+id/notesBlock"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/BlackSqueeze"
+        android:padding="25dp">
+
+        <EditText
+            android:id="@+id/inputNotes"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:hint="Enter Notes (optional)"
+            android:background="@android:color/transparent"
+            android:textColor="@color/DodgerBlue"
+            android:textColorHint="#7AA2C9"
+            android:textSize="32sp"
+            android:gravity="center"/>
+    </FrameLayout>
+
+    <!-- ⏭️ Next Button (Morning Glory) -->
+    <FrameLayout
+        android:id="@+id/btnContinue"
+        android:layout_width="match_parent"
+        android:layout_height="130dp"
+        android:background="@drawable/rectangle_morning_glory"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            style="@style/ShadowText"
+            android:text="Next"
+            android:textColor="@color/White"
+            android:textSize="40sp"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </FrameLayout>
+
+    <!-- 🎤 Mic Bar -->
+    <FrameLayout
+        android:id="@+id/btnMic"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@color/DodgerBlue"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            style="@style/MicIconStyle"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_mic"/>
+    </FrameLayout>
+
+</LinearLayout>

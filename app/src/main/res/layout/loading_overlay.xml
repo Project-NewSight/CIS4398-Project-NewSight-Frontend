@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#CC000000"
+    android:gravity="center">
+
+        <!-- White Large ProgressBar -->
+    <ProgressBar
+    android:id="@+id/loadingSpinner"
+    style="?android:attr/progressBarStyleLarge"
+    android:layout_width="120dp"
+    android:layout_height="120dp"
+    android:indeterminate="true"
+    android:indeterminateTint="@color/white" />
+
+        <!-- Text Under Spinner -->
+    <TextView
+    android:id="@+id/loadingText"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="180dp"
+    android:text="Uploading Item..."
+    android:textColor="@color/white"
+    android:textSize="28sp"
+    android:textStyle="bold" />
+</FrameLayout>

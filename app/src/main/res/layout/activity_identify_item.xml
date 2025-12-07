@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/White">
+
+    <!-- 🔵 Top Bar: Back + Home -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:orientation="horizontal"
+        android:background="@color/DodgerBlue">
+
+        <!-- Back -->
+        <FrameLayout
+            android:id="@+id/btnBack"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:background="@color/DesatDodgerBlue"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                style="@style/ShadowText"
+                android:text="Back"
+                android:textColor="@color/White"
+                android:textSize="36sp"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </FrameLayout>
+
+        <!-- Home -->
+        <FrameLayout
+            android:id="@+id/btnHome"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:background="@color/DodgerBlue"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                style="@style/ShadowText"
+                android:text="Home"
+                android:textColor="@color/White"
+                android:textSize="36sp"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        </FrameLayout>
+    </LinearLayout>
+
+
+    <!-- 🟧 Identify Button (Orange Tile) -->
+    <FrameLayout
+        android:id="@+id/btnIdentify"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@drawable/rectangle_deep_blue"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            style="@style/ShadowText"
+            android:text="Scan Item"
+            android:textSize="50sp"
+            android:textColor="@color/White"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </FrameLayout>
+
+
+    <!-- 📸 Preview Box -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="350dp"
+        android:background="@color/BlackSqueeze"
+        android:padding="4dp">
+
+        <ImageView
+            android:id="@+id/imgPreview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="Preview Image"
+            android:scaleType="centerCrop"/>
+    </FrameLayout>
+
+
+    <!-- 🎤 Mic Bar -->
+    <FrameLayout
+        android:id="@+id/btnMic"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@color/DodgerBlue"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            style="@style/MicIconStyle"
+            android:src="@drawable/ic_mic"
+            android:layout_gravity="center"/>
+    </FrameLayout>
+
+</LinearLayout>
