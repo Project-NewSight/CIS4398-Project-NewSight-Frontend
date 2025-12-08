@@ -580,6 +580,8 @@ All dependencies are managed via Gradle and automatically downloaded during buil
 
 This section provides detailed instructions to build, install, and configure the entire Project NewSight frontend on target devices.
 
+**Note:** This project uses Gradle for build automation (Android standard). There are no Makefiles - all builds are handled through Gradle via Android Studio or command line.
+
 **Note:** Ensure you have met all [Requirements](#requirements) before proceeding with installation.
 
 ### Target Devices
@@ -649,9 +651,24 @@ private static final String NAVIGATION_WS_URL = "ws://192.168.1.254:8000/navigat
 
 **7. Build and Run**
 
+**Using Android Studio (Recommended):**
 - Click the Run button (green play icon) or press Shift+F10
 - Select your device
 - App will build, install, and launch
+
+**Using Gradle Command Line:**
+```bash
+# Build debug APK
+./gradlew assembleDebug
+
+# Install on connected device
+./gradlew installDebug
+
+# Build and install in one command
+./gradlew installDebug
+```
+
+**Note:** This project uses Gradle for build automation (Android standard). There are no Makefiles - all builds are handled through Gradle build scripts (`build.gradle.kts`).
 
 ---
 
