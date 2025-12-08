@@ -1,518 +1,876 @@
-# NewSight - Android Assistive Technology Application
+# Project NewSight - Android Frontend Application
+
+Project NewSight is an Android assistive technology application designed to help visually impaired users with AI-powered features including face recognition, voice navigation, object detection, text reading, emergency alerts, ASL detection, and smart clothing recognition.
+
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Project Structure](#project-structure)
+3. [Features](#features)
+4. [UI/UX Design Overview](#uiux-design-overview)
+5. [Tech Stack](#tech-stack)
+6. [Requirements](#requirements)
+7. [Build, Install & Configuration](#build-install--configuration)
+8. [Running the Applications](#running-the-applications)
+9. [Testing](#testing)
+10. [Configuration](#configuration)
+11. [Known Issues](#known-issues)
+12. [Future Work](#future-work)
+
+---
 
 ## Overview
 
-NewSight is a comprehensive Android application designed to assist visually impaired users through multiple accessible features. The app leverages the device's camera, GPS, voice recognition, and real-time communication to provide environmental awareness, navigation assistance, emergency support, and social connectivity - all through hands-free, voice-activated interactions.
+This frontend consists of four separate Android projects:
 
-## Features
+**Main app** - The primary unified Android application with 12 integrated features (in `app/` folder)
 
-### 1. Voice-Activated Navigation
-- **Hands-Free Operation**: Say "Hey Guide, nearest CVS" or "Give me directions to Starbucks" from any screen
-- **AR-Style Visual Overlay**: Real-time camera feed with directional arrows, distance, and turn instructions overlaid
-- **Turn-by-Turn Voice Guidance**: Announces upcoming turns with distance (e.g., "In 50 feet, turn right on Main Street")
-- **Smart Place Recognition**: Understands generic places (CVS, Starbucks, bus stops) and finds the nearest location
-- **Real-Time GPS Tracking**: Continuous location monitoring for accurate positioning and step advancement
-- **Automatic Navigation Start**: Voice command from any activity automatically launches NavigateActivity with navigation ready
-- **Google Maps Integration**: Walking directions powered by Google Maps Directions, Places, and Geocoding APIs
-- **Proximity-Based Announcements**: Voice alerts at 100m, 50 feet, and 25 feet before turns
+**asl-frontend** - ASL detection feature in a separate folder
 
-### 2. Voice Commands ("Hey Guide")
-- **Wake Word Detection**: Always-listening for "Hey Guide" activation phrase
-- **Multi-Feature Control**: Voice activation for all app features (navigation, detection, emergency, etc.)
-- **Natural Language Processing**: Groq Whisper STT for accurate speech recognition
-- **Intelligent Feature Routing**: AI-powered feature detection using Groq LLaMa LLM
-- **Session-Based Tracking**: Persistent session IDs for location tracking across activities
+**color-cue** - Clothing recognition feature in a separate folder
 
-### 3. Real-Time Object Detection
-- **Live Camera Feed**: On-device TensorFlow Lite model for instant object recognition
-- **Bounding Box Overlay**: High-contrast visual feedback with labeled objects
-- **EfficientDet-Lite0 Model**: Optimized for mobile performance
-- **Obstacle Detection**: Identifies obstacles in the user's path
-- **CameraX Integration**: Modern camera implementation for reliability
+**main-branch** - Legacy UI implementation preserved for reference (old UI before rebranding)
 
-### 4. Familiar Face Recognition
-- **Real-Time Face Detection**: Identifies familiar contacts through camera feed
-- **DeepFace Integration**: Advanced face recognition with configurable models (VGG-Face, Facenet, ArcFace)
-- **WebSocket Communication**: Real-time face matching with backend
-- **Gallery Management**: Cloud-stored face database via AWS S3
-- **Confidence Scoring**: Distance thresholds for accurate matching
+**Why are asl-frontend and color-cue separate?**
+These two features were last-minute integrations before the final merge to main. To avoid breaking the currently working features in the main app, we kept them in their own self-contained folders with separate Gradle configurations. They can be built and run independently.
 
-### 5. Emergency Contact System
-- **Quick Access**: Emergency alert activation with location and photo capture
-- **GPS Location Sharing**: Automatically sends current location to trusted contacts
-- **Photo Documentation**: Captures and uploads emergency photo to AWS S3
-- **SMS Alerts**: Sends emergency messages via Vonage API
-- **Contact Management**: Add, view, and delete trusted emergency contacts
+**Why is main-branch separate?**
+The `main-branch` folder contains our old UI implementation before we rebranded to the new UI design. We preserved it to avoid losing the previous work, but it is not actively maintained.
 
-### 6. Additional Features
-- **Home Dashboard**: Central navigation hub with large, accessible buttons
-- **Text Detection**: OCR for reading text in the environment
-- **Color Identification**: Identifies colors in the camera view
-- **ASL Detection**: American Sign Language recognition
-- **Modular Architecture**: Features separated into distinct activities for maintainability
-
-## Core Components
-
-### Main Activities
-
-- **`HomeActivity.java`**: 
-  - Central dashboard with navigation to all features
-  - Voice command activation with "Hey Guide" wake word
-  - Location tracking initialization for navigation
-  - Session ID management for WebSocket connections
-
-- **`NavigateActivity.java`**: 
-  - AR-style navigation interface with CameraX integration
-  - Real-time turn-by-turn navigation display
-  - Voice command processing for destination input
-  - GPS tracking and WebSocket communication for live updates
-  - Visual overlay with distance, arrows, and instructions
-  - Text-to-speech for voice announcements
-
-- **`ObstacleActivity.java`**: 
-  - Real-time object detection screen
-  - Camera lifecycle management
-  - TensorFlow Lite model integration
-  - Bounding box overlay rendering
-
-- **`CommunicateActivity.java`**: 
-  - Communication features hub
-  - Voice command integration
-  - ASL detection entry point
-  - Location tracking for navigation requests
-
-- **`ObserveActivity.java`**: 
-  - Observation features hub (text detection, color cue, facial recognition)
-  - Voice command integration
-  - Location tracking for navigation requests
-
-- **`EmergencyActivity.java`**: 
-  - Emergency contact management
-  - Quick emergency alert activation
-  - GPS and photo capture integration
-
-### Helper Classes
-
-- **`VoiceCommandHelper.java`**: 
-  - Audio recording and playback
-  - Wake word detection
-  - Speech-to-text via backend API
-  - Session ID management for navigation
-  - OkHttp integration for audio file upload
-
-- **`LocationHelper.java`**: 
-  - FusedLocationProviderClient management
-  - GPS updates every 2 seconds
-  - Location permission handling
-  - Callback interface for location updates
-
-- **`LocationWebSocketHelper.java`**: 
-  - WebSocket connection to `/location/ws` endpoint
-  - Continuous GPS data streaming to backend
-  - Session-based location tracking
-  - Auto-reconnection on disconnection
-
-- **`NavigationHelper.java`**: 
-  - WebSocket connection to `/navigation/ws` endpoint
-  - Real-time turn-by-turn update receiver
-  - Navigation state management
-  - Callback interface for UI updates
-
-- **`TtsHelper.java`**: 
-  - Text-to-speech for voice announcements
-  - Android TextToSpeech engine wrapper
-  - Navigation instruction announcements
-
-### Data Models
-
-- **`DirectionsResponse.java`**: 
-  - Full directions response from Google Maps API
-  - Origin, destination, total distance/duration
-  - List of navigation steps
-
-- **`NavigationStep.java`**: 
-  - Single turn-by-turn instruction
-  - Distance, duration, start/end locations
-  - HTML instruction text
-
-- **`NavigationUpdate.java`**: 
-  - Real-time navigation state update
-  - Current step, distance to next turn
-  - Announcement flags and messages
-  - Status: navigating, step_completed, arrived
-
-- **`VoiceResponse.java`**: 
-  - Voice command API response
-  - Feature identification and confidence
-  - Extracted parameters (destination, query)
-  - TTS output message
-  - Full directions object for navigation
-
-- **`LocationCoordinates.java`**: 
-  - GPS coordinate pair (lat, lng)
-  - Used in navigation steps and directions
-
-### UI Components
-
-- **`DetectorProcessor.java`**: 
-  - Custom `ImageAnalysis.Analyzer` for object detection
-  - Frame rotation and preprocessing
-  - TensorFlow Lite model inference
-  - Results passed to OverlayView
-
-- **`OverlayView.java`**: 
-  - Custom View for detection overlay
-  - Bounding box and label rendering
-  - Scaling to match camera preview
-
-## Technologies Used
-
-### Core Android
-- **Android SDK (Java)**: Primary development language and platform
-- **AndroidX Libraries**: Modern Android Jetpack components
-- **Material Design Components**: UI/UX components for accessibility
-
-### Camera & Vision
-- **CameraX**: Modern camera implementation for preview and image capture
-- **TensorFlow Lite**: On-device ML inference for object detection
-- **EfficientDet-Lite0**: Lightweight object detection model
-
-### Location & Navigation
-- **FusedLocationProviderClient**: GPS location tracking (Google Play Services Location)
-- **Google Maps APIs**: Directions, Places, and Geocoding (via backend)
-- **Haversine Distance Calculation**: GPS proximity detection (backend)
-
-### Communication & Networking
-- **OkHttp 5.2.1**: HTTP client for API calls and audio upload
-- **WebSocket (OkHttp)**: Real-time bidirectional communication for:
-  - Location tracking (`/location/ws`)
-  - Navigation updates (`/navigation/ws`)
-  - Face recognition (`/ws`)
-- **Gson 2.10.1**: JSON parsing and serialization
-
-### Audio & Speech
-- **Android MediaRecorder**: Audio capture for voice commands
-- **Android TextToSpeech**: Voice announcements for navigation
-- **Android AudioManager**: Audio playback control
-- **Backend Speech-to-Text**: Groq Whisper via backend API
-
-### UI Components
-- **PreviewView**: CameraX preview surface
-- **RelativeLayout/FrameLayout**: AR overlay structure
-- **Custom Views**: Bounding box overlay for object detection
-- **ImageView**: Directional arrows (straight, left, right, slight turns)
-- **TextView**: Distance, instructions, street names
-
-### Dependencies (from build.gradle.kts)
-```kotlin
-// AndroidX Core
-implementation("androidx.appcompat:appcompat:1.6.1")
-implementation("com.google.android.material:material:1.11.0")
-implementation("androidx.activity:activity:1.8.0")
-implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-
-// CameraX
-implementation("androidx.camera:camera-core:1.3.4")
-implementation("androidx.camera:camera-camera2:1.3.4")
-implementation("androidx.camera:camera-lifecycle:1.3.4")
-implementation("androidx.camera:camera-view:1.3.4")
-
-// Location Services
-implementation("com.google.android.gms:play-services-location:21.0.1")
-
-// Networking
-implementation("com.squareup.okhttp3:okhttp:5.2.1")
-implementation("com.google.code.gson:gson:2.10.1")
-
-// TensorFlow Lite
-implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.4")
-implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
-```
-
-## Setup and Build
-
-### Prerequisites
-
-- **Android Studio** (latest version recommended)
-- **Physical Android Device** (recommended for GPS, camera, and sensor testing)
-- **Backend Server Running** (see Backend Setup below)
-- **Google Maps API Key** (configured in backend)
-
-### Backend Setup
-
-The app requires the NewSight backend server to be running for full functionality:
-
-1. Clone the backend repository:
-   ```bash
-   git clone <backend-repo-url>
-   cd CIS4398-Project-NewSight-Backend
-   ```
-
-2. Set up Python virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Mac/Linux
-   venv\Scripts\activate     # Windows
-   ```
-
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Configure `.env` file:
-   ```env
-   DATABASE_URL=postgresql+psycopg2://username:password@host:port/dbname
-   AWS_ACCESS_KEY_ID=your-access-key
-   AWS_SECRET_ACCESS_KEY=your-secret-key
-   AWS_REGION=us-east-2
-   AWS_S3_BUCKET_NAME=newsight-storage
-   VONAGE_API_KEY=your-vonage-key
-   VONAGE_API_SECRET=your-vonage-secret
-   GROQ_API_KEY=your-groq-key
-   GOOGLE_MAPS_API_KEY=your-google-maps-api-key
-   ```
-
-5. Start the backend server:
-   ```bash
-   python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-### Android App Setup
-
-1. Clone the frontend repository:
-   ```bash
-   git clone <frontend-repo-url>
-   cd CIS4398-Project-NewSight-Frontend
-   ```
-
-2. Open the project in Android Studio
-
-3. **Configure Backend URLs**:
-   - Update WebSocket and API URLs in the following files with your backend IP:
-     - `VoiceCommandHelper.java` - Change `BACKEND_URL` to your server IP
-     - `NavigateActivity.java` - Change `LOCATION_WS_URL` and `NAVIGATION_WS_URL`
-     - `HomeActivity.java` - Change WebSocket URLs
-     - `CommunicateActivity.java` - Change WebSocket URLs
-     - `ObserveActivity.java` - Change WebSocket URLs
-   
-   Example:
-   ```java
-   private static final String BACKEND_URL = "http://192.168.1.254:8000/voice/transcribe";
-   private static final String LOCATION_WS_URL = "ws://192.168.1.254:8000/location/ws";
-   ```
-
-4. **Add TensorFlow Lite Model**:
-   - Place `efficientdet-lite0.tflite` in `app/src/main/assets/`
-
-5. **Gradle Sync**:
-   - Android Studio will automatically sync Gradle
-   - Ensure all dependencies download successfully
-
-6. **Connect Physical Device** (Recommended):
-   - Enable Developer Options and USB Debugging on your Android device
-   - Connect via USB
-   - Android Studio should detect the device
-
-7. **Build and Run**:
-   - Click the Run button (green play icon)
-   - Select your device
-   - App will install and launch
-
-### Network Configuration (Physical Device Testing)
-
-If testing on a physical Android device connected to the same WiFi network:
-
-1. Find your computer's local IP address:
-   - **Windows**: `ipconfig` (look for IPv4 Address)
-   - **Mac/Linux**: `ifconfig` or `ip addr` (look for inet address)
-
-2. Ensure backend server is accessible on the network:
-   ```bash
-   python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-   ```
-
-3. Test connectivity from phone:
-   - Open browser on phone
-   - Navigate to `http://<your-ip>:8000/docs`
-   - Should see FastAPI documentation
-
-### Network Configuration (USB ADB Port Forwarding)
-
-Alternative to WiFi - use USB connection with ADB:
-
-1. Connect device via USB
-
-2. Set up port forwarding:
-   ```bash
-   adb devices  # Get device serial
-   adb -s <device_serial> reverse tcp:8000 tcp:8000
-   ```
-
-3. Verify:
-   ```bash
-   adb -s <device_serial> reverse --list
-   ```
-
-4. In Android code, use `localhost`:
-   ```java
-   private static final String BACKEND_URL = "http://localhost:8000/voice/transcribe";
-   ```
-
-### Required Permissions
-
-The app requests the following permissions at runtime:
-- **CAMERA** - For AR navigation overlay and object detection
-- **ACCESS_FINE_LOCATION** - For GPS navigation
-- **ACCESS_COARSE_LOCATION** - For approximate location
-- **RECORD_AUDIO** - For voice commands
-
-Ensure these are granted when prompted for full functionality.
+---
 
 ## Project Structure
 
 ```
 CIS4398-Project-NewSight-Frontend/
 │
-├── app/
+├── app/                          # Main Android app (Current UI)
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── java/com/example/newsight/
-│   │   │   │   ├── HomeActivity.java              # Main dashboard
-│   │   │   │   ├── NavigateActivity.java          # AR navigation feature
-│   │   │   │   ├── ObstacleActivity.java          # Object detection
-│   │   │   │   ├── CommunicateActivity.java       # Communication hub
-│   │   │   │   ├── ObserveActivity.java           # Observation features
-│   │   │   │   ├── EmergencyActivity.java         # Emergency contacts
-│   │   │   │   ├── MainActivity.java              # Login/entry
+│   │   │   │   ├── MainActivity.java              # Login & face recognition
+│   │   │   │   ├── HomeActivity.java               # Main dashboard with rewards
+│   │   │   │   ├── NavigateActivity.java           # AR navigation
+│   │   │   │   ├── ObstacleActivity.java           # Object detection
+│   │   │   │   ├── ReadTextActivity.java           # OCR text detection
+│   │   │   │   ├── EmergencyActivity.java          # Emergency contacts
+│   │   │   │   ├── CommunicateActivity.java        # Communication hub
+│   │   │   │   ├── ObserveActivity.java            # Observation features
+│   │   │   │   ├── ColorCueActivity.java           # Color cue integration
+│   │   │   │   ├── SettingsActivity.java           # App settings
+│   │   │   │   ├── UserProfileActivity.java        # User profile
+│   │   │   │   ├── TrustedContactsActivity.java    # Contact management
+│   │   │   │   ├── RewardsActivity.java            # Rewards display
+│   │   │   │   ├── RedeemActivity.java            # Points redemption
+│   │   │   │   ├── HelpAndSupportActivity.java    # Help & support
+│   │   │   │   ├── PrivacyAndDataActivity.java     # Privacy settings
+│   │   │   │   ├── LogoutActivity.java            # Logout handling
 │   │   │   │   │
 │   │   │   │   ├── helpers/
 │   │   │   │   │   ├── VoiceCommandHelper.java    # Voice command processing
 │   │   │   │   │   ├── LocationHelper.java        # GPS tracking
 │   │   │   │   │   ├── LocationWebSocketHelper.java # Location streaming
 │   │   │   │   │   ├── NavigationHelper.java      # Navigation updates
-│   │   │   │   │   └── TtsHelper.java             # Text-to-speech
+│   │   │   │   │   ├── TtsHelper.java             # Text-to-speech
+│   │   │   │   │   └── ReadTextTTSHelper.java     # OCR TTS
 │   │   │   │   │
 │   │   │   │   ├── models/
-│   │   │   │   │   ├── DirectionsResponse.java    # Full directions
-│   │   │   │   │   ├── NavigationStep.java        # Single step
+│   │   │   │   │   ├── DirectionsResponse.java    # Navigation directions
+│   │   │   │   │   ├── NavigationStep.java        # Navigation step
 │   │   │   │   │   ├── NavigationUpdate.java      # Real-time update
 │   │   │   │   │   ├── VoiceResponse.java         # Voice API response
-│   │   │   │   │   └── LocationCoordinates.java   # GPS coordinates
+│   │   │   │   │   ├── LocationCoordinates.java   # GPS coordinates
+│   │   │   │   │   └── TransitInfo.java           # Transit information
 │   │   │   │   │
 │   │   │   │   ├── DetectorProcessor.java         # Object detection processor
-│   │   │   │   └── OverlayView.java              # Detection overlay
+│   │   │   │   ├── OverlayView.java              # Detection overlay
+│   │   │   │   ├── WebSocketManager.java          # WebSocket management
+│   │   │   │   ├── VibrationMotor.java            # Haptic feedback motor
+│   │   │   │   ├── PatternGenerator.java          # Vibration patterns
+│   │   │   │   ├── HapticPermissionHelper.java   # Vibration permissions
+│   │   │   │   └── VibrationPattern.java          # Pattern data models
 │   │   │   │
 │   │   │   ├── res/
-│   │   │   │   ├── layout/
-│   │   │   │   │   ├── activity_navigate.xml      # AR navigation UI
-│   │   │   │   │   ├── activity_home.xml          # Dashboard UI
-│   │   │   │   │   └── ...
-│   │   │   │   │
-│   │   │   │   ├── drawable/
-│   │   │   │   │   ├── ic_arrow_straight.xml      # Navigation arrows
-│   │   │   │   │   ├── ic_arrow_left.xml
-│   │   │   │   │   ├── ic_arrow_right.xml
-│   │   │   │   │   ├── ic_arrow_slight_left.xml
-│   │   │   │   │   ├── ic_arrow_slight_right.xml
-│   │   │   │   │   └── ar_overlay_background.xml  # Glass-morphism effect
-│   │   │   │   │
-│   │   │   │   └── values/
-│   │   │   │       ├── strings.xml
-│   │   │   │       ├── colors.xml
-│   │   │   │       └── styles.xml
-│   │   │   │
+│   │   │   │   ├── layout/                         # XML layouts for activities
+│   │   │   │   ├── drawable/                       # Icons, backgrounds, shapes
+│   │   │   │   ├── values/                         # Colors, strings, styles, themes
+│   │   │   │   └── mipmap/                        # App icons
 │   │   │   ├── assets/
 │   │   │   │   └── efficientdet-lite0.tflite     # Object detection model
-│   │   │   │
-│   │   │   └── AndroidManifest.xml               # Permissions & activities
+│   │   │   └── AndroidManifest.xml                 # Permissions & activities
 │   │   │
-│   │   └── build.gradle.kts                      # App dependencies
+│   │   ├── test/                                  # Unit tests
+│   │   │   └── java/com/example/newsight/         # Test classes
+│   │   │
+│   │   └── androidTest/                           # Instrumented tests
+│   │       └── java/com/example/newsight/         # Android test classes
+│   │   │
+│   │   └── build.gradle.kts                       # App dependencies
 │   │
-│   └── build.gradle.kts                          # Project config
+│   └── build.gradle.kts                            # Project config
 │
+├── asl-frontend/                  # ASL Detection App (Separate)
+│   ├── app/
+│   │   ├── src/
+│   │   │   ├── main/
+│   │   │   │   ├── java/com/example/newsight/      # ASL detection activities
+│   │   │   │   ├── res/                            # ASL UI resources
+│   │   │   │   └── AndroidManifest.xml
+│   │   │   └── build.gradle.kts
+│   │   └── build.gradle.kts
+│   ├── gradle/
+│   ├── settings.gradle.kts
+│   └── README.md
+│
+├── color-cue/                     # Color-Cue App (Separate)
+│   ├── app/
+│   │   ├── src/
+│   │   │   ├── main/
+│   │   │   │   ├── java/com/example/newsight/      # Color-cue activities
+│   │   │   │   ├── res/                            # Color-cue UI resources
+│   │   │   │   └── AndroidManifest.xml
+│   │   │   └── build.gradle.kts
+│   │   └── build.gradle.kts
+│   ├── gradle/
+│   ├── settings.gradle.kts
+│   └── README.md
+│
+├── main-branch/                    # Legacy UI (Old Implementation)
+│   ├── app/
+│   │   ├── src/
+│   │   │   ├── main/
+│   │   │   │   ├── java/com/example/newsight/      # Old UI activities
+│   │   │   │   ├── res/                            # Old UI resources
+│   │   │   │   └── AndroidManifest.xml
+│   │   │   └── build.gradle.kts
+│   │   └── build.gradle.kts
+│   ├── gradle/
+│   ├── settings.gradle.kts
+│   └── README.md
+│
+├── gradle/                         # Gradle wrapper
+├── settings.gradle.kts            # Project settings
+├── build.gradle.kts                # Root build config
 └── README.md
 ```
 
-## Using the Navigation Feature
+---
 
-### Quick Start
+## Features
 
-1. **Launch the app** → Opens HomeActivity
+### Main App Features (app/ folder)
 
-2. **Wait for initialization** (2-3 seconds):
-   - Location WebSocket connects
-   - GPS acquires position
-   - Voice command system ready
+#### 1. Home Dashboard
+**Status: 100% Complete**
 
-3. **Say the wake word**: "Hey Guide"
+Central hub with feature cards, rewards display, and voice command access.
 
-4. **State your destination**:
-   - Generic places: "nearest CVS", "Starbucks", "bus stop"
-   - Specific places: "Temple University", "City Hall Philadelphia"
-   - Addresses: "1801 N Broad St, Philadelphia"
+**How it works:**
+- `HomeActivity.java` manages dashboard state and navigation
+- Rewards card shows points, level, and streak (frontend-only, stored locally)
+- Voice search bar activates "Hey Guide" command system
+- 2-column grid layout with feature cards (Emergency, Navigation, Read Text, Identify, Faces, ASL, Colors)
+- Floating bottom navigation bar (Home, Voice, Settings)
+- Staggered animations on screen load
 
-5. **NavigateActivity launches automatically** with:
-   - Camera feed for AR overlay
-   - Turn-by-turn directions already loaded
-   - Voice announcement: "Starting navigation to [destination]"
+**UI/UX:**
+- Large touch targets (48dp minimum) for accessibility
+- High contrast colors and bold text
+- Rewards card clickable to full Rewards screen
+- Voice-first navigation available from any screen
 
-### During Navigation
+---
 
-**Visual Display:**
-- **Top**: Current street name
-- **Center**: Large distance number (in feet/miles)
-- **Center**: Directional arrow (straight, left, right, slight turns)
-- **Bottom**: Current instruction (e.g., "Turn right on Main Street")
+#### 2. Voice-Activated Navigation
+**Status: 100% Complete**
 
-**Voice Announcements:**
-- Announces at 100 meters (if > 0.1 mi away)
-- Announces at ~50 feet before turn
-- Announces at ~25 feet before turn
-- Example: "In 50 feet, turn right on Main Street"
+AR-style navigation with camera overlay showing distance, direction arrows, and turn instructions.
 
-**Progress:**
-- Automatically advances to next step when you reach each turn
-- Updates distance in real-time as you walk
-- Announces "You have arrived at your destination" when complete
+**How it works:**
+- `NavigateActivity.java` manages navigation state and UI
+- CameraX provides full-screen camera preview
+- `NavigationHelper.java` receives real-time updates via WebSocket
+- `LocationWebSocketHelper.java` streams GPS coordinates to backend
+- `TtsHelper.java` provides voice announcements at 100m, 50ft, and 25ft before turns
+- AR overlay shows distance (48sp white text), direction arrow (180dp), street name (22sp cyan), and instruction (24sp white)
+- Transit banner displays bus/train info when in transit mode
+- Automatic step advancement based on GPS proximity
 
-**Controls:**
-- **Home Button**: Return to HomeActivity (stops navigation)
-- **Mic Button**: Issue new voice command (change destination, activate other features)
+**UI/UX:**
+- Semi-transparent dark overlays for text readability
+- Large, high-contrast text for visibility
+- Voice announcements complement visual information
 
-### Navigation from Different Activities
+---
 
-The navigation feature works from ANY activity:
+#### 3. Real-Time Object Detection
+**Status: 100% Complete**
 
-**From HomeActivity:**
+On-device object detection with bounding box overlay on camera feed.
+
+**How it works:**
+- `ObstacleActivity.java` manages camera lifecycle
+- `DetectorProcessor.java` processes frames with EfficientDet-Lite0 TensorFlow Lite model
+- `OverlayView.java` custom view draws bounding boxes and labels
+- Real-time processing at camera frame rate
+- Works offline (no backend dependency)
+
+**UI/UX:**
+- High-contrast bounding boxes with color-coded object types
+- Labels show object name and confidence above boxes
+- White text on dark background for readability
+
+---
+
+#### 4. Text Detection (OCR)
+**Status: 100% Complete**
+
+Real-time text detection from camera feed with text-to-speech output.
+
+**How it works:**
+- `ReadTextActivity.java` manages camera and WebSocket connection
+- Camera frames sent to backend via WebSocket
+- Backend EasyOCR processes frames and returns detected text
+- Stability filtering prevents text flickering across frames
+- `ReadTextTTSHelper.java` handles text-to-speech output
+- Text display updates in real-time
+
+**UI/UX:**
+- Large text box (24sp, bold) at bottom-center showing detected text
+- Start/Stop and Read Aloud buttons for user control
+- Connection status indicator in top-left corner
+
+---
+
+#### 5. Familiar Face Recognition
+**Status: 100% Complete**
+
+Real-time face recognition to identify familiar contacts using camera feed.
+
+**How it works:**
+- `MainActivity.java` handles face recognition mode
+- Camera frames sent to backend via WebSocket
+- Backend DeepFace matches faces against S3 gallery
+- Recognition results displayed as overlay with person's name
+- WebSocketManager handles real-time communication
+
+**User Experience:**
+- Real-time face matching as camera moves
+- Clear name display for recognized faces
+- Seamless integration with voice commands
+
+---
+
+#### 6. Emergency Contact System
+**Status: 100% Complete**
+
+Quick emergency alert with location sharing and photo capture.
+
+**How it works:**
+- `EmergencyActivity.java` manages contact list
+- Emergency button captures GPS location and photo
+- Photo uploaded to AWS S3 via backend
+- SMS alerts sent to all contacts via backend Vonage API
+- Contact management UI for adding/removing trusted contacts
+
+---
+
+#### 7. Voice Commands ("Hey Guide")
+**Status: 100% Complete**
+
+Intelligent voice command system that routes user requests to appropriate features.
+
+**How it works:**
+- `VoiceCommandHelper.java` handles voice processing:
+  - Wake word detection for "Hey Guide"
+  - Audio recording via MediaRecorder
+  - Audio upload to backend for transcription via Groq Whisper
+  - Backend LLM routes to features (NAVIGATION, OBJECT_DETECTION, TEXT_DETECTION, etc.)
+- `TtsHelper.java` provides voice feedback
+- Integrated in all activities for hands-free operation
+- Session ID management for navigation tracking
+
+---
+
+#### 8. Text-to-Speech (TTS)
+**Status: 100% Complete**
+
+Audio feedback system providing spoken information throughout the app.
+
+**How it works:**
+- `TtsHelper.java` wraps Android TextToSpeech engine
+- `ReadTextTTSHelper.java` specialized helper for OCR reading
+- Automatic speech for navigation instructions, voice command responses, OCR text, and system notifications
+- Configurable speech rate and language
+
+---
+
+#### 9. Haptic Feedback
+**Status: 100% Complete**
+
+Vibration patterns providing tactile feedback for navigation and alerts.
+
+**How it works:**
+- `VibrationMotor.java` manages device vibration
+- `PatternGenerator.java` creates vibration patterns (directional, obstacle warnings, proximity alerts, arrival celebrations)
+- `HapticPermissionHelper.java` checks vibration permissions
+- Integrated with navigation for turn alerts and obstacle detection warnings
+
+---
+
+#### 10. Rewards System
+**Status: 100% Complete (Frontend-Only Feature)**
+
+Gamification system to encourage app usage. Points stored locally (no backend integration).
+
+**How it works:**
+- `RewardsActivity.java` displays rewards information
+- `RedeemActivity.java` handles point redemption
+- Points calculation: 1000 points = $1.00
+- Reward tiers: $10 gift cards at 10,000 points
+- Level progression based on total points
+
+---
+
+#### 11. Settings Menu
+**Status: 100% Complete**
+
+Settings interface for app configuration and user preferences.
+
+**How it works:**
+- `SettingsActivity.java` manages settings navigation
+- Categories: User Profile, Trusted Contacts, Privacy & Data, Help & Support, Logout
+- Voice commands integrated for hands-free navigation
+- Settings persist locally using SharedPreferences
+
+#### 12. User Profile
+**Status: 100% Complete**
+
+User account management and profile information interface.
+
+**How it works:**
+- `UserProfileActivity.java` displays profile information
+- Profile data stored locally (can be extended with backend)
+- Edit functionality for updating information
+- Logout integration with authentication system
+
+---
+
+### asl-frontend Features
+
+#### 13. ASL (American Sign Language) Detection
+**Status: 90% Complete (Separate App)**
+
+Real-time ASL hand sign recognition to convert sign language into text/letters.
+
+**How it works:**
+- Separate Android app with dedicated activities
+- MediaPipe hand tracking for landmark detection
+- TensorFlow Lite model for sign classification
+- Real-time letter prediction display
+
+**Why separate:** Last-minute integration kept isolated to preserve main app stability. Can be built and run independently.
+
+---
+
+### color-cue Features
+
+#### 14. Color Cue (Clothing Recognition & Virtual Closet)
+**Status: 100% Complete (Separate App)**
+
+Smart clothing detection and virtual closet management.
+
+**How it works:**
+- Separate Android app with dedicated activities
+- Camera integration for photo capture
+- Backend API calls for color/pattern detection
+- Database storage for clothing items
+- AI suggests outfit combinations based on occasion, weather, and style
+
+**Why separate:** Last-minute integration kept isolated to avoid breaking working features in main app. Can be built and run independently.
+
+---
+
+### main-branch (Legacy UI)
+
+**Status: Archived (Not Maintained)**
+
+The `main-branch` folder contains the old UI implementation before rebranding. This folder is preserved for reference but is not actively maintained or integrated with the current backend.
+
+**Note:** This folder is kept for historical reference only. Use the main `app/` folder for active development.
+
+---
+
+## UI/UX Design Overview
+
+The app follows accessibility-first design principles for visually impaired users:
+
+**Design Principles:**
+- High contrast colors (primary blue #00D4FF, white text on dark backgrounds)
+- Large text sizes (16sp minimum, up to 48sp for critical info)
+- Large touch targets (48dp minimum)
+- Voice-first navigation ("Hey Guide" available from any screen)
+- Consistent floating bottom navigation (Home, Voice, Settings)
+- Text-to-speech and haptic feedback for multi-modal accessibility
+
+**Color Scheme:**
+- Primary: Cyan (#00D4FF) for actions and active states
+- Background: Dark theme
+- Text: White primary, muted gray secondary
+- Emergency: Red for urgent actions
+
+**Typography:**
+- Headings: 28-32sp, bold
+- Body: 16-18sp
+- Large display: 24-48sp for critical info
+- Small: 10-14sp for labels
+
+**Accessibility:**
+- TalkBack support with content descriptions
+- Large text scaling support
+- High contrast mode compatible
+- Screen reader friendly markup
+
+---
+
+## Tech Stack
+
+### Main App
+- **Android SDK (Java)** - Primary development language
+- **AndroidX Libraries** - Modern Android Jetpack components
+- **Material Design Components** - UI/UX components for accessibility
+- **CameraX** - Modern camera implementation
+- **TensorFlow Lite** - On-device ML inference for object detection
+- **EfficientDet-Lite0** - Lightweight object detection model
+- **FusedLocationProviderClient** - GPS location tracking
+- **OkHttp 5.2.1** - HTTP client and WebSocket support
+- **Gson 2.10.1** - JSON parsing and serialization
+- **Android TextToSpeech** - Voice announcements
+- **Android MediaRecorder** - Audio capture for voice commands
+
+### asl-frontend
+- **Android SDK (Java)**
+- **TensorFlow Lite** - ASL sign classification
+- **MediaPipe** - Hand tracking and landmark detection
+- **CameraX** - Camera preview
+
+### color-cue
+- **Android SDK (Java)**
+- **CameraX** - Camera preview and image capture
+- **OkHttp** - HTTP client for backend API calls
+- **Gson** - JSON parsing
+
+---
+
+## Requirements
+
+### Hardware Requirements
+
+#### Android Device (Physical Device Recommended)
+- **Minimum Android Version:** Android 7.0 (API level 24)
+- **Target Android Version:** Android 15 (API level 36)
+- **RAM:** 2GB minimum (4GB+ recommended for smooth ML model inference)
+- **Storage:** 500MB free space for app installation and TensorFlow Lite models
+- **Camera:** Rear-facing camera required for all camera-based features
+- **GPS:** Built-in GPS chip required for navigation features
+- **Microphone:** Required for voice commands
+- **Vibrator:** Required for haptic feedback features
+- **Network:** WiFi or mobile data for backend communication
+
+#### Development Machine
+- **Operating System:** Windows 10+, macOS 10.14+, or Linux (Ubuntu 18.04+)
+- **RAM:** 8GB minimum (16GB recommended)
+- **Storage:** 10GB free space for Android Studio, SDK, and emulators
+- **CPU:** Multi-core processor recommended
+- **USB Port:** For connecting physical Android devices
+
+### Software Requirements
+
+#### Development Tools
+- **Android Studio:** Latest stable version (Hedgehog/Iguana or newer)
+  - Includes Android SDK, Android Emulator, and build tools
+  - Download from: https://developer.android.com/studio
+- **Java Development Kit (JDK):** JDK 11 or higher
+  - Included with Android Studio or install separately
+- **Android SDK:** API level 24+ (Android 7.0)
+  - Install via Android Studio SDK Manager
+- **Gradle:** Included with Android Studio (Gradle 8.0+)
+- **Git:** For cloning the repository
+
+#### Android SDK Components
+- **Android SDK Platform:** API 24 (minimum), API 36 (target)
+- **Android SDK Build-Tools:** Latest version
+- **Android Emulator:** Optional (limited functionality for camera/GPS features)
+- **Android SDK Platform-Tools:** For ADB (Android Debug Bridge)
+
+#### Backend Services
+The app requires the NewSight backend servers to be running for full functionality:
+- **Main Backend:** Port 8000 (required for most features)
+- **AslBackend:** Port 8001 (required only for ASL detection app)
+- **color-cue Backend:** Port 8002 (required only for color-cue app)
+
+See the [Backend README](../CIS4398-Project-NewSight-Backend/README.md) for detailed backend setup instructions.
+
+#### Network Requirements
+- **Internet Connection:** Required for:
+  - Downloading dependencies during build
+  - Backend API communication
+  - Google Maps API calls (via backend)
+  - AWS S3 uploads
+  - Groq API calls (via backend)
+- **Local Network:** WiFi network for device-to-backend communication (or USB ADB port forwarding)
+
+### Android Permissions
+
+The app requires the following runtime permissions (requested at first use):
+
+- **CAMERA** - Required for:
+  - AR navigation overlay
+  - Object detection
+  - Face recognition
+  - Text detection (OCR)
+  - Emergency photo capture
+- **ACCESS_FINE_LOCATION** - Required for:
+  - GPS navigation
+  - Turn-by-turn directions
+  - Emergency location sharing
+- **ACCESS_COARSE_LOCATION** - Required for:
+  - Approximate location services
+- **RECORD_AUDIO** - Required for:
+  - Voice commands ("Hey Guide")
+  - Speech-to-text transcription
+- **VIBRATE** - Required for:
+  - Haptic feedback patterns
+  - Navigation alerts
+  - Obstacle warnings
+
+Permissions are requested at runtime following Android best practices. Users must grant permissions for features to function.
+
+### Dependencies & Libraries
+
+#### Core Android
+- **AndroidX Libraries:** Modern Android Jetpack components
+- **Material Design Components:** UI/UX components for accessibility
+- **ConstraintLayout:** Flexible layout system
+
+#### Camera & Vision
+- **CameraX 1.3.4:** Modern camera API for preview and capture
+- **TensorFlow Lite 0.4.4:** On-device ML inference
+- **EfficientDet-Lite0 Model:** Pre-trained object detection model (~5MB)
+
+#### Location & Navigation
+- **Google Play Services Location 21.0.1:** GPS location tracking
+- **FusedLocationProviderClient:** High-accuracy location updates
+
+#### Networking
+- **OkHttp 5.2.1:** HTTP client and WebSocket support
+- **Gson 2.10.1:** JSON serialization/deserialization
+
+#### Audio & Speech
+- **Android TextToSpeech:** Built-in TTS engine
+- **Android MediaRecorder:** Audio capture for voice commands
+
+All dependencies are managed via Gradle and automatically downloaded during build.
+
+---
+
+## Build, Install & Configuration
+
+This section provides detailed instructions to build, install, and configure the entire Project NewSight frontend on target devices.
+
+**Note:** Ensure you have met all [Requirements](#requirements) before proceeding with installation.
+
+### Target Devices
+
+This frontend can be deployed on:
+- **Physical Android devices** (recommended for GPS, camera, and sensor testing)
+- **Android emulators** (limited functionality - GPS and camera may not work properly)
+
+---
+
+### Main App - Build & Install
+
+**1. Clone Repository**
+
+```bash
+git clone <repository-url>
+cd CIS4398-Project-NewSight-Frontend
 ```
-"Hey Guide, nearest CVS" → NavigateActivity opens with directions
+
+**2. Open in Android Studio**
+
+- Open Android Studio
+- Select "Open an Existing Project"
+- Navigate to `CIS4398-Project-NewSight-Frontend`
+- Select the root folder
+
+**3. Configure Backend URLs**
+
+Update WebSocket and API URLs in the following files with your backend server IP:
+
+- `app/src/main/java/com/example/newsight/helpers/VoiceCommandHelper.java` - Change `BACKEND_URL`
+- `app/src/main/java/com/example/newsight/NavigateActivity.java` - Change `LOCATION_WS_URL` and `NAVIGATION_WS_URL`
+- `app/src/main/java/com/example/newsight/HomeActivity.java` - Change WebSocket URLs
+- `app/src/main/java/com/example/newsight/MainActivity.java` - Change WebSocket URLs
+- `app/src/main/java/com/example/newsight/ReadTextActivity.java` - Change WebSocket URLs
+- `app/src/main/java/com/example/newsight/CommunicateActivity.java` - Change WebSocket URLs
+- `app/src/main/java/com/example/newsight/ObserveActivity.java` - Change WebSocket URLs
+
+Example:
+```java
+private static final String BACKEND_URL = "http://192.168.1.254:8000/voice/transcribe";
+private static final String LOCATION_WS_URL = "ws://192.168.1.254:8000/location/ws";
+private static final String NAVIGATION_WS_URL = "ws://192.168.1.254:8000/navigation/ws";
 ```
 
-**From CommunicateActivity:**
-```
-"Hey Guide, Starbucks" → NavigateActivity opens with directions
+**4. Add TensorFlow Lite Model**
+
+- Place `efficientdet-lite0.tflite` in `app/src/main/assets/`
+- The model should already be present, but verify it exists
+
+**5. Gradle Sync**
+
+- Android Studio will automatically sync Gradle
+- If not, click "Sync Project with Gradle Files" (elephant icon)
+- Ensure all dependencies download successfully
+
+**6. Connect Physical Device** (Recommended)
+
+- Enable Developer Options on your Android device:
+  - Go to Settings > About Phone
+  - Tap "Build Number" 7 times
+- Enable USB Debugging:
+  - Go to Settings > Developer Options
+  - Enable "USB Debugging"
+- Connect device via USB
+- Android Studio should detect the device
+
+**7. Build and Run**
+
+- Click the Run button (green play icon) or press Shift+F10
+- Select your device
+- App will build, install, and launch
+
+---
+
+### asl-frontend - Build & Install
+
+**1. Navigate to asl-frontend Directory**
+
+```bash
+# From repository root
+cd CIS4398-Project-NewSight-Frontend
+cd asl-frontend
 ```
 
-**From ObserveActivity:**
-```
-"Hey Guide, bus stop" → NavigateActivity opens with directions
+**2. Open in Android Studio**
+
+- In Android Studio, select "File > Open"
+- Navigate to `asl-frontend` folder
+- Select the folder
+
+**3. Configure Backend URLs**
+
+Update backend URLs in ASL-related activities to point to AslBackend (Port 8001):
+
+- Update WebSocket/HTTP URLs to `http://<your-ip>:8001` or `ws://<your-ip>:8001`
+
+**4. Verify TensorFlow Lite Model**
+
+- Ensure ASL TensorFlow Lite model is in `app/src/main/assets/`
+- Model should be present for ASL detection
+
+**5. Gradle Sync**
+
+- Sync project with Gradle files
+- Ensure all dependencies download
+
+**6. Build and Run**
+
+- Connect physical device (recommended for camera testing)
+- Click Run button
+- App will build and install
+
+---
+
+### color-cue - Build & Install
+
+**1. Navigate to color-cue Directory**
+
+```bash
+# From repository root
+cd CIS4398-Project-NewSight-Frontend
+cd color-cue
 ```
 
-**Already in NavigateActivity:**
-```
-"Hey Guide, nearest ATM" → Gets new directions, restarts navigation
+**2. Open in Android Studio**
+
+- In Android Studio, select "File > Open"
+- Navigate to `color-cue` folder
+- Select the folder
+
+**3. Configure Backend URLs**
+
+Update backend URLs in color-cue activities to point to color-cue backend (Port 8002):
+
+- Update HTTP/WebSocket URLs to `http://<your-ip>:8002` or `ws://<your-ip>:8002`
+
+**4. Gradle Sync**
+
+- Sync project with Gradle files
+- Ensure all dependencies download
+
+**5. Build and Run**
+
+- Connect physical device (recommended for camera testing)
+- Click Run button
+- App will build and install
+
+---
+
+### Network Configuration
+
+#### Physical Device Testing (WiFi)
+
+If testing on a physical Android device connected to the same WiFi network:
+
+**1. Find your computer's local IP address:**
+- **Windows**: `ipconfig` (look for IPv4 Address)
+- **Mac/Linux**: `ifconfig` or `ip addr` (look for inet address)
+
+**2. Ensure backend servers are accessible on the network:**
+```bash
+# Main backend
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# AslBackend (if using ASL app)
+cd AslBackend
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
+
+# color-cue backend (if using color-cue app)
+cd color-cue
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8002
 ```
 
-## Testing Checklist
+**3. Test connectivity from phone:**
+- Open browser on phone
+- Navigate to `http://<your-ip>:8000/docs`
+- Should see FastAPI documentation
 
-### Navigation Feature
+**4. Update URLs in Android code:**
+- Use your computer's IP address in all backend URL configurations
+
+#### USB ADB Port Forwarding
+
+Alternative to WiFi - use USB connection with ADB:
+
+**1. Connect device via USB**
+
+**2. Set up port forwarding:**
+```bash
+adb devices  # Get device serial
+adb -s <device_serial> reverse tcp:8000 tcp:8000  # Main backend
+adb -s <device_serial> reverse tcp:8001 tcp:8001  # AslBackend (if needed)
+adb -s <device_serial> reverse tcp:8002 tcp:8002  # color-cue backend (if needed)
+```
+
+**3. Verify:**
+```bash
+adb -s <device_serial> reverse --list
+```
+
+**4. In Android code, use `localhost`:**
+```java
+private static final String BACKEND_URL = "http://localhost:8000/voice/transcribe";
+```
+
+**5. Remove port forwarding (when done):**
+```bash
+adb -s <device_serial> reverse --remove-all
+```
+
+---
+
+## Running the Applications
+
+### Main App
+
+**1. Ensure backend is running:**
+```bash
+cd CIS4398-Project-NewSight-Backend
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**2. Open Android Studio:**
+- Open the main project (root folder)
+- Connect physical device
+- Click Run button (green play icon)
+- App will install and launch
+
+**Access:** App launches to MainActivity (login) or HomeActivity (if already logged in)
+
+---
+
+### asl-frontend
+
+**1. Ensure AslBackend is running:**
+```bash
+cd CIS4398-Project-NewSight-Backend
+cd AslBackend
+source venv_asl/bin/activate  # or venv_asl\Scripts\activate on Windows
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
+```
+
+**2. Open Android Studio:**
+- Open `asl-frontend` folder as project
+- Connect physical device
+- Click Run button
+- ASL detection app will install and launch
+
+---
+
+### color-cue
+
+**1. Ensure color-cue backend is running:**
+```bash
+cd CIS4398-Project-NewSight-Backend
+cd color-cue
+source venv_colorcue/bin/activate  # or venv_colorcue\Scripts\activate on Windows
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8002
+```
+
+**2. Open Android Studio:**
+- Open `color-cue` folder as project
+- Connect physical device
+- Click Run button
+- Color-cue app will install and launch
+
+---
+
+### Running All Three Together
+
+You can run all three Android apps simultaneously on the same device. They are separate applications with different package names, so they won't conflict. Each app connects to its corresponding backend:
+
+- Main app → Backend Port 8000
+- asl-frontend → AslBackend Port 8001
+- color-cue → color-cue backend Port 8002
+
+---
+
+## Testing
+
+### Manual Testing
+
+#### Navigation Feature
 - [ ] Backend server is running on network
-- [ ] Google Maps API key is configured with Directions, Places, and Geocoding APIs enabled
+- [ ] Google Maps API key is configured in backend
 - [ ] App has location permissions granted
 - [ ] App has camera permissions granted
 - [ ] App has microphone permissions granted
-- [ ] GPS has acquired location (check notification bar)
+- [ ] GPS has acquired location
 - [ ] Voice command "Hey Guide" works
 - [ ] Generic place search works ("nearest CVS")
 - [ ] Specific address works ("123 Main St")
@@ -521,159 +879,262 @@ The navigation feature works from ANY activity:
 - [ ] Navigation advances steps automatically
 - [ ] "You have arrived" announcement at destination
 
-### Object Detection
+#### Object Detection
 - [ ] Camera preview displays
 - [ ] Bounding boxes appear around detected objects
 - [ ] Labels are readable and correctly positioned
+- [ ] Model file is present in assets
 
-### Emergency Contact
+#### Face Recognition
+- [ ] Camera preview displays
+- [ ] WebSocket connects to backend
+- [ ] Familiar faces are recognized
+- [ ] Names are displayed correctly
+
+#### Text Detection (OCR)
+- [ ] Camera preview displays
+- [ ] Text is detected in camera feed
+- [ ] Detected text is read aloud
+- [ ] Stability filtering works (no flickering)
+
+#### Emergency Contact
 - [ ] Can add emergency contacts
 - [ ] Emergency alert sends SMS
 - [ ] GPS location is captured
 - [ ] Photo is uploaded to S3
 
-### Voice Commands
+#### Voice Commands
 - [ ] Wake word detection works
 - [ ] Voice transcription is accurate
 - [ ] Features activate correctly from voice commands
+- [ ] Session ID is maintained across activities
 
-## Troubleshooting
+### Unit Testing
 
-### Navigation Issues
+The project includes unit tests in `app/src/test/java/`:
 
-**"No directions found" or "Location not available"**
-- **Cause**: GPS not ready or location WebSocket not connected
-- **Fix**: Wait 3-5 seconds after opening app for GPS to acquire position
-- Check location services are enabled on device
-- Verify backend logs show "Location updated for [session-id]"
+- Test helper classes (LocationHelper, VoiceCommandHelper, etc.)
+- Test model classes
+- Test utility functions
 
-**Navigation doesn't start after voice command**
-- **Cause**: Session ID not sent or backend not returning directions
-- **Fix**: Check backend logs for "🔍 Checking navigation: feature=NAVIGATION, x_session_id="
-- Verify backend server is accessible from phone
-- Restart app and wait for location to initialize
+**Run tests:**
+```bash
+# In Android Studio
+Right-click on test folder > Run 'Tests in 'test''
+```
 
-**App crashes when navigation starts**
-- **Cause**: Null values in navigation update (should be fixed in latest code)
-- **Fix**: Ensure you have latest NavigateActivity.java with null checks
-- Check Android logs for specific error
+Or via Gradle:
+```bash
+./gradlew test
+```
 
-**Voice announcements not working**
-- **Cause**: TextToSpeech not initialized or volume muted
-- **Fix**: Check device volume is up
-- Verify microphone permission is granted
-- Restart app
+---
 
-**Generic places not found (e.g., "nearest CVS")**
-- **Cause**: Too far from any matching location (10km search radius)
-- **Fix**: Try being more specific: "CVS Pharmacy on Main Street"
-- Check backend logs for "identified as generic place"
-- Verify Google Places API is enabled
+## Configuration
 
-**AR overlay not showing**
-- **Cause**: Camera permission denied or navigation not started
-- **Fix**: Grant camera permission when prompted
-- Check that directions were received from backend
-- Verify AR overlay visibility in logs
+### Backend URL Configuration
 
-### Voice Command Issues
+Backend URLs must be configured in Java source files before building. See [Build, Install & Configuration](#build-install--configuration) section for detailed setup instructions.
 
-**"Hey Guide" not detected**
-- **Cause**: Microphone permission denied or noisy environment
-- **Fix**: Grant microphone permission
-- Speak clearly and closer to device
-- Check device microphone is working in other apps
+**Key Files to Update:**
+- `VoiceCommandHelper.java` - Voice command API endpoint
+- `NavigateActivity.java` - Location and navigation WebSocket URLs
+- `MainActivity.java`, `ReadTextActivity.java`, etc. - Feature-specific WebSocket URLs
 
-**Transcription is inaccurate**
-- **Cause**: Background noise or unclear speech
-- **Fix**: Speak slowly and clearly
-- Try quieter environment
-- Check backend Groq API key is valid
+**URL Format:**
+- HTTP endpoints: `http://<your-ip>:8000/...`
+- WebSocket endpoints: `ws://<your-ip>:8000/...`
+- For USB ADB port forwarding: Use `localhost` instead of IP address
 
-### Connection Issues
+### Build Configuration
 
-**"Cannot connect to server"**
-- **Cause**: Backend server not running or wrong IP address
-- **Fix**: Verify backend is running: `http://<ip>:8000/docs`
-- Check IP address in VoiceCommandHelper.java matches your server
-- If using ADB, verify port forwarding: `adb reverse --list`
-- Ensure phone and computer are on same WiFi network
+**SDK Versions:**
+- Minimum SDK: API level 24 (Android 7.0)
+- Target SDK: API level 36 (Android 15)
+- Compile SDK: API level 36
 
-**WebSocket disconnects frequently**
-- **Cause**: Network instability or backend timeout
-- **Fix**: Use USB with ADB port forwarding for stable connection
-- Check WiFi signal strength
-- Backend has auto-reconnect - wait a few seconds
+**Package Name:** `com.example.newsight`
 
-### Object Detection Issues
+**Gradle Configuration:**
+- Build tool: Gradle 8.0+
+- Java version: 11
+- Kotlin DSL for build scripts
 
-**No bounding boxes appear**
-- **Cause**: TensorFlow Lite model missing
-- **Fix**: Verify `efficientdet-lite0.tflite` is in `app/src/main/assets/`
-- Rebuild app after adding model file
+### Runtime Permissions
 
-**Camera preview is rotated**
-- **Cause**: Orientation handling issue
-- **Fix**: This should be handled in DetectorProcessor.java
-- Ensure device auto-rotate is enabled
+All required permissions are declared in `AndroidManifest.xml` and requested at runtime:
+- `CAMERA` - Camera-based features
+- `ACCESS_FINE_LOCATION` - GPS navigation
+- `ACCESS_COARSE_LOCATION` - Location services
+- `RECORD_AUDIO` - Voice commands
+- `INTERNET` - Network communication
+- `VIBRATE` - Haptic feedback
 
-## Development Notes
+See [Requirements - Android Permissions](#android-permissions) for detailed permission usage.
 
-### Adding New Features
+---
 
-To add a new feature to the app:
+## Known Issues
 
-1. **Create Activity**: Add new activity in `java/com/example/newsight/`
-2. **Create Layout**: Add XML layout in `res/layout/`
-3. **Update Manifest**: Declare activity in AndroidManifest.xml
-4. **Add Navigation**: Add button in HomeActivity to launch new feature
-5. **Voice Integration**: Update backend voice_agent.py to recognize feature
-6. **Test**: Build and test on physical device
+### Main App Issues
 
-### Backend Communication
+**1. WebSocket Connection Timeout**
+- **Issue:** WebSocket connections may timeout after 5 minutes of inactivity
+- **Workaround:** App sends periodic ping messages to keep connection alive
+- **Severity:** Low - handled by reconnection logic
 
-All backend communication uses:
-- **OkHttp** for HTTP requests (voice transcription, API calls)
-- **WebSocket** for real-time updates (location, navigation, face recognition)
-- **Gson** for JSON parsing
+**2. GPS Accuracy in Emulators**
+- **Issue:** Android emulators don't provide accurate GPS data
+- **Workaround:** Use physical device for GPS testing
+- **Severity:** Medium - affects development workflow
 
-URLs should be configured at the top of each helper/activity file for easy modification.
+**3. Camera Permission on First Launch**
+- **Issue:** Camera permission must be granted before camera features work
+- **Workaround:** Grant permission when prompted on first launch
+- **Severity:** Low - expected behavior
 
-### Session Management
+**4. Voice Command Background Processing**
+- **Issue:** Voice commands may not work when app is in background
+- **Workaround:** Keep app in foreground for voice commands
+- **Severity:** Medium - affects hands-free operation
 
-- **Session ID**: UUID generated on activity creation
-- **Purpose**: Links location tracking with navigation requests
-- **Lifetime**: Persists for activity lifecycle
-- **Cleanup**: WebSockets disconnected in onDestroy()
+**5. TensorFlow Lite Model Loading**
+- **Issue:** First launch may take longer to load object detection model
+- **Workaround:** Model loads once and is cached
+- **Severity:** Low - only affects first launch
 
-## Future Enhancements
+### asl-frontend Issues
 
-Potential improvements for the app:
+**1. Hand Tracking Lighting Requirements**
+- **Issue:** MediaPipe hand tracking requires good lighting conditions
+- **Workaround:** Users should ensure adequate lighting for best results
+- **Severity:** Medium - affects detection accuracy
 
-### Navigation
-- **Offline Mode**: Cache map tiles for areas without internet
-- **Route Preferences**: Avoid stairs, prefer well-lit paths, accessible routes
-- **Transit Integration**: Public transportation directions
-- **Indoor Navigation**: Building-level navigation
-- **Haptic Feedback**: Vibration patterns for turns
+**2. Separate App Installation**
+- **Issue:** ASL detection requires separate app installation
+- **Workaround:** Install asl-frontend app separately
+- **Severity:** Low - by design (separate deployment)
 
-### Accessibility
-- **Voice-Only Mode**: Complete navigation without looking at screen
-- **Customizable TTS**: Different voices and speeds
-- **Sound Cues**: Non-verbal audio feedback for turns
-- **Gesture Control**: Swipe gestures for common actions
+### color-cue Issues
 
-### Features
-- **Obstacle Avoidance**: Integrate obstacle detection with navigation
-- **Journey Sharing**: Share live location with emergency contacts during navigation
-- **Historical Routes**: Save frequently visited destinations
-- **Weather Integration**: Weather-aware route planning
-- **Battery Optimization**: Reduce GPS frequency when stationary
+**1. Separate App Installation**
+- **Issue:** Color-cue requires separate app installation
+- **Workaround:** Install color-cue app separately
+- **Severity:** Low - by design (separate deployment)
 
-## Contributors
+**2. Backend Dependency**
+- **Issue:** Color-cue app requires color-cue backend running on Port 8002
+- **Workaround:** Ensure color-cue backend is running before using app
+- **Severity:** Medium - app won't work without backend
 
-This app is part of the NewSight capstone project for Temple University CIS 4398.
+### General Issues
 
-## License
+**1. Network Configuration**
+- **Issue:** Backend URLs must be manually configured for each device/network
+- **Workaround:** Use ADB port forwarding for development, or configure IP addresses
+- **Severity:** Low - development workflow consideration
 
-[Specify license here]
+**2. Multiple Backend Connections**
+- **Issue:** Main app connects to multiple backend endpoints
+- **Workaround:** Ensure all required backend services are running
+- **Severity:** Low - expected behavior
+
+**3. Battery Usage**
+- **Issue:** Continuous GPS and camera usage drains battery quickly
+- **Workaround:** Optimize usage patterns, reduce GPS update frequency when not navigating
+- **Severity:** Medium - affects user experience
+
+---
+
+## Future Work
+
+The following improvements are planned for future versions:
+
+**Integration**
+- Merge asl-frontend into main unified app
+- Merge color-cue into main unified app
+- Single app deployment with all features
+- Unified backend connection management
+
+**Performance**
+- Optimize TensorFlow Lite model loading
+- Reduce battery consumption for GPS and camera
+- Implement background processing for voice commands
+- Cache frequently used data
+
+**Features**
+- Offline mode with cached models
+- Multi-language support for OCR and voice
+- Indoor navigation support
+- Word and phrase detection for ASL
+- Wearable device integration
+- Haptic feedback patterns for navigation
+
+**UI/UX**
+- Improved accessibility features
+- Customizable voice command wake words
+- Theme customization (light/dark mode)
+- Gesture controls for common actions
+- Improved AR overlay design
+
+**Infrastructure**
+- Automated backend URL configuration
+- Environment-based configuration (dev/staging/prod)
+- App signing and release builds
+- Google Play Store deployment
+- Analytics and crash reporting
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│         Android Frontend Apps               │
+│    (Camera, Mic, GPS, UI)                   │
+│                                             │
+│  ┌──────────┐  ┌─────────┐  ┌──────────┐  │
+│  │   Main   │  │   ASL   │  │  color-  │  │
+│  │   App    │  │  App    │  │   cue    │  │
+│  └────┬─────┘  └────┬────┘  └────┬─────┘  │
+└───────┼─────────────┼────────────┼────────┘
+        │             │            │
+        v             v            v
+    ┌──────────┐  ┌─────────┐  ┌──────────┐
+    │  Main    │  │   ASL   │  │  color-  │
+    │ Backend  │  │ Backend │  │   cue    │
+    │ :8000    │  │ :8001   │  │ :8002    │
+    └────┬─────┘  └────┬────┘  └────┬─────┘
+         │            │            │
+         └────────────┴────────────┘
+                       │
+           ┌───────────┴───────────┐
+           │                       │
+           v                       v
+    ┌─────────────┐         ┌─────────┐
+    │ PostgreSQL  │         │  AWS S3 │
+    └─────────────┘         └─────────┘
+```
+
+**Communication Flow:**
+- **HTTP/HTTPS:** Voice commands, API calls, file uploads
+- **WebSocket:** Real-time location tracking, navigation updates, face recognition, text detection
+- **OkHttp:** HTTP client library for all network requests
+- **Gson:** JSON serialization/deserialization
+
+---
+
+## Additional Resources
+
+- [Android Developer Documentation](https://developer.android.com/)
+- [CameraX Documentation](https://developer.android.com/training/camerax)
+- [TensorFlow Lite Documentation](https://www.tensorflow.org/lite)
+- [OkHttp Documentation](https://square.github.io/okhttp/)
+- [Material Design Components](https://material.io/components)
+- [Backend README](../CIS4398-Project-NewSight-Backend/README.md) - For backend setup and configuration
+
+---
+
+**Project NewSight** - See Beyond Limits With The Help Of AI
+
+Developed by NewSight Team
